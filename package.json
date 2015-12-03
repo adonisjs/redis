@@ -1,0 +1,22 @@
+{
+  "name": "adonis-redis",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "co": "^4.6.0",
+    "harmony-reflect": "^1.4.2",
+    "ioredis": "^1.11.1"
+  },
+  "devDependencies": {
+    "chai": "^3.4.1",
+    "co-mocha": "^1.1.2",
+    "istanbul": "^0.4.1",
+    "mocha": "^2.3.4"
+  },
+  "scripts": {
+    "test": "node --harmony-proxies ./node_modules/.bin/istanbul cover _mocha test --bail"
+  },
+  "author": "adonisjs",
+  "license": "MIT"
+}
