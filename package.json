@@ -1,22 +1,62 @@
 {
   "name": "adonis-redis",
   "version": "1.0.0",
-  "description": "",
+  "description": "AdonisJs official redis provider to make working with redis fun and simple.",
   "main": "index.js",
   "dependencies": {
+    "cat-log": "^1.0.2",
     "co": "^4.6.0",
     "harmony-reflect": "^1.4.2",
-    "ioredis": "^1.11.1"
+    "ioredis": "^1.11.1",
+    "lodash": "^4.13.1",
+    "node-exceptions": "^1.0.1"
   },
   "devDependencies": {
     "chai": "^3.4.1",
     "co-mocha": "^1.1.2",
+    "cz-conventional-changelog": "^1.1.6",
     "istanbul": "^0.4.1",
     "mocha": "^2.3.4"
   },
   "scripts": {
-    "test": "node --harmony-proxies ./node_modules/.bin/istanbul cover _mocha test --bail"
+    "test": "npm run lint && node --harmony-proxies ./node_modules/.bin/istanbul cover _mocha test --bail",
+    "lint": "standard src/**/*.js test/*.js providers/*.js",
+    "coverage": "node --harmony-proxies ./node_modules/.bin/istanbul cover _mocha test --bail"
+  },
+  "standard": {
+    "globals": [
+      "describe",
+      "it",
+      "context",
+      "before",
+      "after",
+      "beforeEach",
+      "afterEach"
+    ]
   },
   "author": "adonisjs",
-  "license": "MIT"
+  "license": "MIT",
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adonisjs/adonis-redis.git"
+  },
+  "keywords": [
+    "redis",
+    "adonisjs",
+    "adonis",
+    "adonis-redis",
+    "ioredis"
+  ],
+  "bugs": {
+    "url": "https://github.com/adonisjs/adonis-redis/issues"
+  },
+  "homepage": "https://github.com/adonisjs/adonis-redis#readme"
 }
