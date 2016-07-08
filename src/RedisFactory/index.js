@@ -55,7 +55,7 @@ class RedisFactory {
    *      port: 6380,
    *      host: '127.0.0.1'
    *    }],
-   *    options: {}
+   *    redisOptions: {}
    *  }
    *
    * @private
@@ -63,7 +63,7 @@ class RedisFactory {
   _newConnection () {
     if (this.useCluster) {
       logger.verbose('creating new redis cluster using config: %j', this.config)
-      return new IoRedis.Cluster(this.config.clusters, this.config.options)
+      return new IoRedis.Cluster(this.config.clusters, {redisOptions: this.config.redisOptions})
     }
     logger.verbose('creating new redis connection using config: %j', this.config)
     return new IoRedis(this.config)
