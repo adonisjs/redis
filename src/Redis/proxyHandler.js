@@ -15,5 +15,5 @@ proxyHandler.get = function (target, name) {
   if (target[name]) {
     return target[name]
   }
-  return target._getConnection('default')[name]
+  return target.connection('default')[name]
 }

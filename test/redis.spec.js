@@ -42,6 +42,11 @@ describe('Redis', function () {
     expect(connection._getConnection('default') instanceof RedisFactory).to.equal(true)
   })
 
+  it('should return the instance of redis factory when using connection method', function () {
+    const redis = new Redis(Config, RedisFactory)
+    expect(redis.connection() instanceof RedisFactory).to.equal(true)
+  })
+
   it('should throw error when unable to find config for a given connection', function () {
     const connection = new Redis(Config, RedisFactory)
     const fn = () => connection._getConnection('foo')

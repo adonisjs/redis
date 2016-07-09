@@ -82,13 +82,14 @@ class Redis {
    * returns instance of a new factory instance for
    * a given connection
    *
-   * @param  {String} connection
+   * @param  {String} [connection=default]
    *
    * @return {Object}            Instance of redis factory
    *
    * @public
    */
   connection (connection) {
+    connection = connection || 'default'
     return this._getConnection(connection)
   }
 
