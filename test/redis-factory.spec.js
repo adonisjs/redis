@@ -17,7 +17,10 @@ describe('RedisFactory', function () {
   it('should setup connection with redis', function (done) {
     const redis = new RedisFactory({port: 6379, host: 'localhost'})
     redis.once('connect', function () {
-      redis.quit(done)
+      redis.quit().then((response) => {
+        expect(response).deep.equal(['OK'])
+        done()
+      }).catch(done)
     })
   })
 
@@ -26,14 +29,7 @@ describe('RedisFactory', function () {
     redis.set('foo', 'bar')
     const foo = yield redis.get('foo')
     expect(foo).to.equal('bar')
-    redis.quit()
-  })
-
-  it('should proxy ioredis connect event', function (done) {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'})
-    redis.on('connect', function () {
-      redis.quit(done)
-    })
+    yield redis.quit()
   })
 
   it('should proxy ioredis error event', function (done) {
@@ -44,19 +40,26 @@ describe('RedisFactory', function () {
     })
   })
 
+  it('should be able to quit redis connection', function * () {
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
+    const response = yield redis.quit()
+    expect(response).deep.equal(['OK'])
+  })
+
   it('should be able to set/get buffer', function * () {
     const redis = new RedisFactory({port: 6379, host: 'localhost'})
     redis.set('foo', new Buffer('bar'))
     const foo = yield redis.getBuffer('foo')
     expect(foo instanceof Buffer).to.equal(true)
-    redis.quit()
+    yield redis.quit()
   })
 
   it('should be able to pub/sub', function (done) {
     const redis = new RedisFactory({port: 6379, host: 'localhost'})
     redis.subscribe('new:user', function * (message) {
       expect(message).to.equal('virk')
-      redis.quit(done)
+      yield redis.quit()
+      done()
     }).done(function () {
       redis.publish('new:user', 'virk')
     })
@@ -75,7 +78,8 @@ describe('RedisFactory', function () {
     redis.subscribe('bar', function * (message, channel) {
       expect(channel).to.equal('bar')
       redis.unsubscribe('bar', function () {})
-      redis.quit(done)
+      yield redis.quit()
+      done()
     }).done(function () {
       redis.publish('foo', 'baz')
       redis.publish('bar', 'baz')
@@ -90,7 +94,8 @@ describe('RedisFactory', function () {
       expect(channel).to.be.oneOf(['foo', 'bar'])
       if (x === 2) {
         redis.unsubscribe('foo', 'bar', function () {})
-        redis.quit(done)
+        yield redis.quit()
+        done()
       }
     }).done(function () {
       redis.publish('foo', 'baz')
@@ -106,7 +111,7 @@ describe('RedisFactory', function () {
     pipe.get('time')
     const result = yield pipe.exec()
     expect(result[1][1]).to.equal(currentTime.toString())
-    redis.quit()
+    yield redis.quit()
   })
 
   it('should remove subscriber for a given channel when unsubscribe method is called', function (done) {
@@ -115,7 +120,8 @@ describe('RedisFactory', function () {
       expect(channel).to.equal('bar')
       redis.unsubscribe('bar', function () {})
       expect(redis.subscribers.length).to.equal(1)
-      redis.quit(done)
+      yield redis.quit()
+      done()
     }).done(function () {
       redis.publish('bar', 'Hello')
     })
@@ -127,7 +133,8 @@ describe('RedisFactory', function () {
       expect(channel).to.equal('bar')
       redis.unsubscribe('bar', 'foo')
       expect(redis.subscribers.length).to.equal(0)
-      redis.quit(done)
+      yield redis.quit()
+      done()
     }).done(function () {
       redis.publish('bar', 'Hello')
     })
@@ -140,7 +147,8 @@ describe('RedisFactory', function () {
         expect(channel).to.equal('bar')
         redis.unsubscribe('bar')
         expect(redis.subscribers.length).to.equal(0)
-        redis.quit(done)
+        yield redis.quit()
+        done()
       } catch (e) {
         done(e)
       }
@@ -156,7 +164,8 @@ describe('RedisFactory', function () {
       expect(channel).to.equal('hello')
       expect(pattern).to.equal('h?llo')
       redis.punsubscribe('h?llo')
-      redis.quit(done)
+      yield redis.quit()
+      done()
     }).done(function () {
       redis.publish('hello', 'virk')
     })
@@ -167,7 +176,8 @@ describe('RedisFactory', function () {
     redis.psubscribe('h?llo', function * (message, channel, pattern) {
       redis.punsubscribe('h?llo')
       expect(redis.psubscribers.length).to.equal(0)
-      redis.quit(done)
+      yield redis.quit()
+      done()
     }).done(function () {
       redis.publish('hello', 'virk')
     })
@@ -183,7 +193,8 @@ describe('RedisFactory', function () {
       if (messagesCount === 2) {
         redis.punsubscribe('h?llo')
         redis.punsubscribe('f?eak')
-        redis.quit(done)
+        yield redis.quit()
+        done()
       }
     }).done(function () {
       redis.publish('hello', 'virk')
@@ -213,5 +224,18 @@ describe('RedisFactory', function () {
     const redis = new RedisFactory({port: 6379, host: 'localhost'})
     const results = yield redis.pipeline().set('foo', 'bar').get('foo').exec()
     expect(results).deep.equal([[null, 'OK'], [null, 'bar']])
+    yield redis.quit()
+  })
+
+  it('should close subscriber connection with normal connection when quit is called', function * (done) {
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
+    redis.subscribe('foo', function * () {})
+    const response = yield redis.quit()
+    expect(response).deep.equal(['OK', 'OK'])
+    setTimeout(function () {
+      expect(redis.redis.status).to.equal('end')
+      expect(redis.subscriberConnection.status).to.equal('end')
+      done()
+    })
   })
 })

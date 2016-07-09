@@ -80,20 +80,20 @@ describe('Redis', function () {
     redis.quit()
   })
 
-  it('should close a given connection using quit method', function () {
+  it('should close a given connection using quit method', function * () {
     const redis = new Redis(Config, RedisFactory)
     redis.set('foo', 'bar')
-    redis.quit('default')
+    const response = yield redis.quit('default')
+    expect(response).deep.equal([['OK']])
     expect(Object.keys(redis.getConnections()).length).to.equal(0)
   })
 
-  it('should emit close event when using quit method', function (done) {
-    const redis = new Redis(Config, RedisFactory)
-    redis.on('end', () => {
+  it('should throw an error event when unable to connect to redis', function (done) {
+    const redis = new Redis({get: function () { return {port: 6389, host: 'localhost'} }}, RedisFactory)
+    redis.on('error', (error) => {
+      expect(error.code).to.equal('ECONNREFUSED')
       done()
     })
-    redis.quit('default')
-    expect(Object.keys(redis.getConnections()).length).to.equal(0)
   })
 
   it('should be able to create a new redis connection using connection method', function * () {

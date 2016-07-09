@@ -62,7 +62,7 @@ class Redis {
       }
       this.connectionPools[connection] = new this.Factory(config, this._isUsingCluster(config))
     }
-    return this.getConnection(connection)
+    return this.connectionPools[connection]
   }
 
   /**
@@ -104,20 +104,6 @@ class Redis {
   }
 
   /**
-   * returns a given redis connection or null
-   * if not found
-   *
-   * @param  {String} connection
-   *
-   * @return {Object|Null}
-   *
-   * @public
-   */
-  getConnection (connection) {
-    return this.connectionPools[connection] || null
-  }
-
-  /**
    * closes a single or number of redis connections
    *
    * @param  {Spread} connections
@@ -126,9 +112,9 @@ class Redis {
    */
   quit () {
     const connections = _.size(arguments) ? _.toArray(arguments) : _.keys(this.getConnections())
-    _.each(connections, (connection) => {
-      this._closeConnection(connection)
-    })
+    return Promise.all(_.map(connections, (connection) => {
+      return this._closeConnection(connection)
+    }))
   }
 
   /**
@@ -140,13 +126,13 @@ class Redis {
    * @private
    */
   _closeConnection (connection) {
-    const redisConnection = this.getConnection(connection)
+    const redisConnection = this.connectionPools[connection] || null
     if (!redisConnection) {
       logger.warn('trying to close a non-existing redis connection named %s', connection)
       return
     }
-    redisConnection.quit()
     _.unset(this.connectionPools, connection)
+    return redisConnection.quit()
   }
 
 }

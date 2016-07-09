@@ -26,12 +26,25 @@ class RedisFactory {
     this.useCluster = useCluster || false
 
     this.redis = this._newConnection()
-    this.publisher = null
+    this.subscriberConnection = null
     this.subscribers = []
     this.psubscribers = []
 
-    this._bindListeners()
     return new Proxy(this, proxyHandler)
+  }
+
+  /**
+   * creates subscriber connection if does not
+   * exists already
+   *
+   * @private
+   */
+  _createSubscriberConnection () {
+    if (!this.subscriberConnection) {
+      logger.verbose('creating new subscriber connection')
+      this.subscriberConnection = this._newConnection()
+      this._bindListeners()
+    }
   }
 
   /**
@@ -40,8 +53,8 @@ class RedisFactory {
    * @private
    */
   _bindListeners () {
-    this.redis.on('message', this._notifySubscribers.bind(this))
-    this.redis.on('pmessage', this._notifyPsubscribers.bind(this))
+    this.subscriberConnection.on('message', this._notifySubscribers.bind(this))
+    this.subscriberConnection.on('pmessage', this._notifyPsubscribers.bind(this))
   }
 
   /**
@@ -111,10 +124,11 @@ class RedisFactory {
    * @private
    */
   _subscribe (subscriberInstance, subscriptionPayload, type) {
+    this._createSubscriberConnection()
     const redisMethod = type === 'subscriber' ? 'subscribe' : 'psubscribe'
     const instanceProperty = type === 'subscriber' ? 'subscribers' : 'psubscribers'
     this[instanceProperty].push(subscriberInstance)
-    this.redis[redisMethod].apply(this.redis, subscriptionPayload)
+    this.subscriberConnection[redisMethod].apply(this.subscriberConnection, subscriptionPayload)
   }
 
   /**
@@ -135,9 +149,10 @@ class RedisFactory {
       subscriptionPayload = channels.concat([handler])
     }
 
+    this._createSubscriberConnection()
     const redisMethod = type === 'subscriber' ? 'unsubscribe' : 'punsubscribe'
     const instanceProperty = type === 'subscriber' ? 'subscribers' : 'psubscribers'
-    this.redis[redisMethod].apply(this.redis, subscriptionPayload)
+    this.subscriberConnection[redisMethod].apply(this.subscriberConnection, subscriptionPayload)
 
     /**
      * removing the channels from individual subscriber and
@@ -247,11 +262,22 @@ class RedisFactory {
    * @public
    */
   publish () {
-    if (!this.publisher) {
-      logger.verbose('creating new publisher connection')
-      this.publisher = this._newConnection()
+    this.redis.publish.apply(this.redis, _.toArray(arguments))
+  }
+
+  /**
+   * closes redis and subscriber connection together
+   *
+   * @return {Promise}
+   *
+   * @public
+   */
+  quit () {
+    const quitArray = [this.redis.quit()]
+    if (this.subscriberConnection) {
+      quitArray.push(this.subscriberConnection.quit())
     }
-    this.publisher.publish.apply(this.publisher, _.toArray(arguments))
+    return Promise.all(quitArray)
   }
 
 }
