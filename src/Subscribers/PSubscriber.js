@@ -12,7 +12,6 @@
 */
 
 const BaseSubscriber = require('./BaseSubscriber')
-const co = require('co')
 const CatLog = require('cat-log')
 const logger = new CatLog('adonis:redis')
 
@@ -33,10 +32,7 @@ class PSubscriber extends BaseSubscriber {
    * @private
    */
   _callHandler (pattern, channel, message) {
-    const handler = this.handler.bind(this)
-    co(function * () {
-      yield handler(message, channel, pattern)
-    })
+    this._makeHandler(this.handler)(message, channel, pattern)
   }
 
   /**

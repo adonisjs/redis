@@ -18,12 +18,15 @@ const logger = new CatLog('adonis:redis')
 const RedisSubscriber = require('../Subscribers/Subscriber')
 const RedisPSubscriber = require('../Subscribers/PSubscriber')
 const proxyHandler = require('./proxyHandler')
+const Ioc = require('adonis-fold').Ioc
 
 class RedisFactory {
 
-  constructor (config, useCluster) {
+  constructor (config, helpers, useCluster) {
     this.config = config
     this.useCluster = useCluster || false
+    this.listenersPath = 'Listeners'
+    this.helpers = helpers
 
     this.redis = this._newConnection()
     this.subscriberConnection = null
@@ -175,9 +178,20 @@ class RedisFactory {
    * @private
    */
   _validateHandler (handler) {
-    if (typeof (handler) !== 'function') {
+    if (typeof (handler) !== 'function' && (typeof (handler) !== 'object' || !handler.instance || !handler.method)) {
       throw new NE.InvalidArgumentException('subscriber needs a handler to listen for new messages')
     }
+  }
+
+  /**
+   * resolve handle from the Ioc Container
+   *
+   * @return  {Object|Function}
+   *
+   * @private
+   */
+  _resolveHandler (handler) {
+    return typeof (handler) === 'string' ? Ioc.makeFunc(this.helpers.makeNameSpace(this.listenersPath, handler)) : handler
   }
 
   /**
@@ -198,7 +212,7 @@ class RedisFactory {
    */
   subscribe () {
     const channels = _.initial(arguments)
-    const handler = _.last(arguments)
+    const handler = this._resolveHandler(_.last(arguments))
     this._validateHandler(handler)
     const subscriberInstance = new RedisSubscriber(channels, handler)
     const subscriptionPayload = channels.concat([subscriberInstance.onSubscribe.bind(subscriberInstance)])
@@ -221,7 +235,7 @@ class RedisFactory {
    */
   psubscribe () {
     const patterns = _.initial(arguments)
-    const handler = _.last(arguments)
+    const handler = this._resolveHandler(_.last(arguments))
     this._validateHandler(handler)
     const psubscriberInstance = new RedisPSubscriber(patterns, handler)
     const subscriptionPayload = patterns.concat([psubscriberInstance.onSubscribe.bind(psubscriberInstance)])

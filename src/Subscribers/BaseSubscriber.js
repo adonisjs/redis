@@ -11,6 +11,7 @@
 
 const co = require('co')
 const _ = require('lodash')
+const util = require('../../lib/util')
 
 class BaseSubscriber {
 
@@ -50,6 +51,58 @@ class BaseSubscriber {
   }
 
   /**
+   * wraps a function by return a function
+   *
+   * @param   {Object} instance
+   * @param   {Function} method
+   *
+   * @return  {Function}
+   *
+   * @private
+   */
+  _wrapFunction (instance, method) {
+    return function () {
+      method.apply(instance, arguments)
+    }
+  }
+
+  /**
+   * wraps a generator by returning a function
+   *
+   * @param   {Object} instance
+   * @param   {Function} method
+   *
+   * @return  {Function}
+   *
+   * @private
+   */
+  _wrapGenerator (instance, method) {
+    return co.wrap(function * () {
+      yield method.apply(instance, arguments)
+    })
+  }
+
+  /**
+   * returns handle method with correct instance if referenced
+   * as a string from the IoC container
+   *
+   * @return  {function}
+   *
+   * @private
+   */
+  _makeHandler (handler) {
+    let parentContext = {}
+    if (typeof (handler) !== 'function' && handler.instance) {
+      parentContext = handler.instance
+      handler = handler.instance[handler.method]
+    }
+    if (util.isGenerator(handler)) {
+      return this._wrapGenerator(parentContext, handler)
+    }
+    return this._wrapFunction(parentContext, handler)
+  }
+
+  /**
    * calls the subscriber handler by wrapping it inside
    * co
    *
@@ -59,10 +112,7 @@ class BaseSubscriber {
    * @private
    */
   _callHandler (topic, message) {
-    const handler = this.handler.bind(this)
-    co(function * () {
-      yield handler(message, topic)
-    })
+    this._makeHandler(this.handler)(message, topic)
   }
 
   /**
