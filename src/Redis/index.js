@@ -15,9 +15,10 @@ const proxyHandler = require('./proxyHandler')
 
 class Redis {
 
-  constructor (Config, Factory) {
-    this.Factory = Factory
+  constructor (Config, Helpers, Factory) {
     this.Config = Config
+    this.Helpers = Helpers
+    this.Factory = Factory
     this.connectionPools = {}
     return new Proxy(this, proxyHandler)
   }
@@ -60,7 +61,7 @@ class Redis {
       if (!config) {
         throw new NE.RuntimeException(`Cannot get redis configuration for ${connection} connection`)
       }
-      this.connectionPools[connection] = new this.Factory(config, this._isUsingCluster(config))
+      this.connectionPools[connection] = new this.Factory(config, this.Helpers, this._isUsingCluster(config))
     }
     return this.connectionPools[connection]
   }

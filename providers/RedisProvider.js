@@ -17,8 +17,9 @@ class RedisProvider extends ServiceProvider {
     this.app.singleton('Adonis/Addons/Redis', function (app) {
       const RedisFactory = app.use('Adonis/Addons/RedisFactory')
       const Config = app.use('Adonis/Src/Config')
+      const Helpers = app.use('Adonis/Src/Helpers')
       const Redis = require('../src/Redis')
-      return new Redis(Config, RedisFactory)
+      return new Redis(Config, Helpers, RedisFactory)
     })
   }
 
