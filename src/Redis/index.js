@@ -61,7 +61,7 @@ class Redis {
       if (!config) {
         throw new NE.RuntimeException(`Cannot get redis configuration for ${connection} connection`)
       }
-      this.connectionPools[connection] = new this.Factory(config, this.Helpers, this._isUsingCluster(config))
+      this.connectionPools[connection] = new this.Factory(config, this.Helpers, this._isCluster(config))
     }
     return this.connectionPools[connection]
   }
@@ -75,7 +75,7 @@ class Redis {
    *
    * @private
    */
-  _isUsingCluster (config) {
+  _isCluster (config) {
     return !!config.clusters
   }
 
