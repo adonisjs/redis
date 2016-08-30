@@ -19,13 +19,14 @@
     "istanbul": "^0.4.1",
     "mocha": "^2.3.4",
     "mocha-lcov-reporter": "^1.2.0",
+    "shelljs": "^0.7.4",
     "standard": "^7.1.2",
     "test-console": "^1.0.0"
   },
   "scripts": {
-    "test": "npm run lint && node --harmony-proxies ./node_modules/.bin/istanbul cover _mocha --report lcovonly -- -R spec test && cat ./coverage/lcov.info | coveralls && rm -rf ./coverage",
+    "test": "node ./bin/test",
     "lint": "standard src/**/*.js test/*.js providers/*.js",
-    "coverage": "node --harmony-proxies ./node_modules/.bin/istanbul cover _mocha test --bail"
+    "coverage": "node ./bin/coverage"
   },
   "standard": {
     "globals": [

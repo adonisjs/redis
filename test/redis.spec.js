@@ -115,6 +115,6 @@ describe('Redis', function () {
     const inspect = stderr.inspect()
     redis.quit('default')
     inspect.restore()
-    expect(inspect.output[inspect.output.length - 2]).to.match(/trying to close a non-existing redis connection named default/)
+    expect(inspect.output[inspect.output.length - 1]).to.match(/trying to close a non-existing redis connection named default/)
   })
 })
