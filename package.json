@@ -10,9 +10,6 @@
     "lodash": "^4.13.1",
     "node-exceptions": "^1.0.1"
   },
-  "peerDependencies": {
-    "adonis-fold": "^3.0.2"
-  },
   "devDependencies": {
     "adonis-fold": "^3.0.2",
     "chai": "^3.4.1",
