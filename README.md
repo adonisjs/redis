@@ -31,8 +31,8 @@ Once you have installed the provider from the [npm](https://npmjs.org/packages/a
 ```javascript
 const providers = [
   ...,
-  'adonis-redis/providers/RedisFactory',
-  'adonis-redis/providers/Redis'
+  'adonis-redis/providers/RedisFactoryProvider',
+  'adonis-redis/providers/RedisProvider'
 ]
 ```
 
