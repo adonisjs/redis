@@ -20,7 +20,7 @@
     "mocha": "^3.2.0",
     "mocha-lcov-reporter": "^1.2.0",
     "shelljs": "^0.7.4",
-    "standard": "^8.6.0",
+    "standard": "^10.0.0-beta.0",
     "test-console": "^1.0.0"
   },
   "scripts": {
