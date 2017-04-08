@@ -8,7 +8,7 @@
     "harmony-reflect": "^1.4.2",
     "ioredis": "^2.4.2",
     "lodash": "^4.13.1",
-    "node-exceptions": "^1.0.1"
+    "node-exceptions": "^2.0.0"
   },
   "devDependencies": {
     "adonis-fold": "^3.0.2",
