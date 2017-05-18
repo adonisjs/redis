@@ -6,7 +6,7 @@
     "cat-log": "^1.0.2",
     "co": "^4.6.0",
     "harmony-reflect": "^1.4.2",
-    "ioredis": "^2.4.2",
+    "ioredis": "^3.0.0",
     "lodash": "^4.13.1",
     "node-exceptions": "^2.0.0"
   },
