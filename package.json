@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "adonis-fold": "^3.0.2",
-    "chai": "^3.4.1",
+    "chai": "^4.0.0",
     "co-mocha": "^1.1.2",
     "coveralls": "^2.11.9",
     "cz-conventional-changelog": "^2.0.0",
