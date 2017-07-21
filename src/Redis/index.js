@@ -1,73 +1,42 @@
 'use strict'
 
-/**
+/*
  * adonis-redis
- * Copyright(c) 2015-2015- Harminder Virk
- * MIT Licensed
- */
+ *
+ * (c) Harminder Virk <virk@adonisjs.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+*/
 
-require('harmony-reflect')
 const NE = require('node-exceptions')
-const CatLog = require('cat-log')
 const _ = require('lodash')
-const logger = new CatLog('adonis:redis')
 const proxyHandler = require('./proxyHandler')
 
+/**
+ * Redis class is used to call methods on a redis server.
+ * This library creates a pool of connections and reuse
+ * them.
+ *
+ * @namespace Adonis/Addons/Redis
+ * @singleton
+ * @alias Redis
+ *
+ * @class Redis
+ * @constructor
+ */
 class Redis {
-
-  constructor (Config, Helpers, Factory) {
+  constructor (Config, Factory) {
     this.Config = Config
-    this.Helpers = Helpers
     this.Factory = Factory
     this.connectionPools = {}
     return new Proxy(this, proxyHandler)
   }
 
   /**
-   * returns configuration for a given connection
-   * from config/redis.js file.
-   *
-   * @param   {String} connection
-   *
-   * @return  {Object}
-   *
-   * @throws {RuntimeException} If default connection is not found.
-   *
-   * @private
-   */
-  _getConfig (connection) {
-    if (connection === 'default') {
-      connection = this.Config.get('redis.connection')
-      if (!connection) {
-        throw new NE.RuntimeException('Make sure to define a default connection for redis')
-      }
-    }
-    logger.verbose('getting config for %s connection', connection)
-    return this.Config.get(`redis.${connection}`)
-  }
-
-  /**
-   * returns redis factory instance for a given connection
-   *
-   * @param   {String} connection
-   *
-   * @return  {Object}
-   *
-   * @private
-   */
-  _getConnection (connection) {
-    if (!this.connectionPools[connection]) {
-      const config = this._getConfig(connection)
-      if (!config) {
-        throw new NE.RuntimeException(`Cannot get redis configuration for ${connection} connection`)
-      }
-      this.connectionPools[connection] = new this.Factory(config, this.Helpers, this._isCluster(config))
-    }
-    return this.connectionPools[connection]
-  }
-
-  /**
-   * tells whether a user intends to use cluster
+   * Looks at the config file and tells if a
+   * cluster connection to be created or
+   * not
    *
    * @param   {Object}  config
    *
@@ -80,22 +49,55 @@ class Redis {
   }
 
   /**
-   * returns instance of a new factory instance for
-   * a given connection
+   * Closes a given redis connection by quitting
+   * and removing it from the connectionsPool.
    *
-   * @param  {String} [connection=default]
+   * @param   {String} connection
    *
-   * @return {Object}            Instance of redis factory
-   *
-   * @public
+   * @private
    */
-  connection (connection) {
-    connection = connection || 'default'
-    return this._getConnection(connection)
+  _closeConnection (connection) {
+    const redisConnection = this.connectionPools[connection]
+    if (!redisConnection) {
+      return
+    }
+    _.unset(this.connectionPools, connection)
+    return redisConnection.quit()
   }
 
   /**
-   * returns all connections pools
+   * Returns instance of a new factory instance for
+   * a given connection.
+   *
+   * @param  {String} [connection='']
+   *
+   * @return {RedisFactory}
+   */
+  connection (connection = '') {
+    connection = connection || this.Config.get('redis.connection')
+
+    /**
+     * Return the existing connection if exists
+     */
+    if (this.connectionPools[connection]) {
+      return this.connectionPools[connection]
+    }
+
+    /**
+     * Get config
+     */
+    const config = this.Config.get(`redis.${connection}`)
+
+    if (!config || !_.size(config) === 0) {
+      throw new NE.RuntimeException(`Cannot get redis configuration for ${connection} connection`)
+    }
+
+    this.connectionPools[connection] = new this.Factory(config, this._isCluster(config))
+    return this.connectionPools[connection]
+  }
+
+  /**
+   * Returns a hash of connection pools
    *
    * @return {Object}
    *
@@ -106,37 +108,16 @@ class Redis {
   }
 
   /**
-   * closes a single or number of redis connections
+   * Closes a single or number of redis connections
    *
    * @param  {Spread} connections
    *
    * @public
    */
-  quit () {
-    const connections = _.size(arguments) ? _.toArray(arguments) : _.keys(this.getConnections())
-    return Promise.all(_.map(connections, (connection) => {
-      return this._closeConnection(connection)
-    }))
+  quit (...name) {
+    const connections = _.isArray(name) ? name : [name]
+    return Promise.all(_.map(connections, (connection) => this._closeConnection(connection)))
   }
-
-  /**
-   * closes a given redis connection by quitting
-   * and removing it from the connectionsPool.
-   *
-   * @param   {String} connection
-   *
-   * @private
-   */
-  _closeConnection (connection) {
-    const redisConnection = this.connectionPools[connection] || null
-    if (!redisConnection) {
-      logger.warn('trying to close a non-existing redis connection named %s', connection)
-      return
-    }
-    _.unset(this.connectionPools, connection)
-    return redisConnection.quit()
-  }
-
 }
 
 module.exports = Redis

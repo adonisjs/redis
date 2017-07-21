@@ -9,12 +9,10 @@
  * file that was distributed with this source code.
 */
 
-const co = require('co')
 const _ = require('lodash')
 const util = require('../../lib/util')
 
 class BaseSubscriber {
-
   constructor (topics, handler) {
     this.topics = topics
     this.handler = handler
@@ -77,9 +75,9 @@ class BaseSubscriber {
    * @private
    */
   _wrapGenerator (instance, method) {
-    return co.wrap(function * () {
-      yield method.apply(instance, arguments)
-    })
+    return function () {
+      method.apply(instance, arguments)
+    }
   }
 
   /**
@@ -175,7 +173,6 @@ class BaseSubscriber {
   inTopics (topic) {
     return this.topics.indexOf(topic) > -1
   }
-
 }
 
 module.exports = BaseSubscriber

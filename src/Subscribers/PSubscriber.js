@@ -12,14 +12,12 @@
 */
 
 const BaseSubscriber = require('./BaseSubscriber')
-const CatLog = require('cat-log')
-const logger = new CatLog('adonis:redis')
+const debug = require('debug')('adonis:redis')
 
 class PSubscriber extends BaseSubscriber {
-
   constructor (patterns, handler) {
     super(patterns, handler)
-    logger.verbose('initiating new psubscriber for %j patterns', patterns)
+    debug('initiating new psubscriber for %j patterns', patterns)
   }
 
   /**
@@ -60,9 +58,8 @@ class PSubscriber extends BaseSubscriber {
    */
   unsubscribe (patterns) {
     super.unsubscribe(patterns)
-    logger.verbose('unsubscribing from %j patterns', patterns)
+    debug('unsubscribing from %j patterns', patterns)
   }
-
 }
 
 module.exports = PSubscriber

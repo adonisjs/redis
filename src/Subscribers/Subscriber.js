@@ -10,14 +10,12 @@
 */
 
 const BaseSubscriber = require('./BaseSubscriber')
-const CatLog = require('cat-log')
-const logger = new CatLog('adonis:redis')
+const debug = require('debug')('adonis:redis')
 
 class Subscriber extends BaseSubscriber {
-
   constructor (channels, handler) {
     super(channels, handler)
-    logger.verbose('initiating new subscriber for %j channels', channels)
+    debug('initiating new subscriber for %j channels', channels)
   }
 
   /**
@@ -29,9 +27,8 @@ class Subscriber extends BaseSubscriber {
    */
   unsubscribe (channels) {
     super.unsubscribe(channels)
-    logger.verbose('unsubscribing from %j channels', channels)
+    debug('unsubscribing from %j channels', channels)
   }
-
 }
 
 module.exports = Subscriber

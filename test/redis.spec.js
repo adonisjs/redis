@@ -9,112 +9,149 @@
  * file that was distributed with this source code.
 */
 
+const test = require('japa')
+const { Config } = require('@adonisjs/sink')
 const Redis = require('../src/Redis')
 const RedisFactory = require('../src/RedisFactory')
-const chai = require('chai')
-const expect = chai.expect
-const stderr = require('test-console').stderr
 
-require('co-mocha')
-
-const Config = {
-  get: function (key) {
-    switch (key) {
-      case 'redis.connection':
-        return 'primary'
-      case 'redis.primary':
-        return {port: 6379, host: 'localhost'}
-      case 'redis.secondary':
-        return {port: 6379, host: 'localhost'}
-    }
-  }
-}
-
-describe('Redis', function () {
-  it('should throw exception when connection is not defined in redis config file', function () {
-    const connection = new Redis({get: function () {}}, {}, RedisFactory)
-    const fn = () => connection._getConfig('default')
-    expect(fn).to.throw(/Make sure to define a default connection for redis/)
+test.group('Redis', () => {
+  test('should throw exception when connection is not defined in redis config file', (assert) => {
+    const connection = new Redis(new Config(), RedisFactory)
+    const fn = () => connection._getConfig()
+    assert.throw(fn, /Cannot get redis configuration for undefined connection/)
   })
 
-  it('should return the instance of redis factory when using _getConnection method', function () {
-    const connection = new Redis(Config, {}, RedisFactory)
-    expect(connection._getConnection('default') instanceof RedisFactory).to.equal(true)
+  test('should return the instance of redis factory when using _getConnection method', (assert) => {
+    const config = new Config()
+    config.set('redis', {
+      connection: 'primary',
+      primary: { host: '127.0.0.1', port: 6379 }
+    })
+    const connection = new Redis(config, RedisFactory)
+    assert.equal(connection.connection() instanceof RedisFactory, true)
   })
 
-  it('should return the instance of redis factory when using connection method', function () {
-    const redis = new Redis(Config, {}, RedisFactory)
-    expect(redis.connection() instanceof RedisFactory).to.equal(true)
+  test('should return the instance of redis factory when using connection method', (assert) => {
+    const config = new Config()
+    config.set('redis', {
+      connection: 'primary',
+      primary: { host: '127.0.0.1', port: 6379 }
+    })
+
+    const redis = new Redis(config, RedisFactory)
+    assert.equal(redis.connection() instanceof RedisFactory, true)
   })
 
-  it('should throw error when unable to find config for a given connection', function () {
-    const connection = new Redis(Config, {}, RedisFactory)
-    const fn = () => connection._getConnection('foo')
-    expect(fn).to.throw(/Cannot get redis configuration for foo connection/)
+  test('should throw error when unable to find config for a given connection', (assert) => {
+    const config = new Config()
+    config.set('redis', {
+      connection: 'primary',
+      primary: { host: '127.0.0.1', port: 6379 }
+    })
+
+    const connection = new Redis(config, RedisFactory)
+    const fn = () => connection.connection('foo')
+    assert.throw(fn, /Cannot get redis configuration for foo connection/)
   })
 
-  it('should proxy redis factory methods', function () {
-    const redis = new Redis(Config, {}, RedisFactory)
+  test('should proxy redis factory methods', (assert) => {
+    const config = new Config()
+    config.set('redis', {
+      connection: 'primary',
+      primary: { host: '127.0.0.1', port: 6379 }
+    })
+
+    const redis = new Redis(config, RedisFactory)
     const get = redis.get
-    expect(get).to.be.a('function')
+    assert.isFunction(get, 'function')
   })
 
-  it('should be able to connect to redis to set and get data', function * () {
-    const redis = new Redis(Config, {}, RedisFactory)
+  test('should be able to connect to redis to set and get data', async (assert) => {
+    const config = new Config()
+    config.set('redis', {
+      connection: 'primary',
+      primary: { host: '127.0.0.1', port: 6379 }
+    })
+
+    const redis = new Redis(config, RedisFactory)
     redis.set('foo', 'bar')
-    const foo = yield redis.get('foo')
-    expect(foo).to.equal('bar')
+    const foo = await redis.get('foo')
+    assert.equal(foo, 'bar')
     redis.quit()
   })
 
-  it('should reuse the connection pool when trying to access redis for same connection', function * () {
-    const redis = new Redis(Config, {}, RedisFactory)
+  test('should reuse the connection pool when trying to access redis for same connection', async (assert) => {
+    const config = new Config()
+    config.set('redis', {
+      connection: 'primary',
+      primary: { host: '127.0.0.1', port: 6379 }
+    })
+
+    const redis = new Redis(config, RedisFactory)
     redis.set('foo', 'bar')
-    yield redis.get('foo')
-    expect(Object.keys(redis.getConnections()).length).to.equal(1)
-    expect(redis.getConnections()).to.have.property('default')
+    await redis.get('foo')
+    assert.equal(Object.keys(redis.getConnections()).length, 1)
+    assert.property(redis.getConnections(), 'primary')
     redis.quit()
   })
 
-  it('should reuse the connection pool when trying to access redis for same connection', function * () {
-    const redis = new Redis(Config, {}, RedisFactory)
+  test('should reuse the connection pool when trying to access redis for same connection', async (assert) => {
+    const config = new Config()
+    config.set('redis', {
+      connection: 'primary',
+      primary: { host: '127.0.0.1', port: 6379 }
+    })
+
+    const redis = new Redis(config, RedisFactory)
     redis.set('foo', 'bar')
-    yield redis.get('foo')
-    expect(Object.keys(redis.getConnections()).length).to.equal(1)
-    expect(redis.getConnections()).to.have.property('default')
+    await redis.get('foo')
+    assert.equal(Object.keys(redis.getConnections()).length, 1)
+    assert.property(redis.getConnections(), 'primary')
     redis.quit()
   })
 
-  it('should close a given connection using quit method', function * () {
-    const redis = new Redis(Config, {}, RedisFactory)
+  test('should close a given connection using quit method', async (assert) => {
+    const config = new Config()
+    config.set('redis', {
+      connection: 'primary',
+      primary: { host: '127.0.0.1', port: 6379 }
+    })
+
+    const redis = new Redis(config, RedisFactory)
     redis.set('foo', 'bar')
-    const response = yield redis.quit('default')
-    expect(response).deep.equal([['OK']])
-    expect(Object.keys(redis.getConnections()).length).to.equal(0)
+    const response = await redis.quit('primary')
+    assert.deepEqual(response, [['OK']])
+    assert.equal(Object.keys(redis.getConnections()).length, 0)
   })
 
-  it('should throw an error event when unable to connect to redis', function (done) {
-    const redis = new Redis({get: function () { return {port: 6389, host: 'localhost'} }}, {}, RedisFactory)
+  test('should throw an error event when unable to connect to redis', function (assert, done) {
+    const config = new Config()
+    config.set('redis', {
+      connection: 'primary',
+      primary: { host: '127.0.0.1', port: 6389 },
+      secondary: 'self::redis.primary'
+    })
+
+    const redis = new Redis(config, RedisFactory)
     redis.on('error', (error) => {
-      expect(error.code).to.equal('ECONNREFUSED')
+      assert.equal(error.code, 'ECONNREFUSED')
       done()
     })
   })
 
-  it('should be able to create a new redis connection using connection method', function * () {
-    const redis = new Redis(Config, {}, RedisFactory)
-    redis.connection('secondary').set('foo', 'bar')
-    const foo = yield redis.connection('secondary').get('foo')
-    expect(foo).to.equal('bar')
-    expect(Object.keys(redis.getConnections()).length).to.equal(1)
-    expect(redis.getConnections()).to.have.property('secondary')
-  })
+  test('should be able to create a new redis connection using connection method', async (assert) => {
+    const config = new Config()
+    config.set('redis', {
+      connection: 'primary',
+      primary: { host: '127.0.0.1', port: 6379 },
+      secondary: 'self::redis.primary'
+    })
 
-  it('should warn when trying to close a non-existing connection', function () {
-    const redis = new Redis(Config, {}, RedisFactory)
-    const inspect = stderr.inspect()
-    redis.quit('default')
-    inspect.restore()
-    expect(inspect.output[inspect.output.length - 1]).to.match(/trying to close a non-existing redis connection named default/)
+    const redis = new Redis(config, RedisFactory)
+    redis.connection('secondary').set('foo', 'bar')
+    const foo = await redis.connection('secondary').get('foo')
+    assert.equal(foo, 'bar')
+    assert.equal(Object.keys(redis.getConnections()).length, 1)
+    assert.property(redis.getConnections(), 'secondary')
   })
 })

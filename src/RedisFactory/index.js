@@ -9,63 +9,64 @@
  * file that was distributed with this source code.
 */
 
-require('harmony-reflect')
-const IoRedis = require('ioredis')
 const _ = require('lodash')
-const NE = require('node-exceptions')
-const CatLog = require('cat-log')
-const logger = new CatLog('adonis:redis')
-const RedisSubscriber = require('../Subscribers/Subscriber')
-const RedisPSubscriber = require('../Subscribers/PSubscriber')
+const IoRedis = require('ioredis')
+const debug = require('debug')('adonis:redis')
+const { resolver } = require('@adonisjs/fold')
+
 const proxyHandler = require('./proxyHandler')
-const Ioc = require('adonis-fold').Ioc
 
 class RedisFactory {
+  constructor (config, useCluster = false) {
+    this._config = config
+    this._useCluster = useCluster
 
-  constructor (config, helpers, useCluster) {
-    this.config = config
-    this.useCluster = useCluster || false
-    this.listenersPath = 'Listeners'
-    this.helpers = helpers
+    /**
+     * The main redis connection.
+     *
+     * @attribute connection
+     *
+     * @type {Object}
+     */
+    this.connection = null
 
-    this.redis = this._newConnection()
+    /**
+     * The list of subscribers for different channels
+     *
+     * @type {Array}
+     */
+    this.subscribers = {}
+
+    /**
+     * The list of psubscribers for different channels
+     *
+     * @type {Array}
+     */
+    this.psubscribers = {}
+
+    /**
+     * The connection for subscribers, this connection is created
+     * automatically when you register a subscriber.
+     */
     this.subscriberConnection = null
-    this.subscribers = []
-    this.psubscribers = []
+
+    /**
+     * Connect to redis
+     */
+    this.connect()
 
     return new Proxy(this, proxyHandler)
   }
 
   /**
-   * creates subscriber connection if does not
-   * exists already
+   * Create a new redis connection
    *
-   * @private
-   */
-  _createSubscriberConnection () {
-    if (!this.subscriberConnection) {
-      logger.verbose('creating new subscriber connection')
-      this.subscriberConnection = this._newConnection()
-      this._bindListeners()
-    }
-  }
-
-  /**
-   * binds redis message listenrs
-   *
-   * @private
-   */
-  _bindListeners () {
-    this.subscriberConnection.on('message', this._notifySubscribers.bind(this))
-    this.subscriberConnection.on('pmessage', this._notifyPsubscribers.bind(this))
-  }
-
-  /**
-   * sets up a new redis connection with default configuration
+   * @method _newConnection
    *
    * @return {Object}
    *
-   * Example config for cluster
+   * @example
+   * ```js
    *  {
    *    clusters: [{
    *      port: 6380,
@@ -73,227 +74,283 @@ class RedisFactory {
    *    }],
    *    redisOptions: {}
    *  }
+   * ```
    *
    * @private
    */
   _newConnection () {
-    if (this.useCluster) {
-      logger.verbose('creating new redis cluster using config: %j', this.config)
-      return new IoRedis.Cluster(this.config.clusters, {redisOptions: this.config.redisOptions})
+    if (this._useCluster) {
+      debug('creating new redis cluster using config: %j', this._config)
+      return new IoRedis.Cluster(this._config.clusters, { redisOptions: this._config.redisOptions })
     }
-    logger.verbose('creating new redis connection using config: %j', this.config)
-    return new IoRedis(this.config)
+    debug('creating new redis connection using config: %j', this._config)
+    return new IoRedis(this._config)
   }
 
   /**
-   * notify all the subscribers when a new message is received
-   * and they will decided whether to consume the message or
-   * not
+   * This method is invoked when redis pub/sub receives
+   * a new message, it's job is to call the registered
+   * subscribers
    *
-   * @param   {String} channel
-   * @param   {Mixed} message
+   * @method _executeSubscribeListeners
    *
-   * @private
-   */
-  _notifySubscribers (channel, message) {
-    logger.verbose('notifying subscribers for message in %s channel payload: %j', channel, message)
-    this.subscribers.forEach((subscriber) => subscriber.newMessage(channel, message))
-  }
-
-  /**
-   * notify all the subscribers when a new message is received
-   * and they will decided whether to consume the message or
-   * not
+   * @param  {String}                  channel
+   * @param  {Mixed}                  message
    *
-   * @param   {String} pattern
-   * @param   {String} channel
-   * @param   {Mixed} message
+   * @return {void}
    *
    * @private
    */
-  _notifyPsubscribers (pattern, channel, message) {
-    logger.verbose('notifying psubscribers for new message of %s pattern in %s channel payload: %j', pattern, channel, message)
-    this.psubscribers.forEach((subscriber) => subscriber.newMessage(pattern, channel, message))
-  }
-
-  /**
-   * create a redis subscription, it can be using subscribe or psubscribe
-   * method.
-   *
-   * @param   {Object} subscriberInstance
-   * @param   {Mixed} subscriptionPayload
-   * @param   {String} type
-   *
-   * @private
-   */
-  _subscribe (subscriberInstance, subscriptionPayload, type) {
-    this._createSubscriberConnection()
-    const redisMethod = type === 'subscriber' ? 'subscribe' : 'psubscribe'
-    const instanceProperty = type === 'subscriber' ? 'subscribers' : 'psubscribers'
-    this[instanceProperty].push(subscriberInstance)
-    this.subscriberConnection[redisMethod].apply(this.subscriberConnection, subscriptionPayload)
-  }
-
-  /**
-   * unsubscribe from a given channel/pattern based on the type
-   *
-   * @param   {Array} channels
-   * @param   {Array} handler
-   * @param   {String} type
-   *
-   * @private
-   */
-  _unsubscribe (channels, handler, type) {
-    let subscriptionPayload = []
-    if (typeof (handler) !== 'function') {
-      channels = channels.concat([handler])
-      subscriptionPayload = channels
-    } else {
-      subscriptionPayload = channels.concat([handler])
+  _executeSubscribeListeners (channel, message) {
+    if (typeof (this.subscribers[channel]) === 'function') {
+      this.subscribers[channel](message, channel)
     }
+  }
 
-    this._createSubscriberConnection()
-    const redisMethod = type === 'subscriber' ? 'unsubscribe' : 'punsubscribe'
-    const instanceProperty = type === 'subscriber' ? 'subscribers' : 'psubscribers'
-    this.subscriberConnection[redisMethod].apply(this.subscriberConnection, subscriptionPayload)
+  /**
+   * This method is invoked when redis psubscribe receives
+   * a new message, it's job is to call the registered
+   * subscribers
+   *
+   * @method _executePSubscribeListeners
+   *
+   * @param  {String}                 pattern
+   * @param  {String}                 channel
+   * @param  {Mixed}                  message
+   *
+   * @return {void}
+   *
+   * @private
+   */
+  _executePSubscribeListeners (pattern, channel, message) {
+    if (typeof (this.psubscribers[pattern]) === 'function') {
+      this.psubscribers[pattern](pattern, message, channel)
+    }
+  }
 
-    /**
-     * removing the channels from individual subscriber and
-     * removing it's instance all together when subscriber
-     * has zero channels.
-     */
-    _.remove(this[instanceProperty], (subscriber) => {
-      subscriber.unsubscribe(channels)
-      return !subscriber.hasTopics()
+  /**
+   * Closes the redis connection first by removing
+   * all attached listeners
+   *
+   * @method _closeConnection
+   *
+   * @param  {Object}         connection
+   *
+   * @return {Promise}
+   *
+   * @private
+   */
+  _closeConnection (connection) {
+    debug('closing redis connection')
+    return new Promise((resolve, reject) => {
+      connection.quit((response) => {
+        connection.removeAllListeners()
+        return response
+      }).then(resolve).catch(reject)
     })
   }
 
   /**
-   * validates the handler attached to listen to the subscribed messages.
-   * Strings will be resolved using the IoC container.
+   * Creates subscribe connection only if doesn't
+   * exists
    *
-   * @param   {String|Function} handler
-   * @throws {InvalidArgumentException} If handler is not resolved as a function
+   * @method _setupSubscriberConnection
+   *
+   * @return {void}
    *
    * @private
    */
-  _validateHandler (handler) {
-    if (typeof (handler) !== 'function' && (typeof (handler) !== 'object' || !handler.instance || !handler.method)) {
-      throw new NE.InvalidArgumentException('subscriber needs a handler to listen for new messages')
+  _setupSubscriberConnection () {
+    if (!this.subscriberConnection) {
+      debug('creating new subscription connection')
+      this.subscriberConnection = this._newConnection()
+      this.subscriberConnection.on('message', this._executeSubscribeListeners.bind(this))
+      this.subscriberConnection.on('pmessage', this._executePSubscribeListeners.bind(this))
     }
   }
 
   /**
-   * resolve handle from the Ioc Container
+   * Creates a new redis connection
    *
-   * @return  {Object|Function}
+   * @method connect
    *
-   * @private
+   * @return {void}
    */
-  _resolveHandler (handler) {
-    return typeof (handler) === 'string' ? Ioc.makeFunc(this.helpers.makeNameSpace(this.listenersPath, handler)) : handler
+  connect () {
+    this.connection = this._newConnection()
   }
 
   /**
-   * subscribe to number of redis channels.
+   * Subscribe to a channel
    *
-   * @param {...Spread} channels
-   * @param {Function} handler
+   * @method subscribe
+   * @async
    *
-   * @return {Object} Subscriber instance
+   * @param  {String}  channel
+   * @param  {Function|String}  handler
    *
-   * @example
-   * Redis.subscribe('news', 'entertainment', function * (message, channel) {
-   * })
-   * OR
-   * Redis.subscribe('news', 'entertainment', 'MediaSubscriber.message')
-   *
-   * @public
+   * @return {void}
    */
-  subscribe () {
-    const channels = _.initial(arguments)
-    const handler = this._resolveHandler(_.last(arguments))
-    this._validateHandler(handler)
-    const subscriberInstance = new RedisSubscriber(channels, handler)
-    const subscriptionPayload = channels.concat([subscriberInstance.onSubscribe.bind(subscriberInstance)])
-    this._subscribe(subscriberInstance, subscriptionPayload, 'subscriber')
-    return subscriberInstance
+  subscribe (channel, handler) {
+    return new Promise((resolve, reject) => {
+      if (typeof (handler) !== 'function' && typeof (handler) !== 'string') {
+        throw new Error('Redis.subscribe needs a callback function or ioc reference string')
+      }
+
+      const { method } = resolver.forDir('listeners').resolveFunc(handler)
+      this._setupSubscriberConnection()
+
+      /**
+       * Cannot have multiple subscribers on a single channel
+       */
+      if (this.subscribers[channel]) {
+        reject(new Error(`Cannot subscribe to ${channel} channel twice`))
+        return
+      }
+
+      /**
+       * Otherwise subscribe with redis
+       */
+      debug('setting up subscriber for %s', channel)
+      this.subscriberConnection.subscribe(channel, (error, count) => {
+        if (error) {
+          reject(error)
+          return
+        }
+        this.subscribers[channel] = method
+        resolve()
+      })
+    })
   }
 
   /**
-   * adds a new psubscriber to listen for new messages
+   * Subscribe to a pattern on redis
    *
-   * @return {Object} Psubscriber instance
+   * @method psubscribe
+   * @async
    *
-   * @example
-   * Redis.psubscribe('h?llo', function * (message, channel) {
-   * })
-   * OR
-   * Redis.subscribe('h?llo', 'GreetingSubscriber.message')
+   * @param  {String}   pattern
+   * @param  {Function|String}   handler
    *
-   * @public
+   * @return {void}
    */
-  psubscribe () {
-    const patterns = _.initial(arguments)
-    const handler = this._resolveHandler(_.last(arguments))
-    this._validateHandler(handler)
-    const psubscriberInstance = new RedisPSubscriber(patterns, handler)
-    const subscriptionPayload = patterns.concat([psubscriberInstance.onSubscribe.bind(psubscriberInstance)])
-    this._subscribe(psubscriberInstance, subscriptionPayload, 'psubscriber')
-    return psubscriberInstance
+  psubscribe (pattern, handler) {
+    return new Promise((resolve, reject) => {
+      if (typeof (handler) !== 'function' && typeof (handler) !== 'string') {
+        throw new Error('Redis.psubscribe needs a callback function or ioc reference string')
+      }
+
+      const { method } = resolver.forDir('listeners').resolveFunc(handler)
+      this._setupSubscriberConnection()
+
+      /**
+       * Cannot have multiple subscribers on a single channel
+       */
+      if (this.psubscribers[pattern]) {
+        reject(new Error(`Cannot subscribe to ${pattern} pattern twice`))
+        return
+      }
+
+      /**
+       * Otherwise subscribe with redis
+       */
+      debug('setting up psubscriber for %s', pattern)
+      this.subscriberConnection.psubscribe(pattern, (error, count) => {
+        if (error) {
+          reject(error)
+          return
+        }
+        this.psubscribers[pattern] = method
+        resolve()
+      })
+    })
   }
 
   /**
-   * unsubscribe from one or multiple redis channels
+   * Unsubscribe from a channel. If there are no subscribers for
+   * any channels, this method will close the subscription
+   * connection with redis.
    *
-   * @param {...Spread} channels
-   * @param {Function} [handler]
+   * @method unsubscribe
+   * @async
    *
-   * @public
+   * @param  {String}    channel
+   *
+   * @return {String}   `OK` is return if unsubscribed
    */
-  unsubscribe () {
-    this._unsubscribe(_.initial(arguments), _.last(arguments), 'subscriber')
+  unsubscribe (channel) {
+    return new Promise((resolve, reject) => {
+      _.unset(this.subscribers, channel)
+
+      if (!this.subscriberConnection) {
+        resolve('OK')
+      }
+
+      this
+        .subscriberConnection
+        .unsubscribe(channel)
+        .then(() => {
+          /**
+           * Close subscriber connection when there are no
+           * subscribers for any channels
+           */
+          if (_.size(this.subscribers) === 0) {
+            return this._closeConnection(this.subscriberConnection)
+          }
+          return 'OK'
+        }).then(resolve).catch(reject)
+    })
   }
 
   /**
-   * unsubscribe from one or multiple redis channels
+   * Unsubscribe from a pattern. If there are no subscribers for
+   * any patterns, this method will close the subscription
+   * connection with redis.
    *
-   * @param {...Spread} channels
-   * @param {Function} [handler]
+   * @method punsubscribe
+   * @async
    *
-   * @public
+   * @param  {String}    pattern
+   *
+   * @return {String}   `OK` is return if unsubscribed
    */
-  punsubscribe () {
-    this._unsubscribe(_.initial(arguments), _.last(arguments), 'psubscriber')
+  punsubscribe (pattern) {
+    return new Promise((resolve, reject) => {
+      _.unset(this.psubscribers, pattern)
+
+      if (!this.subscriberConnection) {
+        resolve('OK')
+      }
+
+      this
+        .subscriberConnection
+        .punsubscribe(pattern)
+        .then(() => {
+          /**
+           * Close subscriber connection when there are no
+           * subscribers for any patterns
+           */
+          if (_.size(this.psubscribers) === 0) {
+            return this._closeConnection(this.subscriberConnection)
+          }
+          return 'OK'
+        }).then(resolve).catch(reject)
+    })
   }
 
   /**
-   * publishes a new message to a given channel
-   *
-   * @param {...Spread} channels
-   * @param {Mixed} data
-   *
-   * @public
-   */
-  publish () {
-    this.redis.publish.apply(this.redis, _.toArray(arguments))
-  }
-
-  /**
-   * closes redis and subscriber connection together
+   * Closes redis connection
    *
    * @return {Promise}
    *
    * @public
    */
   quit () {
-    const quitArray = [this.redis.quit()]
-    if (this.subscriberConnection) {
-      quitArray.push(this.subscriberConnection.quit())
-    }
-    return Promise.all(quitArray)
+    return Promise.all(_([this.connection, this.subscriberConnection])
+    .filter((connection) => connection && connection.status !== 'end')
+    .map((connection) => this._closeConnection(connection))
+    .value())
   }
-
 }
 
 module.exports = RedisFactory

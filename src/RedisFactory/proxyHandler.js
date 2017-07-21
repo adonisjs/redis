@@ -21,8 +21,22 @@ let proxyHandler = exports = module.exports = {}
  * @public
  */
 proxyHandler.get = function (target, name) {
-  if (target[name]) {
+  /**
+   * Node.js inspecting target
+   */
+  if (typeof (name) === 'symbol' || name === 'inspect') {
     return target[name]
   }
-  return target.redis[name]
+
+  /**
+   * Property exists on target
+   */
+  if (typeof (target[name]) !== 'undefined') {
+    return target[name]
+  }
+
+  /**
+   * Fallback to redis connection
+   */
+  return target.connection[name]
 }

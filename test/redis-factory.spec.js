@@ -8,326 +8,264 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
 */
+
+const test = require('japa')
+const { ioc } = require('@adonisjs/fold')
+const { setupResolver } = require('@adonisjs/sink')
+
 const RedisFactory = require('../src/RedisFactory')
-const chai = require('chai')
-const Ioc = require('adonis-fold').Ioc
-const expect = chai.expect
-require('co-mocha')
 
-const Helpers = {
-  makeNameSpace: function (base, toPath) {
-    return `App/${base}/${toPath}`
-  }
-}
+test.group('RedisFactory', function (group) {
+  group.before(() => {
+    ioc.restore()
+    setupResolver()
+  })
 
-describe('RedisFactory', function () {
-  it('should setup connection with redis', function (done) {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
+  test('should setup connection with redis', (assert, done) => {
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
     redis.once('connect', function () {
       redis.quit().then((response) => {
-        expect(response).deep.equal(['OK'])
+        assert.deepEqual(response, ['OK'])
         done()
       }).catch(done)
     })
   })
 
-  it('should use proxy to call command over redis client', function * () {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
+  test('should use proxy to call command over redis client', async (assert) => {
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
     redis.set('foo', 'bar')
-    const foo = yield redis.get('foo')
-    expect(foo).to.equal('bar')
-    yield redis.quit()
+    const foo = await redis.get('foo')
+    assert.equal(foo, 'bar')
+    await redis.quit()
   })
 
-  it('should proxy ioredis error event', function (done) {
+  test('should proxy ioredis error event', (assert, done) => {
     const redis = new RedisFactory({port: 6389, host: 'localhost', retryStrategy: function () { return null }})
     redis.on('error', function (error) {
-      expect(error.code).to.equal('ECONNREFUSED')
+      assert.equal(error.code, 'ECONNREFUSED')
       done()
     })
   })
 
-  it('should be able to quit redis connection', function * () {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-    const response = yield redis.quit()
-    expect(response).deep.equal(['OK'])
+  test('should be able to quit redis connection', async (assert) => {
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
+    const response = await redis.quit()
+    assert.deepEqual(response, ['OK'])
   })
 
-  it('should be able to set/get buffer', function * () {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-    redis.set('foo', new Buffer('bar'))
-    const foo = yield redis.getBuffer('foo')
-    expect(foo instanceof Buffer).to.equal(true)
-    yield redis.quit()
+  test('should be able to set/get buffer', async (assert) => {
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
+    redis.set('foo', Buffer.from('bar'))
+    const foo = await redis.getBuffer('foo')
+    assert.equal(foo instanceof Buffer, true)
+    await redis.quit()
   })
 
-  it('should be able to pub/sub', function (done) {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-    redis.subscribe('new:user', function * (message) {
-      expect(message).to.equal('virk')
-      yield redis.quit()
-      done()
-    }).done(function () {
-      redis.publish('new:user', 'virk')
-    })
+  test('subscribe to a channel', async (assert) => {
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
+    await redis.subscribe('news', function () { })
+    assert.isDefined(redis.subscribers.news)
+    await redis.quit()
   })
 
-  it('should be able to attach normal functions', function (done) {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-    redis.subscribe('new:user', function (message) {
-      expect(message).to.equal('virk')
-      redis.quit().then(() => done()).catch(done)
-    }).done(function () {
-      redis.publish('new:user', 'virk')
-    })
+  test('subscribing multiple times should throw exception', async (assert) => {
+    assert.plan(1)
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
+    await redis.subscribe('news', function () { })
+    try {
+      await redis.subscribe('news', function () { })
+    } catch ({ message }) {
+      assert.equal(message, 'Cannot subscribe to news channel twice')
+    }
+    await redis.quit()
   })
 
-  it('should be able to define subscriber as an autoload namespace', function (done) {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
+  test('do not register any subscribers when unable to subscribe', async (assert) => {
+    assert.plan(3)
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
+    redis.subscriberConnection = redis._newConnection()
+    try {
+      await redis.subscriberConnection.quit()
+      await redis.subscribe('news', function () { })
+    } catch ({ message }) {
+      assert.equal(message, 'Connection is closed.')
+      assert.deepEqual(redis.subscribers, {})
+      assert.equal(redis.subscriberConnection.listenerCount('message'), 0)
+    }
+    await redis.quit()
+  })
+
+  test('should be able to define subscriber as an autoload namespace', (assert, done) => {
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
     const RedisSubscriber = {
-      * onNewUser (message) {
-        expect(message).to.equal('virk')
-        yield redis.quit()
+      async onNewUser (message) {
+        assert.equal(message, 'virk')
+        await redis.quit()
         done()
       }
     }
-    Ioc.bind('App/Listeners/Redis', function () {
+
+    ioc.fake('App/Listeners/Redis', function () {
       return RedisSubscriber
     })
-    redis.subscribe('new:user', 'Redis.onNewUser').done(function () {
+
+    redis
+    .subscribe('new:user', 'Redis.onNewUser')
+    .then(() => {
       redis.publish('new:user', 'virk')
-    })
+    }).catch(done)
   })
 
-  it('ioc referenced listener should maintain the scope', function (done) {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-    const RedisSubscriber = {
-      name: 'foo',
-      * onNewUser (message) {
-        expect(message).to.equal('virk')
-        expect(this.name).to.equal('foo')
-        yield redis.quit()
-        done()
-      }
-    }
-    Ioc.bind('App/Listeners/Redis', function () {
-      return RedisSubscriber
-    })
-    redis.subscribe('new:user', 'Redis.onNewUser').done(function () {
-      redis.publish('new:user', 'virk')
-    })
-  })
-
-  it('should throw error when subscriber handler is not defined', function () {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-    const fn = function () {
-      return redis.subscribe('bar', {})
-    }
-    expect(fn).to.throw(/subscriber needs a handler to listen for new messages/)
-  })
-
-  it('should not listen to messages on different channels', function (done) {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-    redis.subscribe('bar', function * (message, channel) {
-      expect(channel).to.equal('bar')
-      redis.unsubscribe('bar', function () {})
-      yield redis.quit()
+  test('unsubscribe from a channel', (assert, done) => {
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
+    redis
+    .subscribe('new:user', function () {})
+    .then(() => {
+      return redis.unsubscribe('new:user')
+    }).then(() => {
+      assert.isUndefined(redis.subscribers['new:user'])
+      assert.deepEqual(redis.subscribers, {})
+      assert.equal(redis.subscriberConnection.listenerCount('message'), 0)
+      assert.equal(redis.subscriberConnection.listenerCount('pmessage'), 0)
+      return redis.quit()
+    }).then(() => {
       done()
-    }).done(function () {
+    }).catch(done)
+  })
+
+  test('subscribe to a pattern', async (assert) => {
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
+    await redis.psubscribe('new?', function () { })
+    assert.isDefined(redis.psubscribers['new?'])
+    await redis.quit()
+  })
+
+  test('receive messages related to a pattern', (assert, done) => {
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
+    redis
+      .psubscribe('new?', async function (pattern, message, channel) {
+        assert.equal(pattern, 'new?')
+        assert.equal(message, 'hello')
+        assert.equal(channel, 'news')
+        await redis.quit()
+        done()
+      })
+      .then(() => {
+        redis.publish('news', 'hello')
+      })
+  })
+
+  test('unsubscribe from a pattern', (assert, done) => {
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
+    redis
+      .psubscribe('new?', function () {})
+      .then(() => {
+        return redis.punsubscribe('new?')
+      })
+      .then(() => {
+        assert.isUndefined(redis.psubscribers['new:user'])
+        assert.deepEqual(redis.psubscribers, {})
+        assert.equal(redis.subscriberConnection.listenerCount('message'), 0)
+        assert.equal(redis.subscriberConnection.listenerCount('pmessage'), 0)
+        return redis.quit()
+      }).then(() => {
+        done()
+      }).catch(done)
+  })
+
+  test('should throw error when subscriber handler is not defined', async (assert) => {
+    assert.plan(1)
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
+
+    try {
+      await redis.subscribe('bar', {})
+    } catch ({ message }) {
+      assert.equal(message, 'Redis.subscribe needs a callback function or ioc reference string')
+    }
+  })
+
+  test('should throw error when pattern subscriber handler is not defined', async (assert) => {
+    assert.plan(1)
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
+
+    try {
+      await redis.psubscribe('new?', {})
+    } catch ({ message }) {
+      assert.equal(message, 'Redis.psubscribe needs a callback function or ioc reference string')
+    }
+  })
+
+  test('should not listen to messages on different channels', (assert, done) => {
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
+    redis.subscribe('bar', async (message, channel) => {
+      assert.equal(channel, 'bar')
+      await redis.quit()
+      done()
+    }).then(function () {
       redis.publish('foo', 'baz')
       redis.publish('bar', 'baz')
     })
   })
 
-  it('should be able to subscribe to multiple channels', function (done) {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-    let x = 0
-    redis.subscribe('foo', 'bar', function * (message, channel) {
-      x++
-      expect(channel).to.be.oneOf(['foo', 'bar'])
-      if (x === 2) {
-        redis.unsubscribe('foo', 'bar', function () {})
-        yield redis.quit()
-        done()
-      }
-    }).done(function () {
-      redis.publish('foo', 'baz')
-      redis.publish('bar', 'baz')
-    })
-  })
+  // test('should be able to subscribe to multiple channels', (assert, done) => {
+  //   const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
+  //   let x = 0
+  //   redis.subscribe('foo', 'bar', async (message, channel) => {
+  //     x++
+  //     expect(channel).to.be.oneOf(['foo', 'bar'])
+  //     if (x === 2) {
+  //       redis.unsubscribe('foo', 'bar', function () {})
+  //       await redis.quit()
+  //       done()
+  //     }
+  //   }).done(function () {
+  //     redis.publish('foo', 'baz')
+  //     redis.publish('bar', 'baz')
+  //   })
+  // })
 
-  it('should be able to pipe commands', function * () {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
+  test('should be able to pipe commands', async (assert) => {
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
     const pipe = redis.pipeline()
     const currentTime = new Date().getTime()
     pipe.set('time', currentTime)
     pipe.get('time')
-    const result = yield pipe.exec()
-    expect(result[1][1]).to.equal(currentTime.toString())
-    yield redis.quit()
+    const result = await pipe.exec()
+    assert.equal(result[1][1], currentTime.toString())
+    await redis.quit()
   })
 
-  it('should remove subscriber for a given channel when unsubscribe method is called', function (done) {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-    redis.subscribe('bar', 'foo', function * (message, channel) {
-      expect(channel).to.equal('bar')
-      redis.unsubscribe('bar', function () {})
-      expect(redis.subscribers.length).to.equal(1)
-      yield redis.quit()
-      done()
-    }).done(function () {
-      redis.publish('bar', 'Hello')
-    })
+  test('should not throw exception when unsubscribing from unknown channels', async (assert) => {
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
+    await redis.unsubscribe('bar')
+    await redis.quit()
   })
 
-  it('should remove multiple subscribers for a given channel when unsubscribe method is called', function (done) {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-    redis.subscribe('bar', 'foo', function * (message, channel) {
-      expect(channel).to.equal('bar')
-      redis.unsubscribe('bar', 'foo')
-      expect(redis.subscribers.length).to.equal(0)
-      yield redis.quit()
-      done()
-    }).done(function () {
-      redis.publish('bar', 'Hello')
-    })
+  test('should not throw exception when unsubscribing from unknown channels', async (assert) => {
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
+    await redis.punsubscribe('new?')
+    await redis.quit()
   })
 
-  it('should remove subscribers using unsubscribe when last argument is not a callback', function (done) {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-    redis.subscribe('bar', function * (message, channel) {
-      try {
-        expect(channel).to.equal('bar')
-        redis.unsubscribe('bar')
-        expect(redis.subscribers.length).to.equal(0)
-        yield redis.quit()
+  test('should be able to pipeline commands', async (assert) => {
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
+    const results = await redis.pipeline().set('foo', 'bar').get('foo').exec()
+    assert.deepEqual(results, [[null, 'OK'], [null, 'bar']])
+    await redis.quit()
+  })
+
+  test('should close subscriber connection with normal connection when quit is called', (assert, done) => {
+    const redis = new RedisFactory({port: 6379, host: 'localhost'})
+    redis.subscribe('foo', async function () {})
+    redis
+    .quit()
+    .then((response) => {
+      assert.deepEqual(response, ['OK', 'OK'])
+      setTimeout(() => {
+        assert.equal(redis.connection.status, 'end')
+        assert.equal(redis.subscriberConnection.status, 'end')
         done()
-      } catch (e) {
-        done(e)
-      }
-    }).done(function () {
-      redis.publish('bar', 'Hello')
-    })
-  })
-
-  it('should be able to psubscribe to a pattern', function (done) {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-    redis.psubscribe('h?llo', function * (message, channel, pattern) {
-      expect(message).to.equal('virk')
-      expect(channel).to.equal('hello')
-      expect(pattern).to.equal('h?llo')
-      redis.punsubscribe('h?llo')
-      yield redis.quit()
-      done()
-    }).done(function () {
-      redis.publish('hello', 'virk')
-    })
-  })
-
-  it('should be able to psubscribe and attach an autoload path as a listener', function (done) {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-    const RedisSubscriber = {
-      * onGreeting (message, channel, pattern) {
-        expect(message).to.equal('virk')
-        expect(channel).to.equal('hello')
-        expect(pattern).to.equal('h?llo')
-        redis.punsubscribe('h?llo')
-        yield redis.quit()
-        done()
-      }
-    }
-    Ioc.bind('App/Listeners/Redis', function () {
-      return RedisSubscriber
-    })
-    redis.psubscribe('h?llo', 'Redis.onGreeting').done(function () {
-      redis.publish('hello', 'virk')
-    })
-  })
-
-  it('should be able to psubscribe plain functions', function (done) {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-    const RedisSubscriber = {
-      onGreeting (message, channel, pattern) {
-        expect(message).to.equal('virk')
-        expect(channel).to.equal('hello')
-        expect(pattern).to.equal('h?llo')
-        redis.punsubscribe('h?llo')
-        redis.quit().then(() => done()).catch(done)
-      }
-    }
-    Ioc.bind('App/Listeners/Redis', function () {
-      return RedisSubscriber
-    })
-    redis.psubscribe('h?llo', 'Redis.onGreeting').done(function () {
-      redis.publish('hello', 'virk')
-    })
-  })
-
-  it('should be able to unsubscribe from a pattern subscription', function (done) {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-    redis.psubscribe('h?llo', function * (message, channel, pattern) {
-      redis.punsubscribe('h?llo')
-      expect(redis.psubscribers.length).to.equal(0)
-      yield redis.quit()
-      done()
-    }).done(function () {
-      redis.publish('hello', 'virk')
-    })
-  })
-
-  it('should be able to pattern subscribe to multiple patterns', function (done) {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-    let messagesCount = 0
-    redis.psubscribe('h?llo', 'f?eak', function * (message, channel, pattern) {
-      messagesCount++
-      expect(pattern).to.be.oneOf(['h?llo', 'f?eak'])
-      expect(message).to.equal('virk')
-      if (messagesCount === 2) {
-        redis.punsubscribe('h?llo')
-        redis.punsubscribe('f?eak')
-        yield redis.quit()
-        done()
-      }
-    }).done(function () {
-      redis.publish('hello', 'virk')
-      redis.publish('freak', 'virk')
-    })
-  })
-
-  it('should return 0 as count when trying to unsubscribe from unknown channels', function (done) {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-    redis.unsubscribe('bar', function (err, counts) {
-      expect(err).not.to.exist
-      expect(counts).to.equal(0)
-      done()
-    })
-  })
-
-  it('should return 0 as count when trying to punsubscribe from unknown channels', function (done) {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-    redis.punsubscribe('bar', function (err, counts) {
-      expect(err).not.to.exist
-      expect(counts).to.equal(0)
-      done()
-    })
-  })
-
-  it('should be able to pipeline commands', function * () {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-    const results = yield redis.pipeline().set('foo', 'bar').get('foo').exec()
-    expect(results).deep.equal([[null, 'OK'], [null, 'bar']])
-    yield redis.quit()
-  })
-
-  it('should close subscriber connection with normal connection when quit is called', function * (done) {
-    const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-    redis.subscribe('foo', function * () {})
-    const response = yield redis.quit()
-    expect(response).deep.equal(['OK', 'OK'])
-    setTimeout(function () {
-      expect(redis.redis.status).to.equal('end')
-      expect(redis.subscriberConnection.status).to.equal('end')
-      done()
-    })
+      })
+    }).catch(done)
   })
 })
