@@ -123,11 +123,13 @@ test.group('RedisFactory', function (group) {
     .then(() => {
       return redis.unsubscribe('new:user')
     }).then(() => {
-      assert.isUndefined(redis.subscribers['new:user'])
-      assert.deepEqual(redis.subscribers, {})
-      assert.equal(redis.subscriberConnection.listenerCount('message'), 0)
-      assert.equal(redis.subscriberConnection.listenerCount('pmessage'), 0)
-      return redis.quit()
+      setTimeout(() => {
+        assert.isUndefined(redis.subscribers['new:user'])
+        assert.deepEqual(redis.subscribers, {})
+        assert.equal(redis.subscriberConnection.listenerCount('message'), 0)
+        assert.equal(redis.subscriberConnection.listenerCount('pmessage'), 0)
+        return redis.quit()
+      })
     }).then(() => {
       done()
     }).catch(done)
@@ -163,11 +165,13 @@ test.group('RedisFactory', function (group) {
         return redis.punsubscribe('new?')
       })
       .then(() => {
-        assert.isUndefined(redis.psubscribers['new:user'])
-        assert.deepEqual(redis.psubscribers, {})
-        assert.equal(redis.subscriberConnection.listenerCount('message'), 0)
-        assert.equal(redis.subscriberConnection.listenerCount('pmessage'), 0)
-        return redis.quit()
+        setTimeout(() => {
+          assert.isUndefined(redis.psubscribers['new:user'])
+          assert.deepEqual(redis.psubscribers, {})
+          assert.equal(redis.subscriberConnection.listenerCount('message'), 0)
+          assert.equal(redis.subscriberConnection.listenerCount('pmessage'), 0)
+          return redis.quit()
+        })
       }).then(() => {
         done()
       }).catch(done)
@@ -256,16 +260,16 @@ test.group('RedisFactory', function (group) {
 
   test('should close subscriber connection with normal connection when quit is called', (assert, done) => {
     const redis = new RedisFactory({port: 6379, host: 'localhost'})
-    redis.subscribe('foo', async function () {})
     redis
-    .quit()
+    .subscribe('foo', async function () {})
+    .then(() => redis.quit())
     .then((response) => {
       assert.deepEqual(response, ['OK', 'OK'])
       setTimeout(() => {
         assert.equal(redis.connection.status, 'end')
         assert.equal(redis.subscriberConnection.status, 'end')
         done()
-      })
+      }, 200)
     }).catch(done)
   })
 })
