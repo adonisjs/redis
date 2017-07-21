@@ -15,6 +15,7 @@ const debug = require('debug')('adonis:redis')
 const { resolver } = require('@adonisjs/fold')
 
 const proxyHandler = require('./proxyHandler')
+const CE = require('../Exceptions')
 
 class RedisFactory {
   constructor (config, useCluster = false) {
@@ -194,7 +195,7 @@ class RedisFactory {
   subscribe (channel, handler) {
     return new Promise((resolve, reject) => {
       if (typeof (handler) !== 'function' && typeof (handler) !== 'string') {
-        throw new Error('Redis.subscribe needs a callback function or ioc reference string')
+        throw new CE.RuntimeException('Redis.subscribe needs a callback function or ioc reference string')
       }
 
       const { method } = resolver.forDir('listeners').resolveFunc(handler)

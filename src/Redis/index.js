@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
 */
 
-const NE = require('node-exceptions')
+const CE = require('../Exceptions')
 const _ = require('lodash')
 const proxyHandler = require('./proxyHandler')
 
@@ -89,7 +89,7 @@ class Redis {
     const config = this.Config.get(`redis.${connection}`)
 
     if (!config || !_.size(config) === 0) {
-      throw new NE.RuntimeException(`Cannot get redis configuration for ${connection} connection`)
+      throw CE.InvalidArgumentException.missingConfig('redis', connection)
     }
 
     this.connectionPools[connection] = new this.Factory(config, this._isCluster(config))

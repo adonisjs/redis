@@ -16,8 +16,7 @@
     "japa": "^1.0.3",
     "japa-cli": "^1.0.1",
     "nyc": "^11.0.3",
-    "standard": "^10.0.2",
-    "test-console": "^1.0.0"
+    "standard": "^10.0.2"
   },
   "scripts": {
     "lint": "standard",
@@ -40,6 +39,9 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "nyc": {
+    "exclude": ["bin"]
   },
   "directories": {
     "test": "test"

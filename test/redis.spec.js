@@ -18,7 +18,7 @@ test.group('Redis', () => {
   test('should throw exception when connection is not defined in redis config file', (assert) => {
     const connection = new Redis(new Config(), RedisFactory)
     const fn = () => connection._getConfig()
-    assert.throw(fn, /Cannot get redis configuration for undefined connection/)
+    assert.throw(fn, 'Cannot get configuration for undefined key from config/redis.js file')
   })
 
   test('should return the instance of redis factory when using _getConnection method', (assert) => {
@@ -51,7 +51,7 @@ test.group('Redis', () => {
 
     const connection = new Redis(config, RedisFactory)
     const fn = () => connection.connection('foo')
-    assert.throw(fn, /Cannot get redis configuration for foo connection/)
+    assert.throw(fn, 'Cannot get configuration for foo key from config/redis.js file')
   })
 
   test('should proxy redis factory methods', (assert) => {
