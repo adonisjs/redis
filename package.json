@@ -1,50 +1,47 @@
 {
-  "name": "adonis-redis",
-  "version": "1.0.1",
+  "name": "@adonisjs/redis",
+  "version": "2.0.0",
   "description": "AdonisJs official redis provider to make working with redis fun and simple.",
   "dependencies": {
-    "cat-log": "^1.0.2",
-    "co": "^4.6.0",
-    "harmony-reflect": "^1.4.2",
-    "ioredis": "^1.11.1",
-    "lodash": "^4.13.1",
-    "node-exceptions": "^1.0.1"
+    "debug": "^2.6.8",
+    "ioredis": "^3.1.1",
+    "lodash": "^4.17.4",
+    "node-exceptions": "^2.0.2"
   },
   "devDependencies": {
-    "adonis-fold": "^3.0.2",
-    "chai": "^3.4.1",
-    "co-mocha": "^1.1.2",
-    "coveralls": "^2.11.9",
-    "cz-conventional-changelog": "^1.1.6",
-    "istanbul": "^0.4.1",
-    "mocha": "^2.3.4",
-    "mocha-lcov-reporter": "^1.2.0",
-    "shelljs": "^0.7.4",
-    "standard": "^7.1.2",
-    "test-console": "^1.0.0"
+    "@adonisjs/fold": "^4.0.0",
+    "@adonisjs/sink": "^1.0.9",
+    "coveralls": "^2.13.1",
+    "cz-conventional-changelog": "^2.0.0",
+    "japa": "^1.0.3",
+    "japa-cli": "^1.0.1",
+    "nyc": "^11.0.3",
+    "standard": "^10.0.2"
   },
   "scripts": {
-    "test": "node ./bin/test",
-    "lint": "standard src/**/*.js test/*.js providers/*.js",
-    "coverage": "node ./bin/coverage"
+    "lint": "standard",
+    "pretest": "npm run lint",
+    "posttest": "npm run coverage",
+    "test:local": "FORCE_COLOR=true node bin/index.js --local",
+    "test": "nyc npm run test:local",
+    "test:win": "set FORCE_COLOR=true && node bin/index.js --win",
+    "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
   "standard": {
     "globals": [
-      "describe",
-      "it",
-      "context",
-      "before",
-      "after",
-      "beforeEach",
-      "afterEach"
+      "use",
+      "make"
     ]
   },
-  "author": "adonisjs",
+  "author": "virk",
   "license": "MIT",
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "nyc": {
+    "exclude": ["bin"]
   },
   "directories": {
     "test": "test"

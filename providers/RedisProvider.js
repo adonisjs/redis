@@ -9,20 +9,17 @@
  * file that was distributed with this source code.
 */
 
-const ServiceProvider = require('adonis-fold').ServiceProvider
+const { ServiceProvider } = require('@adonisjs/fold')
 
 class RedisProvider extends ServiceProvider {
-
-  * register () {
+  register () {
     this.app.singleton('Adonis/Addons/Redis', function (app) {
       const RedisFactory = app.use('Adonis/Addons/RedisFactory')
       const Config = app.use('Adonis/Src/Config')
-      const Helpers = app.use('Adonis/Src/Helpers')
       const Redis = require('../src/Redis')
-      return new Redis(Config, Helpers, RedisFactory)
+      return new Redis(Config, RedisFactory)
     })
   }
-
 }
 
 module.exports = RedisProvider
