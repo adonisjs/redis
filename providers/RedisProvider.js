@@ -13,12 +13,16 @@ const { ServiceProvider } = require('@adonisjs/fold')
 
 class RedisProvider extends ServiceProvider {
   register () {
-    this.app.singleton('Adonis/Addons/Redis', function (app) {
+    this.app.bind('Adonis/Addons/RedisFactory', () => require('../src/RedisFactory'))
+
+    this.app.singleton('Adonis/Addons/Redis', (app) => {
       const RedisFactory = app.use('Adonis/Addons/RedisFactory')
       const Config = app.use('Adonis/Src/Config')
       const Redis = require('../src/Redis')
       return new Redis(Config, RedisFactory)
     })
+
+    this.app.alias('Adonis/Addons/Redis', 'Redis')
   }
 }
 
