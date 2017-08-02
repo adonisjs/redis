@@ -4,18 +4,18 @@
   "description": "AdonisJs official redis provider to make working with redis fun and simple.",
   "dependencies": {
     "debug": "^2.6.8",
-    "ioredis": "^3.1.1",
+    "ioredis": "^3.1.2",
     "lodash": "^4.17.4",
     "node-exceptions": "^2.0.2"
   },
   "devDependencies": {
-    "@adonisjs/fold": "^4.0.0",
-    "@adonisjs/sink": "^1.0.9",
+    "@adonisjs/fold": "^4.0.1",
+    "@adonisjs/sink": "^1.0.11",
     "coveralls": "^2.13.1",
     "cz-conventional-changelog": "^2.0.0",
     "japa": "^1.0.3",
     "japa-cli": "^1.0.1",
-    "nyc": "^11.0.3",
+    "nyc": "^11.1.0",
     "standard": "^10.0.2"
   },
   "scripts": {
@@ -41,7 +41,9 @@
     }
   },
   "nyc": {
-    "exclude": ["bin"]
+    "exclude": [
+      "bin"
+    ]
   },
   "directories": {
     "test": "test"
