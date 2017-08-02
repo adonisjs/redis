@@ -75,7 +75,7 @@ test.group('RedisFactory', function (group) {
     try {
       await redis.subscribe('news', function () { })
     } catch ({ message }) {
-      assert.equal(message, 'Cannot subscribe to news channel twice')
+      assert.equal(message, 'E_RUNTIME_ERROR: Cannot subscribe to news channel twice')
     }
     await redis.quit()
   })
@@ -184,7 +184,7 @@ test.group('RedisFactory', function (group) {
     try {
       await redis.subscribe('bar', {})
     } catch ({ message }) {
-      assert.equal(message, 'Redis.subscribe needs a callback function or ioc reference string')
+      assert.equal(message, 'E_INVALID_PARAMETER: Redis.subscribe needs a callback function or ioc reference string instead received object')
     }
   })
 
@@ -195,7 +195,7 @@ test.group('RedisFactory', function (group) {
     try {
       await redis.psubscribe('new?', {})
     } catch ({ message }) {
-      assert.equal(message, 'Redis.psubscribe needs a callback function or ioc reference string')
+      assert.equal(message, 'E_INVALID_PARAMETER: Redis.psubscribe needs a callback function or ioc reference string instead received object')
     }
   })
 

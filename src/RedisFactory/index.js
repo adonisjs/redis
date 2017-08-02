@@ -13,9 +13,9 @@ const _ = require('lodash')
 const IoRedis = require('ioredis')
 const debug = require('debug')('adonis:redis')
 const { resolver } = require('@adonisjs/fold')
+const GE = require('@adonisjs/generic-exceptions')
 
 const proxyHandler = require('./proxyHandler')
-const CE = require('../Exceptions')
 
 class RedisFactory {
   constructor (config, useCluster = false) {
@@ -195,7 +195,9 @@ class RedisFactory {
   subscribe (channel, handler) {
     return new Promise((resolve, reject) => {
       if (typeof (handler) !== 'function' && typeof (handler) !== 'string') {
-        throw new CE.RuntimeException('Redis.subscribe needs a callback function or ioc reference string')
+        throw GE
+          .InvalidArgumentException
+          .invalidParameter('Redis.subscribe needs a callback function or ioc reference string', handler)
       }
 
       const { method } = resolver.forDir('listeners').resolveFunc(handler)
@@ -205,7 +207,7 @@ class RedisFactory {
        * Cannot have multiple subscribers on a single channel
        */
       if (this.subscribers[channel]) {
-        reject(new Error(`Cannot subscribe to ${channel} channel twice`))
+        reject(GE.RuntimeException.invoke(`Cannot subscribe to ${channel} channel twice`))
         return
       }
 
@@ -238,7 +240,9 @@ class RedisFactory {
   psubscribe (pattern, handler) {
     return new Promise((resolve, reject) => {
       if (typeof (handler) !== 'function' && typeof (handler) !== 'string') {
-        throw new Error('Redis.psubscribe needs a callback function or ioc reference string')
+        throw GE
+          .InvalidArgumentException
+          .invalidParameter('Redis.psubscribe needs a callback function or ioc reference string', handler)
       }
 
       const { method } = resolver.forDir('listeners').resolveFunc(handler)

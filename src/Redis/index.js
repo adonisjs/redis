@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
 */
 
-const CE = require('../Exceptions')
+const GE = require('@adonisjs/generic-exceptions')
 const _ = require('lodash')
 const proxyHandler = require('./proxyHandler')
 
@@ -89,7 +89,7 @@ class Redis {
     const config = this.Config.get(`redis.${connection}`)
 
     if (!config || !_.size(config) === 0) {
-      throw CE.InvalidArgumentException.missingConfig('redis', connection)
+      throw GE.RuntimeException.missingConfig(connection || 'configuration for redis', 'config/redis.js')
     }
 
     this.connectionPools[connection] = new this.Factory(config, this._isCluster(config))
