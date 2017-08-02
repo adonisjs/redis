@@ -1,3 +1,14 @@
+<a name="2.0.1"></a>
+## [2.0.1](https://github.com/adonisjs/adonis-redis/compare/v2.0.0...v2.0.1) (2017-08-02)
+
+
+### Features
+
+* **exceptions:** use generic-exceptions package ([311e6b7](https://github.com/adonisjs/adonis-redis/commit/311e6b7))
+* **instructions:** implement instructions ([fa31bbc](https://github.com/adonisjs/adonis-redis/commit/fa31bbc))
+
+
+
 <a name="2.0.0"></a>
 # 2.0.0 (2017-07-22)
 
