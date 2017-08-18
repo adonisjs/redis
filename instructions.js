@@ -11,14 +11,21 @@
 
 const path = require('path')
 
-module.exports = async function (cli) {
+async function createConfigFile (cli) {
   try {
-    await cli.copy(
-      path.join(__dirname, './examples/redis.js'),
-      path.join(cli.helpers.configPath(), 'redis.js')
-    )
+    await cli.copy(path.join(__dirname, 'examples/redis.js'), path.join(cli.helpers.configPath(), 'redis.js'))
     cli.command.completed('create', 'config/redis.js')
-  } catch (error) {
-    // ignore error when redis.js already exists
-  }
+  } catch (e) {}
+}
+
+async function createListenerFile (cli) {
+  try {
+    await cli.copy(path.join(__dirname, 'examples/listener.js'), path.join(cli.helpers.appRoot(), 'start/redis.js'))
+    cli.command.completed('create', 'start/redis.js')
+  } catch (e) {}
+}
+
+module.exports = async function (cli) {
+  createConfigFile(cli)
+  createListenerFile(cli)
 }

@@ -16,7 +16,7 @@ await Redis.get()
 ```
 
 ## Pub Sub
-In order to make use of pub/sub you can create `start/redis.js` file and subscribe to channels.
+In order to make use of pub/sub you can subscribe to channels inside `start/redis.js` file.
 
 ```js
 const Redis = use('Redis')
@@ -28,7 +28,7 @@ Redis.subcribe('news', 'News.onMessage')
 ```
 
 ## Config
-The config file `start/redis.js` contains all the configuration. Feel free to tweak it as per your needs.
+The config file `config/redis.js` contains all the configuration. Feel free to tweak it as per your needs.
 
 ## Environment variables
 The configuration file makes use of **Environment variables**, make sure to define them for development and in production too
