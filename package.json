@@ -3,7 +3,7 @@
   "version": "2.0.3",
   "description": "AdonisJs official redis provider to make working with redis fun and simple.",
   "dependencies": {
-    "@adonisjs/generic-exceptions": "^1.0.0",
+    "@adonisjs/generic-exceptions": "^2.0.0",
     "debug": "^3.1.0",
     "ioredis": "^3.2.1",
     "lodash": "^4.17.4"
