@@ -1,6 +1,6 @@
 {
   "name": "@adonisjs/redis",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "AdonisJs official redis provider to make working with redis fun and simple.",
   "dependencies": {
     "@adonisjs/generic-exceptions": "^2.0.0",
@@ -16,6 +16,7 @@
     "japa": "^1.0.6",
     "japa-cli": "^1.0.1",
     "nyc": "^11.4.1",
+    "semver": "^5.5.0",
     "standard": "^10.0.3"
   },
   "scripts": {
