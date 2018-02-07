@@ -1,3 +1,8 @@
+<a name="2.0.4"></a>
+## [2.0.4](https://github.com/adonisjs/adonis-redis/compare/v2.0.3...v2.0.4) (2018-02-07)
+
+
+
 <a name="2.0.3"></a>
 ## [2.0.3](https://github.com/adonisjs/adonis-redis/compare/v2.0.2...v2.0.3) (2017-10-29)
 

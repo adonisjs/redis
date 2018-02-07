@@ -1,21 +1,22 @@
 {
   "name": "@adonisjs/redis",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "AdonisJs official redis provider to make working with redis fun and simple.",
   "dependencies": {
-    "@adonisjs/generic-exceptions": "^1.0.0",
+    "@adonisjs/generic-exceptions": "^2.0.0",
     "debug": "^3.1.0",
-    "ioredis": "^3.2.1",
-    "lodash": "^4.17.4"
+    "ioredis": "^3.2.2",
+    "lodash": "^4.17.5"
   },
   "devDependencies": {
     "@adonisjs/fold": "^4.0.5",
     "@adonisjs/sink": "^1.0.13",
     "coveralls": "^3.0.0",
     "cz-conventional-changelog": "^2.1.0",
-    "japa": "^1.0.5",
+    "japa": "^1.0.6",
     "japa-cli": "^1.0.1",
-    "nyc": "^11.2.1",
+    "nyc": "^11.4.1",
+    "semver": "^5.5.0",
     "standard": "^10.0.3"
   },
   "scripts": {
