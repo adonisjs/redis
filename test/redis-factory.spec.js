@@ -186,6 +186,8 @@ test.group('RedisFactory', function (group) {
     } catch ({ message }) {
       assert.match(message, /E_INVALID_PARAMETER: Redis.subscribe needs a callback function or ioc reference string instead received object/)
     }
+
+    redis.quit()
   })
 
   test('should throw error when pattern subscriber handler is not defined', async (assert) => {
@@ -197,6 +199,8 @@ test.group('RedisFactory', function (group) {
     } catch ({ message }) {
       assert.match(message, /E_INVALID_PARAMETER: Redis.psubscribe needs a callback function or ioc reference string instead received object/)
     }
+
+    redis.quit()
   })
 
   test('should not listen to messages on different channels', (assert, done) => {
@@ -210,23 +214,6 @@ test.group('RedisFactory', function (group) {
       redis.publish('bar', 'baz')
     })
   })
-
-  // test('should be able to subscribe to multiple channels', (assert, done) => {
-  //   const redis = new RedisFactory({port: 6379, host: 'localhost'}, Helpers)
-  //   let x = 0
-  //   redis.subscribe('foo', 'bar', async (message, channel) => {
-  //     x++
-  //     expect(channel).to.be.oneOf(['foo', 'bar'])
-  //     if (x === 2) {
-  //       redis.unsubscribe('foo', 'bar', function () {})
-  //       await redis.quit()
-  //       done()
-  //     }
-  //   }).done(function () {
-  //     redis.publish('foo', 'baz')
-  //     redis.publish('bar', 'baz')
-  //   })
-  // })
 
   test('should be able to pipe commands', async (assert) => {
     const redis = new RedisFactory({port: 6379, host: 'localhost'})
