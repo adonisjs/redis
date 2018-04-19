@@ -1,3 +1,13 @@
+<a name="2.0.6"></a>
+## [2.0.6](https://github.com/adonisjs/adonis-redis/compare/v2.0.5...v2.0.6) (2018-04-19)
+
+
+### Bug Fixes
+
+* **redis:** improve connections pool flow ([9a891c5](https://github.com/adonisjs/adonis-redis/commit/9a891c5))
+
+
+
 <a name="2.0.5"></a>
 ## [2.0.5](https://github.com/adonisjs/adonis-redis/compare/v2.0.4...v2.0.5) (2018-04-19)
 
