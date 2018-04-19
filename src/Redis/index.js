@@ -75,18 +75,8 @@ class Redis {
    */
   connection (connection = '') {
     connection = connection || this.Config.get('redis.connection')
-
-    /**
-     * Return the existing connection if exists
-     */
-    if (this.connectionPools[connection]) {
-      return this.connectionPools[connection]
-    }
-
-    /**
-     * Get config
-     */
     const config = this.Config.get(`redis.${connection}`)
+
     return this.namedConnection(connection, config)
   }
 
@@ -102,6 +92,10 @@ class Redis {
    * @return {RedisFactory}
    */
   namedConnection (name, config) {
+    if (this.connectionPools[name]) {
+      return this.connectionPools[name]
+    }
+
     if (!config || !_.size(config) === 0) {
       throw GE.RuntimeException.missingConfig(name || 'configuration for redis', 'config/redis.js')
     }
