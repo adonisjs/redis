@@ -87,13 +87,27 @@ class Redis {
      * Get config
      */
     const config = this.Config.get(`redis.${connection}`)
+    return this.namedConnection(connection, config)
+  }
 
+  /**
+   * Creates a connection using raw config and adds it to the
+   * connection pool.
+   *
+   * @method namedConnection
+   *
+   * @param  {String}        name
+   * @param  {Object}        config
+   *
+   * @return {RedisFactory}
+   */
+  namedConnection (name, config) {
     if (!config || !_.size(config) === 0) {
-      throw GE.RuntimeException.missingConfig(connection || 'configuration for redis', 'config/redis.js')
+      throw GE.RuntimeException.missingConfig(name || 'configuration for redis', 'config/redis.js')
     }
 
-    this.connectionPools[connection] = new this.Factory(config, this._isCluster(config))
-    return this.connectionPools[connection]
+    this.connectionPools[name] = new this.Factory(config, this._isCluster(config))
+    return this.connectionPools[name]
   }
 
   /**
