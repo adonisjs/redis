@@ -352,9 +352,9 @@ class RedisFactory {
    */
   quit () {
     return Promise.all(_([this.connection, this.subscriberConnection])
-    .filter((connection) => connection && connection.status !== 'end')
-    .map((connection) => this._closeConnection(connection))
-    .value())
+      .filter((connection) => connection && connection.status !== 'end')
+      .map((connection) => this._closeConnection(connection))
+      .value())
   }
 }
 
