@@ -26,5 +26,10 @@ proxyHandler.get = function (target, name) {
     return target[name]
   }
 
+  const connection = target.connection()
+  if (typeof (connection[name]) === 'function') {
+    return connection[name].bind(connection)
+  }
+
   return target.connection()[name]
 }

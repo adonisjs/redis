@@ -1,3 +1,14 @@
+<a name="2.0.7"></a>
+## [2.0.7](https://github.com/adonisjs/adonis-redis/compare/v2.0.6...v2.0.7) (2018-06-02)
+
+
+### Bug Fixes
+
+* **redisfactory:** bind connection when proxy receives a function call ([10de858](https://github.com/adonisjs/adonis-redis/commit/10de858))
+* **tests:** improve tests connection/disconnection flow ([9ab980f](https://github.com/adonisjs/adonis-redis/commit/9ab980f))
+
+
+
 <a name="2.0.6"></a>
 ## [2.0.6](https://github.com/adonisjs/adonis-redis/compare/v2.0.5...v2.0.6) (2018-04-19)
 

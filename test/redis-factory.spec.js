@@ -24,10 +24,8 @@ test.group('RedisFactory', function (group) {
   test('should setup connection with redis', (assert, done) => {
     const redis = new RedisFactory({port: 6379, host: 'localhost'})
     redis.once('connect', function () {
-      redis.quit().then((response) => {
-        assert.deepEqual(response, ['OK'])
-        done()
-      }).catch(done)
+      redis.quit()
+      done()
     })
   })
 
@@ -47,10 +45,12 @@ test.group('RedisFactory', function (group) {
     })
   })
 
-  test('should be able to quit redis connection', async (assert) => {
+  test('should be able to quit redis connection', (assert, done) => {
     const redis = new RedisFactory({port: 6379, host: 'localhost'})
-    const response = await redis.quit()
-    assert.deepEqual(response, ['OK'])
+    redis.once('end', () => {
+      done()
+    })
+    redis.quit()
   })
 
   test('should be able to set/get buffer', async (assert) => {
@@ -159,22 +159,25 @@ test.group('RedisFactory', function (group) {
 
   test('unsubscribe from a pattern', (assert, done) => {
     const redis = new RedisFactory({port: 6379, host: 'localhost'})
-    redis
-      .psubscribe('new?', function () {})
-      .then(() => {
-        return redis.punsubscribe('new?')
-      })
-      .then(() => {
-        setTimeout(() => {
-          assert.isUndefined(redis.psubscribers['new:user'])
-          assert.deepEqual(redis.psubscribers, {})
-          assert.equal(redis.subscriberConnection.listenerCount('message'), 0)
-          assert.equal(redis.subscriberConnection.listenerCount('pmessage'), 0)
-          return redis.quit()
+
+    redis.once('connect', function () {
+      redis
+        .psubscribe('new?', function () {})
+        .then(() => {
+          return redis.punsubscribe('new?')
         })
-      }).then(() => {
-        done()
-      }).catch(done)
+        .then(() => {
+          setTimeout(() => {
+            assert.isUndefined(redis.psubscribers['new:user'])
+            assert.deepEqual(redis.psubscribers, {})
+            assert.equal(redis.subscriberConnection.listenerCount('message'), 0)
+            assert.equal(redis.subscriberConnection.listenerCount('pmessage'), 0)
+            return redis.quit()
+          })
+        }).then(() => {
+          done()
+        }).catch(done)
+    })
   })
 
   test('should throw error when subscriber handler is not defined', async (assert) => {
@@ -247,6 +250,7 @@ test.group('RedisFactory', function (group) {
 
   test('should close subscriber connection with normal connection when quit is called', (assert, done) => {
     const redis = new RedisFactory({port: 6379, host: 'localhost'})
+
     redis
       .subscribe('foo', async function () {})
       .then(() => redis.quit())
