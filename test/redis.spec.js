@@ -21,27 +21,21 @@ test.group('Redis', () => {
     assert.throw(fn, 'E_MISSING_CONFIG: configuration for redis is not defined inside config/redis.js file')
   })
 
-  test('should return the instance of redis factory when using _getConnection method', async (assert) => {
+  test('should return the instance of redis factory when using connection method', (assert, done) => {
     const config = new Config()
     config.set('redis', {
       connection: 'primary',
       primary: { host: '127.0.0.1', port: 6379 }
     })
+
     const connection = new Redis(config, RedisFactory)
-    assert.equal(connection.connection() instanceof RedisFactory, true)
-    await connection.quit('primary')
-  })
-
-  test('should return the instance of redis factory when using connection method', async (assert) => {
-    const config = new Config()
-    config.set('redis', {
-      connection: 'primary',
-      primary: { host: '127.0.0.1', port: 6379 }
+    connection.once('end', done)
+    connection.once('connect', () => {
+      assert.equal(connection.connection() instanceof RedisFactory, true)
+      connection.disconnect()
     })
 
-    const redis = new Redis(config, RedisFactory)
-    assert.equal(redis.connection() instanceof RedisFactory, true)
-    await redis.quit('primary')
+    connection.connection()
   })
 
   test('should throw error when unable to find config for a given connection', async (assert) => {
@@ -54,11 +48,9 @@ test.group('Redis', () => {
     const connection = new Redis(config, RedisFactory)
     const fn = () => connection.connection('foo')
     assert.throw(fn, 'E_MISSING_CONFIG: foo is not defined inside config/redis.js file')
-
-    await connection.quit('primary')
   })
 
-  test('should proxy redis factory methods', async (assert) => {
+  test('should proxy redis factory methods', (assert, done) => {
     const config = new Config()
     config.set('redis', {
       connection: 'primary',
@@ -66,13 +58,16 @@ test.group('Redis', () => {
     })
 
     const redis = new Redis(config, RedisFactory)
-    const get = redis.get
-    assert.isFunction(get, 'function')
+    redis.on('end', done)
 
-    await redis.quit('primary')
+    redis.once('connect', () => {
+      const get = redis.get
+      assert.isFunction(get, 'function')
+      redis.disconnect()
+    })
   })
 
-  test('should be able to connect to redis to set and get data', async (assert) => {
+  test('should be able to connect to redis to set and get data', (assert, done) => {
     const config = new Config()
     config.set('redis', {
       connection: 'primary',
@@ -80,14 +75,21 @@ test.group('Redis', () => {
     })
 
     const redis = new Redis(config, RedisFactory)
-    redis.set('foo', 'bar')
-    const foo = await redis.get('foo')
-    assert.equal(foo, 'bar')
+    redis.once('end', done)
 
-    await redis.quit('primary')
+    redis.once('connect', () => {
+      redis.set('foo', 'bar')
+      redis
+        .get('foo')
+        .then((foo) => {
+          assert.equal(foo, 'bar')
+          redis.disconnect()
+        })
+        .catch(done)
+    })
   })
 
-  test('should reuse the connection pool when trying to access redis for same connection', async (assert) => {
+  test('should reuse the connection pool when trying to access redis for same connection', (assert, done) => {
     const config = new Config()
     config.set('redis', {
       connection: 'primary',
@@ -95,12 +97,21 @@ test.group('Redis', () => {
     })
 
     const redis = new Redis(config, RedisFactory)
-    redis.set('foo', 'bar')
-    await redis.get('foo')
-    assert.equal(Object.keys(redis.getConnections()).length, 1)
-    assert.property(redis.getConnections(), 'primary')
+    redis.once('end', done)
 
-    await redis.quit('primary')
+    redis.once('connect', () => {
+      redis
+        .set('foo', 'bar')
+        .then(() => {
+          redis.get('foo')
+        })
+        .then(() => {
+          assert.equal(Object.keys(redis.getConnections()).length, 1)
+          assert.property(redis.getConnections(), 'primary')
+          redis.disconnect()
+        })
+        .catch(done)
+    })
   })
 
   test('should close a given connection using quit method', async (assert) => {
@@ -111,7 +122,7 @@ test.group('Redis', () => {
     })
 
     const redis = new Redis(config, RedisFactory)
-    redis.set('foo', 'bar')
+    await redis.set('foo', 'bar')
     const response = await redis.quit('primary')
     assert.deepEqual(response, [['OK']])
     assert.equal(Object.keys(redis.getConnections()).length, 0)
@@ -137,7 +148,7 @@ test.group('Redis', () => {
     })
   })
 
-  test('should be able to create a new redis connection using connection method', async (assert) => {
+  test('should be able to create a new redis connection using connection method', (assert, done) => {
     const config = new Config()
     config.set('redis', {
       connection: 'primary',
@@ -146,17 +157,26 @@ test.group('Redis', () => {
     })
 
     const redis = new Redis(config, RedisFactory)
-    redis.connection('secondary').set('foo', 'bar')
-    const foo = await redis.connection('secondary').get('foo')
-    assert.equal(foo, 'bar')
-    assert.equal(Object.keys(redis.getConnections()).length, 1)
-    assert.property(redis.getConnections(), 'secondary')
+    redis.connection('secondary').on('end', done)
 
-    await redis.quit('primary')
-    await redis.quit('secondary')
+    redis.connection('secondary').on('connect', () => {
+      redis
+        .connection('secondary')
+        .set('foo', 'bar')
+        .then(() => {
+          return redis.connection('secondary').get('foo')
+        })
+        .then((foo) => {
+          assert.equal(foo, 'bar')
+          assert.equal(Object.keys(redis.getConnections()).length, 1)
+          assert.property(redis.getConnections(), 'secondary')
+          redis.connection('secondary').disconnect()
+        })
+        .catch(done)
+    })
   })
 
-  test('return connection and add it to the pool', async (assert) => {
+  test('return connection and add it to the pool', (assert, done) => {
     const config = new Config()
     config.set('redis', {
       connection: 'primary',
@@ -168,11 +188,25 @@ test.group('Redis', () => {
       host: '127.0.0.1', port: 6379
     }
 
-    await redis.namedConnection('secondary', rawConfig).set('foo', 'bar')
-    const foo = await redis.namedConnection('secondary', rawConfig).get('foo')
-    assert.equal(foo, 'bar')
+    redis.namedConnection('secondary', rawConfig)
+    redis.namedConnection('secondary', rawConfig).on('end', done)
 
-    const connectedClients = await redis.client('list')
-    assert.equal(connectedClients.split('\n').filter((line) => line.trim()).length, 2)
+    redis.namedConnection('secondary', rawConfig).on('ready', () => {
+      redis
+        .connection('secondary')
+        .set('foo', 'bar')
+        .then(() => {
+          return redis.connection('secondary', rawConfig).get('foo')
+        })
+        .then((foo) => {
+          assert.equal(foo, 'bar')
+          return redis.client('list')
+        })
+        .then((connectedClients) => {
+          assert.equal(connectedClients.split('\n').filter((line) => line.trim()).length, 2)
+          redis.connection('secondary').disconnect()
+        })
+        .catch(done)
+    })
   })
 })

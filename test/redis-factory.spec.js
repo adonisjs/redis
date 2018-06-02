@@ -15,8 +15,6 @@ const { setupResolver } = require('@adonisjs/sink')
 
 const RedisFactory = require('../src/RedisFactory')
 
-test.grep('return connection and add it to the pool')
-
 test.group('RedisFactory', function (group) {
   group.before(() => {
     ioc.restore()
@@ -26,10 +24,8 @@ test.group('RedisFactory', function (group) {
   test('should setup connection with redis', (assert, done) => {
     const redis = new RedisFactory({port: 6379, host: 'localhost'})
     redis.once('connect', function () {
-      redis.quit().then((response) => {
-        assert.deepEqual(response, ['OK'])
-        done()
-      }).catch(done)
+      redis.quit()
+      done()
     })
   })
 
@@ -49,10 +45,12 @@ test.group('RedisFactory', function (group) {
     })
   })
 
-  test('should be able to quit redis connection', async (assert) => {
+  test('should be able to quit redis connection', (assert, done) => {
     const redis = new RedisFactory({port: 6379, host: 'localhost'})
-    const response = await redis.quit()
-    assert.deepEqual(response, ['OK'])
+    redis.once('end', () => {
+      done()
+    })
+    redis.quit()
   })
 
   test('should be able to set/get buffer', async (assert) => {
