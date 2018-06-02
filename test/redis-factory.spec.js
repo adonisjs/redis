@@ -15,6 +15,8 @@ const { setupResolver } = require('@adonisjs/sink')
 
 const RedisFactory = require('../src/RedisFactory')
 
+test.grep('return connection and add it to the pool')
+
 test.group('RedisFactory', function (group) {
   group.before(() => {
     ioc.restore()
