@@ -163,7 +163,7 @@ test.group('Redis', () => {
       host: '127.0.0.1', port: 6379
     }
 
-    redis.namedConnection('secondary', rawConfig).set('foo', 'bar')
+    await redis.namedConnection('secondary', rawConfig).set('foo', 'bar')
     const foo = await redis.namedConnection('secondary', rawConfig).get('foo')
     assert.equal(foo, 'bar')
 
