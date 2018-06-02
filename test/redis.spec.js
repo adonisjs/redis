@@ -126,8 +126,13 @@ test.group('Redis', () => {
     })
 
     const redis = new Redis(config, RedisFactory)
+
     redis.on('error', (error) => {
+      redis.disconnect()
       assert.equal(error.code, 'ECONNREFUSED')
+    })
+
+    redis.on('end', () => {
       done()
     })
   })

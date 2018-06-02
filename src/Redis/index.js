@@ -96,8 +96,6 @@ class Redis {
       return this.connectionPools[name]
     }
 
-    console.log('creating new config')
-
     if (!config || !_.size(config) === 0) {
       throw GE.RuntimeException.missingConfig(name || 'configuration for redis', 'config/redis.js')
     }

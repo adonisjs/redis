@@ -35,6 +35,10 @@ proxyHandler.get = function (target, name) {
     return target[name]
   }
 
+  if (typeof (target.connection[name]) === 'function') {
+    return target.connection[name].bind(target.connection)
+  }
+
   /**
    * Fallback to redis connection
    */
