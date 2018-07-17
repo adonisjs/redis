@@ -9,13 +9,13 @@
     "lodash": "^4.17.10"
   },
   "devDependencies": {
-    "@adonisjs/fold": "^4.0.8",
+    "@adonisjs/fold": "^4.0.9",
     "@adonisjs/sink": "^1.0.16",
-    "coveralls": "^3.0.1",
+    "coveralls": "^3.0.2",
     "cz-conventional-changelog": "^2.1.0",
     "japa": "^1.0.6",
     "japa-cli": "^1.0.1",
-    "nyc": "^12.0.1",
+    "nyc": "^12.0.2",
     "semver": "^5.5.0",
     "standard": "^11.0.1"
   },
