@@ -76,5 +76,11 @@
   "np": {
     "contents": ".",
     "anyBranch": false
+  },
+  "dependencies": {
+    "@poppinss/utils": "^1.0.3",
+    "@types/ioredis": "^4.0.12",
+    "emittery": "^0.4.1",
+    "ioredis": "^4.10.0"
   }
 }
