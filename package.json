@@ -1,66 +1,18 @@
 {
   "name": "@adonisjs/redis",
   "version": "2.0.8",
-  "description": "AdonisJs official redis provider to make working with redis fun and simple.",
-  "files": [
-    "examples",
-    "providers",
-    "src",
-    "instructions.js",
-    "instructions.md"
-  ],
-  "dependencies": {
-    "@adonisjs/generic-exceptions": "^2.0.1",
-    "debug": "^3.1.0",
-    "ioredis": "^3.2.2",
-    "lodash": "^4.17.10"
-  },
-  "devDependencies": {
-    "@adonisjs/fold": "^4.0.9",
-    "@adonisjs/mrm-preset": "^1.0.9",
-    "@adonisjs/sink": "^1.0.16",
-    "commitizen": "^2.10.1",
-    "coveralls": "^3.0.2",
-    "cz-conventional-changelog": "^2.1.0",
-    "japa": "^1.0.6",
-    "japa-cli": "^1.0.1",
-    "mrm": "^1.2.1",
-    "nyc": "^12.0.2",
-    "pkg-ok": "^2.2.0",
-    "semver": "^5.5.0",
-    "standard": "^11.0.1"
-  },
+  "description": "AdonisJs addon for Redis",
   "scripts": {
     "mrm": "mrm --preset=@adonisjs/mrm-preset",
     "pretest": "npm run lint",
-    "test:local": "FORCE_COLOR=true node bin/index.js --local",
-    "test": "nyc japa",
-    "test:win": "node ./node_modules/japa-cli/index.js",
-    "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "test": "node japaFile.js",
+    "lint": "tslint --project tsconfig.json",
+    "clean": "del build",
+    "compile": "npm run lint && npm run clean && tsc",
+    "build": "npm run compile",
     "commit": "git-cz",
-    "lint": "standard"
-  },
-  "standard": {
-    "globals": [
-      "use",
-      "make"
-    ]
-  },
-  "author": "virk",
-  "license": "MIT",
-  "config": {
-    "commitizen": {
-      "path": "cz-conventional-changelog"
-    }
-  },
-  "nyc": {
-    "exclude": [
-      "test",
-      "japaFile.js"
-    ]
-  },
-  "directories": {
-    "test": "test"
+    "release": "np",
+    "version": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -68,13 +20,61 @@
   },
   "keywords": [
     "redis",
-    "adonisjs",
-    "adonis",
-    "adonis-redis",
     "ioredis"
   ],
+  "author": "virk,adonisjs",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/adonisjs/adonis-redis/issues"
   },
-  "homepage": "https://github.com/adonisjs/adonis-redis#readme"
+  "homepage": "https://github.com/adonisjs/adonis-redis#readme",
+  "publishConfig": {
+    "access": "public",
+    "tag": "next"
+  },
+  "devDependencies": {
+    "@adonisjs/mrm-preset": "^2.0.3",
+    "@types/node": "^12.0.10",
+    "commitizen": "^3.1.1",
+    "cz-conventional-changelog": "^2.1.0",
+    "del-cli": "^2.0.0",
+    "doctoc": "^1.4.0",
+    "husky": "^2.5.0",
+    "japa": "^2.0.10",
+    "mrm": "^1.2.2",
+    "np": "^5.0.3",
+    "ts-node": "^8.3.0",
+    "tslint": "^5.18.0",
+    "tslint-eslint-rules": "^5.4.0",
+    "typescript": "^3.5.2"
+  },
+  "nyc": {
+    "exclude": [
+      "test"
+    ],
+    "extension": [
+      ".ts"
+    ]
+  },
+  "main": "build/index.js",
+  "files": [
+    "build/src",
+    "build/index.d.ts",
+    "build/index.js"
+  ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "doctoc README.md --title='## Table of contents' && git add README.md",
+      "commit-msg": "node ./node_modules/@adonisjs/mrm-preset/validateCommit/conventional/validate.js"
+    }
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  },
+  "np": {
+    "contents": ".",
+    "anyBranch": false
+  }
 }
