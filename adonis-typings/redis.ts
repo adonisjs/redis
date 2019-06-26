@@ -11,6 +11,19 @@ declare module '@ioc:Adonis/Addons/Redis' {
   import { Redis, RedisOptions, ClusterOptions, Cluster, NodeRole } from 'ioredis'
 
   /**
+   * List of connections from the config interface by excluding the
+   * connection property.
+   */
+  type ConnectionsList = Exclude<keyof RedisConfigContract, 'connection'>
+
+  /**
+   * Returns factory for a given connection by inspecting it's config.
+   */
+  type GetFactory<T extends ConnectionsList> = RedisConfigContract[T] extends ClusterConfigContract
+    ? RedisClusterFactoryContract
+    : RedisFactoryContract
+
+  /**
    * Pubsub subscriber
    */
   export type PubSubChannelHandler<T extends any = any> = ((data: T) => Promise<void> | void)
@@ -30,7 +43,6 @@ declare module '@ioc:Adonis/Addons/Redis' {
    * Shape of cluster config
    */
   export type ClusterConfigContract = {
-    cluster: boolean,
     clusters: { host: string, port: number }[],
     clusterOptions?: ClusterOptions,
   }
@@ -53,7 +65,8 @@ declare module '@ioc:Adonis/Addons/Redis' {
     'subscribe' |
     'unsubscribe' |
     'psubscribe' |
-    'punsubscribe'
+    'punsubscribe' |
+    'quit'
   >
 
   /**
@@ -61,11 +74,14 @@ declare module '@ioc:Adonis/Addons/Redis' {
    */
   export interface RedisFactoryContract extends RedisCommandsContract, RedisPubSubContract {
     status: string
-    connection: Redis
-    subscriberConnection?: Redis
+    connectionName: string,
+    subscriberStatus?: string
+    ioConnection: Redis
+    ioSubscriberConnection?: Redis
     connect (callback?: () => void): Promise<any>
     disconnect (): void
     duplicate (): Redis
+    quit (): Promise<void>
   }
 
   /**
@@ -73,11 +89,49 @@ declare module '@ioc:Adonis/Addons/Redis' {
    */
   export interface RedisClusterFactoryContract extends RedisCommandsContract, RedisPubSubContract {
     status: string
-    connection: Cluster
-    subscriberConnection?: Cluster
+    connectionName: string,
+    subscriberStatus?: string
+    ioConnection: Cluster
+    ioSubscriberConnection?: Cluster
     connect (callback?: () => void): Promise<any>
     nodes (role?: NodeRole): Redis[]
     disconnect (): void
     duplicate (): Cluster
+    quit (): Promise<void>
   }
+
+  /**
+   * The shape of redis config accepted by the Redis module
+   */
+  export interface RedisConfigContract {
+    connection: ConnectionsList,
+  }
+
+  /**
+   * Redis main contract
+   */
+  export interface RedisContract extends Omit<
+    GetFactory<RedisConfigContract['connection']>,
+    'status' |
+    'connectionName' |
+    'subscriberStatus' |
+    'ioConnection' |
+    'ioSubscriberConnection' |
+    'duplicate' |
+    'disconnect' |
+    'quit'
+  > {
+    connection<Connection extends ConnectionsList> (name: Connection): GetFactory<Connection>
+    connection (name: string): RedisFactoryContract | RedisClusterFactoryContract
+    connection (): GetFactory<RedisConfigContract['connection']>
+
+    quit<Connection extends ConnectionsList> (name: Connection): Promise<void>
+    quit (name?: string): Promise<void>
+
+    disconnect<Connection extends ConnectionsList> (name: Connection): Promise<void>
+    disconnect (name?: string): Promise<void>
+  }
+
+  const Redis: RedisContract
+  export default Redis
 }

@@ -7,6 +7,8 @@
 * file that was distributed with this source code.
 */
 
+/// <reference path="../../adonis-typings/redis.ts" />
+
 import * as Redis from 'ioredis'
 import { ConnectionConfigContract } from '@ioc:Adonis/Addons/Redis'
 
@@ -20,9 +22,9 @@ import { AbstractFactory } from '../AbstractFactory'
  * by itself.
  */
 export class RedisFactory extends AbstractFactory<Redis.Redis> {
-  constructor (private _config: ConnectionConfigContract) {
-    super()
-    this.connection = new Redis(this._config)
+  constructor (connectionName: string, private _config: ConnectionConfigContract) {
+    super(connectionName)
+    this.ioConnection = new Redis(this._config)
     this.$proxyConnectionEvents()
   }
 
@@ -31,7 +33,7 @@ export class RedisFactory extends AbstractFactory<Redis.Redis> {
    * invoke this method when first subscription is created.
    */
   protected $makeSubscriberConnection () {
-    this.subscriberConnection = new Redis(this._config)
+    this.ioSubscriberConnection = new Redis(this._config)
   }
 }
 
@@ -41,6 +43,6 @@ export class RedisFactory extends AbstractFactory<Redis.Redis> {
  */
 ioMethods.forEach((method) => {
   RedisFactory.prototype[method] = function redisFactoryProxyFn (...args: any[]) {
-    return this.connection[method](...args)
+    return this.ioConnection[method](...args)
   }
 })

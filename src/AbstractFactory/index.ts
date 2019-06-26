@@ -7,6 +7,8 @@
 * file that was distributed with this source code.
 */
 
+/// <reference path="../../adonis-typings/redis.ts" />
+
 import * as Emitter from 'emittery'
 import { Redis, Cluster } from 'ioredis'
 import { Exception } from '@poppinss/utils'
@@ -17,18 +19,38 @@ import { PubSubChannelHandler, PubSubPatternHandler } from '@ioc:Adonis/Addons/R
  * and normal Redis connections.
  */
 export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitter {
-  public connection: T
-  public subscriberConnection?: T
+  public ioConnection: T
+  public ioSubscriberConnection?: T
 
   protected $subscriptions: Map<string, PubSubChannelHandler> = new Map()
   protected $psubscriptions: Map<string, PubSubPatternHandler> = new Map()
+
+  /**
+   * Returns status of the main connection
+   */
+  public get status (): string {
+    return (this.ioConnection as any).status
+  }
+
+    /**
+   * Returns status of the subscriber connection or
+   * undefined when there is no subscriber
+   * connection
+   */
+  public get subscriberStatus (): string | undefined {
+    if (!this.ioSubscriberConnection) {
+      return
+    }
+
+    return (this.ioSubscriberConnection as any).status
+  }
 
   /**
    * Parent class must implement makeSubscriberConnection
    */
   protected abstract $makeSubscriberConnection (): void
 
-  constructor () {
+  constructor (public connectionName: string) {
     super()
   }
 
@@ -39,29 +61,29 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
    * event on the actual connection and then remove listeners.
    */
   protected $proxyConnectionEvents () {
-    this.connection.on('connect', () => this.emit('connect'))
-    this.connection.on('ready', () => this.emit('ready'))
-    this.connection.on('error', (error: any) => this.emit('error', error))
-    this.connection.on('close', () => this.emit('close'))
-    this.connection.on('reconnecting', () => this.emit('reconnecting'))
+    this.ioConnection.on('connect', () => this.emit('connect'))
+    this.ioConnection.on('ready', () => this.emit('ready'))
+    this.ioConnection.on('error', (error: any) => this.emit('error', error))
+    this.ioConnection.on('close', () => this.emit('close'))
+    this.ioConnection.on('reconnecting', () => this.emit('reconnecting'))
 
     /**
      * Cluster only events
      */
-    this.connection.on('+node', (node: Redis) => this.emit('node:added', node))
-    this.connection.on('-node', (node: Redis) => this.emit('node:removed', node))
-    this.connection.on('node error', (error: any, address: string) => {
+    this.ioConnection.on('+node', (node: Redis) => this.emit('node:added', node))
+    this.ioConnection.on('-node', (node: Redis) => this.emit('node:removed', node))
+    this.ioConnection.on('node error', (error: any, address: string) => {
       this.emit('node:error', { error, address })
     })
 
     /**
      * On end, we must cleanup client and self listeners
      */
-    this.connection.on('end', async () => {
-      this.connection.removeAllListeners()
+    this.ioConnection.on('end', async () => {
+      this.ioConnection.removeAllListeners()
 
       try {
-        await this.emit('end')
+        await this.emit('end', this)
       } catch (error) {
       }
 
@@ -74,7 +96,7 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
    * results in a noop, in case of an existing subscriber connection.
    */
   protected $setupSubscriberConnection () {
-    if (this.subscriberConnection) {
+    if (this.ioSubscriberConnection) {
       return
     }
 
@@ -86,7 +108,7 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
     /**
      * Listen for messages
      */
-    this.subscriberConnection!.on('message', (channel, message) => {
+    this.ioSubscriberConnection!.on('message', (channel, message) => {
       const handler = this.$subscriptions.get(channel)
       if (handler) {
         handler(message)
@@ -96,7 +118,7 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
     /**
      * Listen for pattern messages
      */
-    this.subscriberConnection!.on('pmessage', (pattern, channel, message) => {
+    this.ioSubscriberConnection!.on('pmessage', (pattern, channel, message) => {
       const handler = this.$psubscriptions.get(pattern)
       if (handler) {
         handler(channel, message)
@@ -108,21 +130,21 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
      * Also make sure not to clear the events of this class on subscriber
      * disconnect
      */
-    this.subscriberConnection!.on('connect', () => this.emit('subscriber:connect'))
-    this.subscriberConnection!.on('ready', () => this.emit('subscriber:ready'))
-    this.subscriberConnection!.on('error', (error: any) => this.emit('subscriber:error', error))
-    this.subscriberConnection!.on('close', () => this.emit('subscriber:close'))
-    this.subscriberConnection!.on('reconnecting', () => this.emit('subscriber:reconnecting'))
+    this.ioSubscriberConnection!.on('connect', () => this.emit('subscriber:connect'))
+    this.ioSubscriberConnection!.on('ready', () => this.emit('subscriber:ready'))
+    this.ioSubscriberConnection!.on('error', (error: any) => this.emit('subscriber:error', error))
+    this.ioSubscriberConnection!.on('close', () => this.emit('subscriber:close'))
+    this.ioSubscriberConnection!.on('reconnecting', () => this.emit('subscriber:reconnecting'))
 
     /**
      * On subscriber connection end, we must clear registered
      * subscriptions and client event listeners.
      */
-    this.subscriberConnection!.on('end', async () => {
-      this.connection.removeAllListeners()
+    this.ioSubscriberConnection!.on('end', async () => {
+      this.ioConnection.removeAllListeners()
 
       try {
-        await this.emit('subscriber:end')
+        await this.emit('subscriber:end', this)
       } catch (error) {
       }
 
@@ -138,9 +160,9 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
    * Gracefully end the redis connection
    */
   public async quit () {
-    await this.connection.quit()
-    if (this.subscriberConnection) {
-      await this.subscriberConnection.quit()
+    await this.ioConnection.quit()
+    if (this.ioSubscriberConnection) {
+      await this.ioSubscriberConnection.quit()
     }
   }
 
@@ -148,9 +170,9 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
    * Forcefully end the redis connection
    */
   public async disconnect () {
-    await this.connection.disconnect()
-    if (this.subscriberConnection) {
-      await this.subscriberConnection.disconnect()
+    await this.ioConnection.disconnect()
+    if (this.ioSubscriberConnection) {
+      await this.ioSubscriberConnection.disconnect()
     }
   }
 
@@ -181,7 +203,7 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
      * on the given channel, hence we should make one subscription and also set
      * the subscription handler.
      */
-    (this.subscriberConnection as any).subscribe(channel, (error: any, count: number) => {
+    (this.ioSubscriberConnection as any).subscribe(channel, (error: any, count: number) => {
       if (error) {
         this.emit('subscription:error', error)
         return
@@ -197,7 +219,7 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
    */
   public unsubscribe (channel: string) {
     this.$subscriptions.delete(channel)
-    return (this.subscriberConnection as any).unsubscribe(channel)
+    return (this.ioSubscriberConnection as any).unsubscribe(channel)
   }
 
   /**
@@ -226,7 +248,7 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
      * on the given channel, hence we should make one subscription and also set
      * the subscription handler.
      */
-    (this.subscriberConnection as any).psubscribe(pattern, (error: any, count: number) => {
+    (this.ioSubscriberConnection as any).psubscribe(pattern, (error: any, count: number) => {
       if (error) {
         this.emit('psubscription:error', error)
         return
@@ -242,6 +264,6 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
    */
   public punsubscribe (pattern: string) {
     this.$psubscriptions.delete(pattern)
-    return (this.subscriberConnection as any).punsubscribe(pattern)
+    return (this.ioSubscriberConnection as any).punsubscribe(pattern)
   }
 }

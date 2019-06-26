@@ -19,8 +19,7 @@ const nodes = process.env.REDIS_CLUSTER_PORTS!.split(',').map((port) => {
 
 test.group('Redis cluster factory', () => {
   test('emit ready when connected to redis server', (assert, done) => {
-    const factory = new RedisClusterFactory({
-      cluster: true,
+    const factory = new RedisClusterFactory('main', {
       clusters: nodes,
     }) as unknown as RedisClusterFactoryContract
 
@@ -32,8 +31,7 @@ test.group('Redis cluster factory', () => {
   })
 
   test('emit node connection event', (assert, done) => {
-    const factory = new RedisClusterFactory({
-      cluster: true,
+    const factory = new RedisClusterFactory('main', {
       clusters: [{ host: process.env.REDIS_HOST!!, port: 7000 }],
     }) as unknown as RedisClusterFactoryContract
 
@@ -45,8 +43,7 @@ test.group('Redis cluster factory', () => {
   })
 
   test('execute redis commands', async (assert) => {
-    const factory = new RedisClusterFactory({
-      cluster: true,
+    const factory = new RedisClusterFactory('main', {
       clusters: nodes,
     }) as unknown as RedisClusterFactoryContract
 
@@ -59,14 +56,13 @@ test.group('Redis cluster factory', () => {
   })
 
   test('clean event listeners on quit', async (assert, done) => {
-    const factory = new RedisClusterFactory({
-      cluster: true,
+    const factory = new RedisClusterFactory('main', {
       clusters: nodes,
     }) as unknown as RedisClusterFactoryContract
 
     factory.on('end', () => {
-      assert.equal(factory.connection.listenerCount('ready'), 0)
-      assert.equal(factory.connection.listenerCount('end'), 0)
+      assert.equal(factory.ioConnection.listenerCount('ready'), 0)
+      assert.equal(factory.ioConnection.listenerCount('end'), 0)
       done()
     })
 
@@ -76,14 +72,13 @@ test.group('Redis cluster factory', () => {
   })
 
   test('clean event listeners on disconnect', async (assert, done) => {
-    const factory = new RedisClusterFactory({
-      cluster: true,
+    const factory = new RedisClusterFactory('main', {
       clusters: nodes,
     }) as unknown as RedisClusterFactoryContract
 
     factory.on('end', () => {
-      assert.equal(factory.connection.listenerCount('ready'), 0)
-      assert.equal(factory.connection.listenerCount('end'), 0)
+      assert.equal(factory.ioConnection.listenerCount('ready'), 0)
+      assert.equal(factory.ioConnection.listenerCount('end'), 0)
       done()
     })
 
@@ -93,14 +88,13 @@ test.group('Redis cluster factory', () => {
   })
 
   test('get event for connection errors', async (assert, done) => {
-    const factory = new RedisClusterFactory({
-      cluster: true,
+    const factory = new RedisClusterFactory('main', {
       clusters: [{ host: process.env.REDIS_HOST!, port: 5000 }],
     }) as unknown as RedisClusterFactoryContract
 
     factory.on('end', () => {
-      assert.equal(factory.connection.listenerCount('ready'), 0)
-      assert.equal(factory.connection.listenerCount('end'), 0)
+      assert.equal(factory.ioConnection.listenerCount('ready'), 0)
+      assert.equal(factory.ioConnection.listenerCount('end'), 0)
       done()
     })
 
@@ -108,6 +102,23 @@ test.group('Redis cluster factory', () => {
      * `error` event is also emitted
      */
     factory.on('node:error', async () => {
+      await factory.quit()
+    })
+  })
+
+  test('access cluster nodes', async (assert, done) => {
+    const factory = new RedisClusterFactory('main', {
+      clusters: nodes,
+    }) as unknown as RedisClusterFactoryContract
+
+    factory.on('end', () => {
+      assert.equal(factory.ioConnection.listenerCount('ready'), 0)
+      assert.equal(factory.ioConnection.listenerCount('end'), 0)
+      done()
+    })
+
+    factory.on('ready', async () => {
+      assert.equal(factory.nodes().length, 6) // defined in compose file
       await factory.quit()
     })
   })

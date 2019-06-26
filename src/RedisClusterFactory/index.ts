@@ -7,6 +7,8 @@
 * file that was distributed with this source code.
 */
 
+/// <reference path="../../adonis-typings/redis.ts" />
+
 import * as Redis from 'ioredis'
 import { ClusterConfigContract } from '@ioc:Adonis/Addons/Redis'
 
@@ -20,9 +22,9 @@ import { AbstractFactory } from '../AbstractFactory'
  * by itself.
  */
 export class RedisClusterFactory extends AbstractFactory<Redis.Cluster> {
-  constructor (private _config: ClusterConfigContract) {
-    super()
-    this.connection = new Redis.Cluster(this._config.clusters, this._config.clusterOptions)
+  constructor (connectionName: string, private _config: ClusterConfigContract) {
+    super(connectionName)
+    this.ioConnection = new Redis.Cluster(this._config.clusters, this._config.clusterOptions)
     this.$proxyConnectionEvents()
   }
 
@@ -31,12 +33,19 @@ export class RedisClusterFactory extends AbstractFactory<Redis.Cluster> {
    * invoke this method when first subscription is created.
    */
   protected $makeSubscriberConnection () {
-    this.subscriberConnection = new Redis.Cluster(this._config.clusters, this._config.clusterOptions)
+    this.ioSubscriberConnection = new Redis.Cluster(this._config.clusters, this._config.clusterOptions)
+  }
+
+  /**
+   * Returns cluster nodes
+   */
+  public nodes (role?: Redis.NodeRole) {
+    return this.ioConnection.nodes(role)
   }
 }
 
 ioMethods.forEach((method) => {
   RedisClusterFactory.prototype[method] = function redisFactoryProxyFn (...args: any[]) {
-    return this.connection[method](...args)
+    return this.ioConnection[method](...args)
   }
 })
