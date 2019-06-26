@@ -101,14 +101,24 @@ declare module '@ioc:Adonis/Addons/Redis' {
   }
 
   /**
-   * The shape of redis config accepted by the Redis module
+   * Define the config properties on this interface and they will appear
+   * everywhere.
    */
   export interface RedisConfigContract {
     connection: ConnectionsList,
   }
 
   /**
-   * Redis main contract
+   * Redis class exposes the API to intertact with a redis server. You can make
+   * use of multiple redis connections by defining them inside `config/redis`
+   * file.
+   *
+   * ```ts
+   * Redis.connection() // default connection
+   * Redis.connection('primary') // named connection
+   *
+   * Redis.get('some-key') // runs on default connection
+   * ```
    */
   export interface RedisContract extends Omit<
     GetFactory<RedisConfigContract['connection']>,
@@ -121,15 +131,43 @@ declare module '@ioc:Adonis/Addons/Redis' {
     'disconnect' |
     'quit'
   > {
+
+    /**
+     * Fetch a named connection from the defined config inside config/redis file
+     */
     connection<Connection extends ConnectionsList> (name: Connection): GetFactory<Connection>
+
+    /**
+     * Fetch a named connection from the defined config inside config/redis file
+     */
     connection (name: string): RedisFactoryContract | RedisClusterFactoryContract
+
+    /**
+     * Returns the default connection client
+     */
     connection (): GetFactory<RedisConfigContract['connection']>
 
+    /**
+     * Quit a named connection.
+     */
     quit<Connection extends ConnectionsList> (name: Connection): Promise<void>
     quit (name?: string): Promise<void>
 
+    /**
+     * Forcefully disconnect a named connection.
+     */
     disconnect<Connection extends ConnectionsList> (name: Connection): Promise<void>
     disconnect (name?: string): Promise<void>
+
+    /**
+     * Quit all redis connections
+     */
+    quitAll (): Promise<void>
+
+    /**
+     * Disconnect all redis connections
+     */
+    disconnectAll (): Promise<void>
   }
 
   const Redis: RedisContract

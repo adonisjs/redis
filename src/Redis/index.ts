@@ -26,6 +26,10 @@ export class Redis {
    */
   private _connectionPools: { [key: string]: RedisClusterFactory | RedisFactory } = {}
 
+  /**
+   * A method to cleanup memory after a connection has been
+   * closed.
+   */
   private _cleanup = function cleanup (connection: RedisClusterFactory | RedisFactory) {
     delete this._connectionPools[connection.connectionName]
   }.bind(this)
@@ -41,58 +45,104 @@ export class Redis {
   }
 
   /**
+   * Returns an existing connection using it's name or the
+   * default connection,
+   */
+  private _getExistingConnection (connection?: string) {
+    connection = connection || this._getDefaultConnection()
+    return this._connectionPools[connection]
+  }
+
+  /**
    * Returns redis factory for a given named connection
    */
-  public connection (name?: string): any {
+  public connection (connection?: string): any {
     /**
      * Using default connection name when actual
      * name is missing
      */
-    name = name || this._getDefaultConnection()
+    connection = connection || this._getDefaultConnection()
 
     /**
      * Return cached driver, when it's already cached
      */
-    if (this._connectionPools[name]) {
-      return this._connectionPools[name]
+    if (this._connectionPools[connection]) {
+      return this._connectionPools[connection]
     }
 
-    const config = this._config[name]
+    const config = this._config[connection]
 
     /**
      * Raise error if config for the given name is missing
      */
     if (!config) {
-      throw new Exception(`Define config for ${name} connection inside config/redis file`)
+      throw new Exception(`Define config for ${connection} connection inside config/redis file`)
     }
 
-    this._connectionPools[name] = config.clusters
-      ? new RedisClusterFactory(name, config)
-      : new RedisFactory(name, config)
+    /**
+     * Create connection and store inside the connection pools
+     * object, so that we can re-use it later
+     */
+    const factory = this._connectionPools[connection] = config.clusters
+      ? new RedisClusterFactory(connection, config)
+      : new RedisFactory(connection, config)
 
-    this._connectionPools[name].on('end', this._cleanup)
-    return this._connectionPools[name]
+    /**
+     * Hook into end event to cleanup memory
+     */
+    factory.on('end', this._cleanup)
+
+    /**
+     * Return connection
+     */
+    return factory
   }
 
+  /**
+   * Quit a named connection or the default connection when no
+   * name is defined.
+   */
   public async quit (connection?: string): Promise<void> {
-    connection = connection || this._getDefaultConnection()
-    if (!this._connectionPools[connection]) {
+    const factory = this._getExistingConnection(connection)
+    if (!factory) {
       return
     }
 
-    return this.connection(connection).quit()
+    return factory.quit()
   }
 
+  /**
+   * Disconnect a named connection or the default connection when no
+   * name is defined.
+   */
   public async disconnect (connection?: string): Promise<void> {
-    connection = connection || this._getDefaultConnection()
-    if (!this._connectionPools[connection]) {
+    const factory = this._getExistingConnection(connection)
+    if (!factory) {
       return
     }
 
-    return this.connection(connection).disconnect()
+    return factory.disconnect()
+  }
+
+  /**
+   * Quit all connections
+   */
+  public async quitAll (): Promise<void[]> {
+    return Promise.all(Object.keys(this._connectionPools).map((name) => this.quit(name)))
+  }
+
+  /**
+   * Disconnect all connections
+   */
+  public async disconnectAll (): Promise<void[]> {
+    return Promise.all(Object.keys(this._connectionPools).map((name) => this.disconnect(name)))
   }
 }
 
+/**
+ * Copy redis commands to the prototype and each command
+ * is executed agains the default connection
+ */
 ioMethods.forEach((method) => {
   Redis.prototype[method] = function redisProxyFn (...args: any[]) {
     return this.connection()[method](...args)
