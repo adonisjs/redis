@@ -13,11 +13,15 @@ import * as test from 'japa'
 import { RedisClusterFactory } from '../src/RedisClusterFactory'
 import { RedisClusterFactoryContract } from '@ioc:Adonis/Addons/Redis'
 
+const nodes = process.env.REDIS_CLUSTER_PORTS!.split(',').map((port) => {
+  return { host: process.env.REDIS_HOST!, port: Number(port) }
+})
+
 test.group('Redis cluster factory', () => {
   test('emit ready when connected to redis server', (assert, done) => {
     const factory = new RedisClusterFactory({
       cluster: true,
-      clusters: [{ host: 'localhost', port: 30001 }],
+      clusters: nodes,
     }) as unknown as RedisClusterFactoryContract
 
     factory.on('ready', async () => {
@@ -30,7 +34,7 @@ test.group('Redis cluster factory', () => {
   test('emit node connection event', (assert, done) => {
     const factory = new RedisClusterFactory({
       cluster: true,
-      clusters: [{ host: 'localhost', port: 30001 }],
+      clusters: [{ host: process.env.REDIS_HOST!!, port: 7000 }],
     }) as unknown as RedisClusterFactoryContract
 
     factory.on('node:added', async () => {
@@ -43,7 +47,7 @@ test.group('Redis cluster factory', () => {
   test('execute redis commands', async (assert) => {
     const factory = new RedisClusterFactory({
       cluster: true,
-      clusters: [{ host: 'localhost', port: 30001 }],
+      clusters: nodes,
     }) as unknown as RedisClusterFactoryContract
 
     await factory.set('greeting', 'hello world')
@@ -57,7 +61,7 @@ test.group('Redis cluster factory', () => {
   test('clean event listeners on quit', async (assert, done) => {
     const factory = new RedisClusterFactory({
       cluster: true,
-      clusters: [{ host: 'localhost', port: 30001 }],
+      clusters: nodes,
     }) as unknown as RedisClusterFactoryContract
 
     factory.on('end', () => {
@@ -74,7 +78,7 @@ test.group('Redis cluster factory', () => {
   test('clean event listeners on disconnect', async (assert, done) => {
     const factory = new RedisClusterFactory({
       cluster: true,
-      clusters: [{ host: 'localhost', port: 30001 }],
+      clusters: nodes,
     }) as unknown as RedisClusterFactoryContract
 
     factory.on('end', () => {
@@ -91,7 +95,7 @@ test.group('Redis cluster factory', () => {
   test('get event for connection errors', async (assert, done) => {
     const factory = new RedisClusterFactory({
       cluster: true,
-      clusters: [{ host: 'localhost', port: 5000 }],
+      clusters: [{ host: process.env.REDIS_HOST!, port: 5000 }],
     }) as unknown as RedisClusterFactoryContract
 
     factory.on('end', () => {
@@ -103,8 +107,7 @@ test.group('Redis cluster factory', () => {
     /**
      * `error` event is also emitted
      */
-    factory.on('node:error', async ({ address }) => {
-      assert.equal(address, '127.0.0.1:5000')
+    factory.on('node:error', async () => {
       await factory.quit()
     })
   })
