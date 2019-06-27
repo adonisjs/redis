@@ -11,7 +11,7 @@ services:
     depends_on:
       - redis
     network_mode: "host"
-    command: ["/wait-for-it.sh", "0.0.0.0:7007", "--", "npm", "test"]
+    command: ["/wait-for-it.sh", "0.0.0.0:7007", "--", "node", "japaFile.js"]
   redis:
     image: grokzen/redis-cluster
     environment:
