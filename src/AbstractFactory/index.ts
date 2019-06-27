@@ -11,7 +11,7 @@
 
 import * as Emitter from 'emittery'
 import { Redis, Cluster } from 'ioredis'
-import { Exception } from '@poppinss/utils'
+import { Exception, parseIocReference } from '@poppinss/utils'
 import { PubSubChannelHandler, PubSubPatternHandler } from '@ioc:Adonis/Addons/Redis'
 
 /**
@@ -24,6 +24,20 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
 
   protected $subscriptions: Map<string, PubSubChannelHandler> = new Map()
   protected $psubscriptions: Map<string, PubSubPatternHandler> = new Map()
+
+  private _namespace: string = 'App/Listeners'
+
+  /**
+   * Returns an anonymous function by parsing the IoC container
+   * binding.
+   */
+  private _resolveIoCBinding (handler: string): PubSubChannelHandler | PubSubPatternHandler {
+    const parsed = parseIocReference(handler, this._namespace)
+    return function dynamicEventHandler (...args: any[]) {
+      const instance = global[Symbol.for('ioc.make')](parsed.namespace)
+      return global[Symbol.for('ioc.call')](instance, parsed.method, args)
+    }
+  }
 
   /**
    * Returns status of the main connection
@@ -180,7 +194,7 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
    * Subscribe to a given channel to receive Redis pub/sub events. A
    * new subscriber connection will be created/managed automatically.
    */
-  public subscribe (channel: string, handler: PubSubChannelHandler): void {
+  public subscribe (channel: string, handler: PubSubChannelHandler | string): void {
     /**
      * Make the subscriber connection. The method results in a noop when
      * subscriber connection already exists.
@@ -209,6 +223,10 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
         return
       }
 
+      if (typeof (handler) === 'string') {
+        handler = this._resolveIoCBinding(handler) as PubSubChannelHandler
+      }
+
       this.emit('subscription:ready', count)
       this.$subscriptions.set(channel, handler)
     })
@@ -225,7 +243,7 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
   /**
    * Make redis subscription for a pattern
    */
-  public psubscribe (pattern: string, handler: PubSubPatternHandler): void {
+  public psubscribe (pattern: string, handler: PubSubPatternHandler | string): void {
     /**
      * Make the subscriber connection. The method results in a noop when
      * subscriber connection already exists.
@@ -252,6 +270,10 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
       if (error) {
         this.emit('psubscription:error', error)
         return
+      }
+
+      if (typeof (handler) === 'string') {
+        handler = this._resolveIoCBinding(handler) as PubSubPatternHandler
       }
 
       this.emit('psubscription:ready', count)

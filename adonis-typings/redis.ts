@@ -33,8 +33,8 @@ declare module '@ioc:Adonis/Addons/Redis' {
    * Redis pub/sub methods
    */
   export interface RedisPubSubContract {
-    subscribe (channel: string, handler: PubSubChannelHandler): void
-    psubscribe (pattern: string, handler: PubSubPatternHandler): void
+    subscribe (channel: string, handler: PubSubChannelHandler | string): void
+    psubscribe (pattern: string, handler: PubSubPatternHandler | string): void
     unsubscribe (channel: string): void
     punsubscribe (pattern: string): void
   }

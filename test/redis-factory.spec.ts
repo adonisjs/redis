@@ -10,6 +10,7 @@
 /// <reference path="../adonis-typings/redis.ts" />
 
 import * as test from 'japa'
+import { Ioc } from '@adonisjs/fold'
 import { RedisFactory } from '../src/RedisFactory'
 import { RedisFactoryContract } from '@ioc:Adonis/Addons/Redis'
 
@@ -324,6 +325,35 @@ test.group('Redis factory - PSubscribe', () => {
         assert.equal(count, 0)
         done()
       })
+    })
+  })
+
+  test('bind IoC container binding as subscriber', async (assert, done) => {
+    const factory = new RedisFactory('main', {
+      host: process.env.REDIS_HOST,
+      port: Number(process.env.REDIS_PORT),
+    }) as unknown as RedisFactoryContract
+
+    class RedisListeners {
+      public async onNews (channel: string, message: string) {
+        assert.equal(channel, 'news:prime')
+        assert.equal(message, 'breaking news at 9')
+        await factory.quit()
+        done()
+      }
+    }
+
+    const ioc = new Ioc()
+    ioc.bind('App/Listeners/RedisListeners', () => {
+      return new RedisListeners()
+    })
+    global[Symbol.for('ioc.make')] = ioc.make.bind(ioc)
+    global[Symbol.for('ioc.call')] = ioc.call.bind(ioc)
+
+    factory.psubscribe('news:*', 'RedisListeners.onNews')
+
+    factory.on('psubscription:ready', () => {
+      factory.publish('news:prime', 'breaking news at 9')
     })
   })
 })
