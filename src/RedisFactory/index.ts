@@ -16,7 +16,7 @@ import { ioMethods } from '../ioMethods'
 import { AbstractFactory } from '../AbstractFactory'
 
 /**
- * Redis factory exposes the API to run Redis commands unsing `ioredis` as the
+ * Redis factory exposes the API to run Redis commands using `ioredis` as the
  * underlying client. The factory abstracts the need of creating and managing
  * multiple pub/sub connections by hand, since it handles that internally
  * by itself.
