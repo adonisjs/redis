@@ -9,7 +9,7 @@
 
 /// <reference path="../../adonis-typings/redis.ts" />
 
-import * as Emitter from 'emittery'
+import Emitter from 'emittery'
 import { Redis, Cluster } from 'ioredis'
 import { Exception, parseIocReference } from '@poppinss/utils'
 import { PubSubChannelHandler, PubSubPatternHandler } from '@ioc:Adonis/Addons/Redis'

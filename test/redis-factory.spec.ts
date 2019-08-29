@@ -9,7 +9,7 @@
 
 /// <reference path="../adonis-typings/redis.ts" />
 
-import * as test from 'japa'
+import test from 'japa'
 import { Ioc } from '@adonisjs/fold'
 import { RedisFactory } from '../src/RedisFactory'
 import { RedisFactoryContract } from '@ioc:Adonis/Addons/Redis'

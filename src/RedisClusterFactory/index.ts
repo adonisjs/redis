@@ -9,7 +9,7 @@
 
 /// <reference path="../../adonis-typings/redis.ts" />
 
-import * as Redis from 'ioredis'
+import Redis from 'ioredis'
 import { ClusterConfigContract } from '@ioc:Adonis/Addons/Redis'
 
 import { ioMethods } from '../ioMethods'

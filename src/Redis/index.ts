@@ -11,9 +11,9 @@
 
 import { Exception } from '@poppinss/utils'
 
+import { ioMethods } from '../ioMethods'
 import { RedisFactory } from '../RedisFactory'
 import { RedisClusterFactory } from '../RedisClusterFactory'
-import { ioMethods } from '../ioMethods'
 
 /**
  * Redis class exposes the API to interact with a redis server. It automatically

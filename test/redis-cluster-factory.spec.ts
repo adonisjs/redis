@@ -9,7 +9,7 @@
 
 /// <reference path="../adonis-typings/redis.ts" />
 
-import * as test from 'japa'
+import test from 'japa'
 import { RedisClusterFactory } from '../src/RedisClusterFactory'
 import { RedisClusterFactoryContract } from '@ioc:Adonis/Addons/Redis'
 
