@@ -1,0 +1,44 @@
+/**
+ * Config source: https://git.io/fjxzf
+ *
+ * Feel free to let us know via PR, if you find something broken in this config
+ * file.
+ */
+
+import { RedisConfigContract } from '@ioc:Adonis/Addons/Redis'
+
+/*
+|--------------------------------------------------------------------------
+| Redis configuration
+|--------------------------------------------------------------------------
+|
+| Following is the configuration used by the Redis provider to connect to
+| the redis server and execute redis commands.
+|
+| Do make sure to pre-define the connections type inside `contracts/redis.ts`
+| file for AdonisJs to recognize connections.
+|
+*/
+const redisConfig: RedisConfigContract = {
+  connection: Env.get('REDIS_CONNECTION', 'default'),
+
+  /*
+  |--------------------------------------------------------------------------
+  | The default connection
+  |--------------------------------------------------------------------------
+  |
+  | The main connection you want to use to execute redis commands. The same
+  | connection will be used by the session provider, if you rely on the
+  | redis driver.
+  |
+  */
+  default: {
+    host: Env.get('REDIS_HOST', '127.0.0.1'),
+    port: Env.get('REDIS_PORT', '6379'),
+    password: Env.get('REDIS_PASSWORD', ''),
+    db: 0,
+    keyPrefix: '',
+  },
+}
+
+export default redisConfig

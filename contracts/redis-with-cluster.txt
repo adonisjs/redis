@@ -1,0 +1,6 @@
+declare module '@ioc:Adonis/Addons/Redis' {
+  interface RedisConfigContract {
+    local: ConnectionConfigContract,
+    cluster: ClusterConfigContract,
+  }
+}

@@ -7,10 +7,11 @@
 * file that was distributed with this source code.
 */
 
+import { IocContract } from '@adonisjs/fold'
 import { Redis } from '../src/Redis'
 
 export default class RedisProvider {
-  constructor (protected $container: any) {
+  constructor (protected $container: IocContract) {
   }
 
   /**
@@ -18,10 +19,8 @@ export default class RedisProvider {
    */
   public register () {
     this.$container.singleton('Adonis/Addons/Redis', () => {
-      const config = this.$container.use('Adonis/Src/Config')
-      return new Redis(config.get('redis', {
-        connection: 'primary',
-      }))
+      const config = this.$container.use('Adonis/Core/Config').get('redis', {})
+      return new Redis(config)
     })
   }
 }
