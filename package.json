@@ -7,8 +7,7 @@
     "build/src",
     "build/adonis-typings",
     "build/providers",
-    "build/config",
-    "build/contracts",
+    "build/templates",
     "build/instructions.js"
   ],
   "types": "build/adonis-typings/index.d.ts",

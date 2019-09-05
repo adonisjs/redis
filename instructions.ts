@@ -17,12 +17,12 @@ import { ApplicationContract } from '@poppinss/application'
  */
 const templatesMap = {
   default: {
-    config: join(__dirname, 'config/redis.txt'),
-    contract: join(__dirname, 'contracts/redis.txt'),
+    config: join(__dirname, 'templates/config-redis.txt'),
+    contract: join(__dirname, 'templates/contract-redis.txt'),
   },
   cluster: {
-    config: join(__dirname, 'config/redis-with-cluster.txt'),
-    contract: join(__dirname, 'contracts/redis-with-cluster.txt'),
+    config: join(__dirname, 'templates/config-redis-with-cluster.txt'),
+    contract: join(__dirname, 'templates/contract-redis-with-cluster.txt'),
   },
 }
 
@@ -56,11 +56,8 @@ const envValuesMap = {
 export default async function instructions (
   projectRoot: string,
   application: ApplicationContract,
-  { TemplateFile, kleur, getPrompt, EnvFile }: typeof sinkStatic,
+  { copyTemplates, getPrompt, EnvFile, kleur }: typeof sinkStatic,
 ) {
-  const configFile = `${application.directoriesMap.get('config')}/redis.ts`
-  const contractsFile = `${application.directoriesMap.get('contracts')}/redis.ts`
-
   /**
    * Asking user if they want to use cluster with redis or not
    */
@@ -69,18 +66,7 @@ export default async function instructions (
 
   const templates = useCluster ? templatesMap.cluster : templatesMap.default
   const envValues = useCluster ? envValuesMap.cluster : envValuesMap.default
-
-  /**
-   * Creating config file
-   */
-  new TemplateFile(projectRoot, configFile, templates.config).apply({}).commit()
-  console.log(`  create  ${kleur.green(configFile)}`)
-
-  /**
-   * Creating contracts file
-   */
-  new TemplateFile(projectRoot, contractsFile, templates.contract).apply({}).commit()
-  console.log(`  create  ${kleur.green(contractsFile)}`)
+  await copyTemplates(projectRoot, application, join(__dirname, 'build', 'templates'), templates)
 
   /**
    * Updating .env file with redis related env values
