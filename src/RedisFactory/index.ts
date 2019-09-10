@@ -10,6 +10,7 @@
 /// <reference path="../../adonis-typings/redis.ts" />
 
 import Redis from 'ioredis'
+import { IocContract } from '@adonisjs/fold'
 import { ConnectionConfigContract } from '@ioc:Adonis/Addons/Redis'
 
 import { ioMethods } from '../ioMethods'
@@ -22,8 +23,12 @@ import { AbstractFactory } from '../AbstractFactory'
  * by itself.
  */
 export class RedisFactory extends AbstractFactory<Redis.Redis> {
-  constructor (connectionName: string, private _config: ConnectionConfigContract) {
-    super(connectionName)
+  constructor (
+    connectionName: string,
+    private _config: ConnectionConfigContract,
+    container: IocContract,
+  ) {
+    super(connectionName, container)
     this.ioConnection = new Redis(this._config)
     this.$proxyConnectionEvents()
   }

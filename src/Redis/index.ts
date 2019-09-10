@@ -10,6 +10,8 @@
 /// <reference path="../../adonis-typings/redis.ts" />
 
 import { Exception } from '@poppinss/utils'
+import { IocContract } from '@adonisjs/fold'
+import { RedisConfigContract } from '@ioc:Adonis/Addons/Redis'
 
 import { ioMethods } from '../ioMethods'
 import { RedisFactory } from '../RedisFactory'
@@ -34,7 +36,7 @@ export class Redis {
     delete this._connectionPools[connection.connectionName]
   }.bind(this)
 
-  constructor (private _config: any) {
+  constructor (private _container: IocContract, private _config: RedisConfigContract) {
   }
 
   /**
@@ -54,38 +56,45 @@ export class Redis {
   }
 
   /**
+   * Returns config for a given connection
+   */
+  private _getConnectionConfig (name: string) {
+    return this._config.connections[name]
+  }
+
+  /**
    * Returns redis factory for a given named connection
    */
-  public connection (connection?: string): any {
+  public connection (name?: string): any {
     /**
      * Using default connection name when actual
      * name is missing
      */
-    connection = connection || this._getDefaultConnection()
+    name = name || this._getDefaultConnection()
 
     /**
-     * Return cached driver, when it's already cached
+     * Return cached connection
      */
-    if (this._connectionPools[connection]) {
-      return this._connectionPools[connection]
+    if (this._connectionPools[name]) {
+      return this._connectionPools[name]
     }
 
-    const config = this._config[connection]
+    const config = this._getConnectionConfig(name)
 
     /**
      * Raise error if config for the given name is missing
      */
     if (!config) {
-      throw new Exception(`Define config for ${connection} connection inside config/redis file`)
+      throw new Exception(`Define config for ${name} connection inside config/redis file`)
     }
 
     /**
      * Create connection and store inside the connection pools
      * object, so that we can re-use it later
      */
-    const factory = this._connectionPools[connection] = config.clusters
-      ? new RedisClusterFactory(connection, config)
-      : new RedisFactory(connection, config)
+    const factory = this._connectionPools[name] = config.clusters
+      ? new RedisClusterFactory(name, config, this._container)
+      : new RedisFactory(name, config, this._container)
 
     /**
      * Hook into end event to cleanup memory

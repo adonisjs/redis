@@ -11,7 +11,8 @@
 
 import Emitter from 'emittery'
 import { Redis, Cluster } from 'ioredis'
-import { Exception, parseIocReference } from '@poppinss/utils'
+import { Exception } from '@poppinss/utils'
+import { IocContract, IocResolverContract } from '@adonisjs/fold'
 import { PubSubChannelHandler, PubSubPatternHandler } from '@ioc:Adonis/Addons/Redis'
 
 /**
@@ -25,17 +26,18 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
   protected $subscriptions: Map<string, PubSubChannelHandler> = new Map()
   protected $psubscriptions: Map<string, PubSubPatternHandler> = new Map()
 
-  private _namespace: string = 'App/Listeners'
+  /**
+   * IocResolver to resolve bindings
+   */
+  private _resolver: IocResolverContract
 
   /**
    * Returns an anonymous function by parsing the IoC container
    * binding.
    */
   private _resolveIoCBinding (handler: string): PubSubChannelHandler | PubSubPatternHandler {
-    const parsed = parseIocReference(handler, this._namespace)
-    return function dynamicEventHandler (...args: any[]) {
-      const instance = global[Symbol.for('ioc.make')](parsed.namespace)
-      return global[Symbol.for('ioc.call')](instance, parsed.method, args)
+    return (...args: any[]) => {
+      return this._resolver.call(handler, undefined, args)
     }
   }
 
@@ -64,8 +66,9 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
    */
   protected abstract $makeSubscriberConnection (): void
 
-  constructor (public connectionName: string) {
+  constructor (public connectionName: string, container: IocContract) {
     super()
+    this._resolver = container.getResolver(undefined, 'redisListeners', 'App/Listeners')
   }
 
   /**

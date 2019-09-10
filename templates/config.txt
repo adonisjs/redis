@@ -20,25 +20,27 @@ import { RedisConfigContract } from '@ioc:Adonis/Addons/Redis'
 |
 */
 const redisConfig: RedisConfigContract = {
-  connection: Env.get('REDIS_CONNECTION', 'default'),
+  connection: Env.get('REDIS_CONNECTION', 'default') as const,
 
-  /*
-  |--------------------------------------------------------------------------
-  | The default connection
-  |--------------------------------------------------------------------------
-  |
-  | The main connection you want to use to execute redis commands. The same
-  | connection will be used by the session provider, if you rely on the
-  | redis driver.
-  |
-  */
-  default: {
-    host: Env.get('REDIS_HOST', '127.0.0.1'),
-    port: Env.get('REDIS_PORT', '6379'),
-    password: Env.get('REDIS_PASSWORD', ''),
-    db: 0,
-    keyPrefix: '',
-  },
+  connections: {
+    /*
+    |--------------------------------------------------------------------------
+    | The default connection
+    |--------------------------------------------------------------------------
+    |
+    | The main connection you want to use to execute redis commands. The same
+    | connection will be used by the session provider, if you rely on the
+    | redis driver.
+    |
+    */
+    default: {
+      host: Env.get('REDIS_HOST', '127.0.0.1'),
+      port: Env.get('REDIS_PORT', '6379'),
+      password: Env.get('REDIS_PASSWORD', ''),
+      db: 0,
+      keyPrefix: '',
+    },
+  }
 }
 
 export default redisConfig

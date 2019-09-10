@@ -14,12 +14,15 @@ declare module '@ioc:Adonis/Addons/Redis' {
    * List of connections from the config interface by excluding the
    * connection property.
    */
-  type ConnectionsList = Exclude<keyof RedisConfigContract, 'connection'>
+  export interface RedisConnectionsList {
+  }
 
   /**
    * Returns factory for a given connection by inspecting it's config.
    */
-  type GetFactory<T extends ConnectionsList> = RedisConfigContract[T] extends ClusterConfigContract
+  type GetFactory<
+    T extends keyof RedisConnectionsList
+  > = RedisConnectionsList[T] extends ClusterConfigContract
     ? RedisClusterFactoryContract
     : RedisFactoryContract
 
@@ -105,7 +108,8 @@ declare module '@ioc:Adonis/Addons/Redis' {
    * everywhere.
    */
   export interface RedisConfigContract {
-    connection: ConnectionsList,
+    connection: keyof RedisConnectionsList,
+    connections: { [P in keyof RedisConnectionsList]: RedisConnectionsList[P] },
   }
 
   /**
@@ -135,7 +139,7 @@ declare module '@ioc:Adonis/Addons/Redis' {
     /**
      * Fetch a named connection from the defined config inside config/redis file
      */
-    connection<Connection extends ConnectionsList> (name: Connection): GetFactory<Connection>
+    connection<Connection extends keyof RedisConnectionsList> (name: Connection): GetFactory<Connection>
 
     /**
      * Fetch a named connection from the defined config inside config/redis file
@@ -150,13 +154,13 @@ declare module '@ioc:Adonis/Addons/Redis' {
     /**
      * Quit a named connection.
      */
-    quit<Connection extends ConnectionsList> (name: Connection): Promise<void>
+    quit<Connection extends keyof RedisConnectionsList> (name: Connection): Promise<void>
     quit (name?: string): Promise<void>
 
     /**
      * Forcefully disconnect a named connection.
      */
-    disconnect<Connection extends ConnectionsList> (name: Connection): Promise<void>
+    disconnect<Connection extends keyof RedisConnectionsList> (name: Connection): Promise<void>
     disconnect (name?: string): Promise<void>
 
     /**

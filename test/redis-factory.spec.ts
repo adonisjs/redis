@@ -19,7 +19,7 @@ test.group('Redis factory', () => {
     const factory = new RedisFactory('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
-    }) as unknown as RedisFactoryContract
+    }, new Ioc()) as unknown as RedisFactoryContract
 
     factory.on('error', async (error) => {
       console.log(error)
@@ -36,7 +36,7 @@ test.group('Redis factory', () => {
     const factory = new RedisFactory('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
-    }) as unknown as RedisFactoryContract
+    }, new Ioc()) as unknown as RedisFactoryContract
 
     await factory.set('greeting', 'hello world')
 
@@ -51,7 +51,7 @@ test.group('Redis factory', () => {
     const factory = new RedisFactory('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
-    }) as unknown as RedisFactoryContract
+    }, new Ioc()) as unknown as RedisFactoryContract
 
     factory.on('end', () => {
       assert.equal(factory.ioConnection.listenerCount('ready'), 0)
@@ -68,7 +68,7 @@ test.group('Redis factory', () => {
     const factory = new RedisFactory('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
-    }) as unknown as RedisFactoryContract
+    }, new Ioc()) as unknown as RedisFactoryContract
 
     factory.on('end', () => {
       assert.equal(factory.ioConnection.listenerCount('ready'), 0)
@@ -82,7 +82,7 @@ test.group('Redis factory', () => {
   })
 
   test('get event for connection errors', async (assert, done) => {
-    const factory = new RedisFactory('main', { port: 4444 }) as unknown as RedisFactoryContract
+    const factory = new RedisFactory('main', { port: 4444 }, new Ioc()) as unknown as RedisFactoryContract
 
     factory.on('end', () => {
       assert.equal(factory.ioConnection.listenerCount('ready'), 0)
@@ -103,7 +103,7 @@ test.group('Redis factory - Subscribe', () => {
     const factory = new RedisFactory('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
-    }) as unknown as RedisFactoryContract
+    }, new Ioc()) as unknown as RedisFactoryContract
     factory.on('subscriber:ready', async () => {
       await factory.quit()
       done()
@@ -116,7 +116,7 @@ test.group('Redis factory - Subscribe', () => {
     const factory = new RedisFactory('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
-    }) as unknown as RedisFactoryContract
+    }, new Ioc()) as unknown as RedisFactoryContract
     factory.on('subscription:ready', async (count) => {
       assert.equal(count, 1)
       await factory.quit()
@@ -130,7 +130,7 @@ test.group('Redis factory - Subscribe', () => {
     const factory = new RedisFactory('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
-    }) as unknown as RedisFactoryContract
+    }, new Ioc()) as unknown as RedisFactoryContract
     let invokedCounts = 0
 
     factory.on('subscription:ready', async (count) => {
@@ -153,7 +153,7 @@ test.group('Redis factory - Subscribe', () => {
     const factory = new RedisFactory('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
-    }) as unknown as RedisFactoryContract
+    }, new Ioc()) as unknown as RedisFactoryContract
     factory.subscribe('news', async (message) => {
       assert.equal(message, 'breaking news at 9')
       await factory.quit()
@@ -169,7 +169,7 @@ test.group('Redis factory - Subscribe', () => {
     const factory = new RedisFactory('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
-    }) as unknown as RedisFactoryContract
+    }, new Ioc()) as unknown as RedisFactoryContract
 
     factory.on('subscription:ready', (count) => {
       if (count === 1) {
@@ -193,7 +193,7 @@ test.group('Redis factory - Subscribe', () => {
     const factory = new RedisFactory('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
-    }) as unknown as RedisFactoryContract
+    }, new Ioc()) as unknown as RedisFactoryContract
 
     factory.on('subscription:ready', () => {
       factory.publish('news', 'breaking news at 9')
@@ -216,7 +216,7 @@ test.group('Redis factory - PSubscribe', () => {
     const factory = new RedisFactory('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
-    }) as unknown as RedisFactoryContract
+    }, new Ioc()) as unknown as RedisFactoryContract
     factory.on('subscriber:ready', async () => {
       await factory.quit()
       done()
@@ -229,7 +229,7 @@ test.group('Redis factory - PSubscribe', () => {
     const factory = new RedisFactory('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
-    }) as unknown as RedisFactoryContract
+    }, new Ioc()) as unknown as RedisFactoryContract
     factory.on('psubscription:ready', async (count) => {
       assert.equal(count, 1)
       await factory.quit()
@@ -243,7 +243,7 @@ test.group('Redis factory - PSubscribe', () => {
     const factory = new RedisFactory('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
-    }) as unknown as RedisFactoryContract
+    }, new Ioc()) as unknown as RedisFactoryContract
     let invokedCounts = 0
 
     factory.on('psubscription:ready', async (count) => {
@@ -266,7 +266,7 @@ test.group('Redis factory - PSubscribe', () => {
     const factory = new RedisFactory('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
-    }) as unknown as RedisFactoryContract
+    }, new Ioc()) as unknown as RedisFactoryContract
     factory.psubscribe('news:*', async (channel, message) => {
       assert.equal(channel, 'news:prime')
       assert.equal(message, 'breaking news at 9')
@@ -284,7 +284,7 @@ test.group('Redis factory - PSubscribe', () => {
     const factory = new RedisFactory('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
-    }) as unknown as RedisFactoryContract
+    }, new Ioc()) as unknown as RedisFactoryContract
 
     factory.on('psubscription:ready', (count) => {
       if (count === 1) {
@@ -310,7 +310,7 @@ test.group('Redis factory - PSubscribe', () => {
     const factory = new RedisFactory('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
-    }) as unknown as RedisFactoryContract
+    }, new Ioc()) as unknown as RedisFactoryContract
 
     factory.on('psubscription:ready', () => {
       factory.publish('news:prime', 'breaking news at 9')
@@ -329,10 +329,11 @@ test.group('Redis factory - PSubscribe', () => {
   })
 
   test('bind IoC container binding as subscriber', async (assert, done) => {
+    const ioc = new Ioc()
     const factory = new RedisFactory('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
-    }) as unknown as RedisFactoryContract
+    }, ioc) as unknown as RedisFactoryContract
 
     class RedisListeners {
       public async onNews (channel: string, message: string) {
@@ -343,12 +344,9 @@ test.group('Redis factory - PSubscribe', () => {
       }
     }
 
-    const ioc = new Ioc()
     ioc.bind('App/Listeners/RedisListeners', () => {
       return new RedisListeners()
     })
-    global[Symbol.for('ioc.make')] = ioc.make.bind(ioc)
-    global[Symbol.for('ioc.call')] = ioc.call.bind(ioc)
 
     factory.psubscribe('news:*', 'RedisListeners.onNews')
 

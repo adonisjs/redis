@@ -43,22 +43,22 @@
     "tag": "next"
   },
   "devDependencies": {
-    "@adonisjs/fold": "^6.1.6",
+    "@adonisjs/fold": "^6.1.9",
     "@adonisjs/mrm-preset": "^2.1.0",
-    "@adonisjs/sink": "^2.1.9",
+    "@adonisjs/sink": "^2.1.11",
     "@poppinss/application": "^1.0.10",
     "@types/node": "^12.7.4",
     "commitizen": "^4.0.3",
     "copyfiles": "^2.1.1",
     "cz-conventional-changelog": "^3.0.2",
-    "del-cli": "^2.0.0",
+    "del-cli": "^3.0.0",
     "doctoc": "^1.4.0",
     "husky": "^3.0.5",
     "japa": "^3.0.1",
     "mrm": "^1.2.2",
     "np": "^5.0.3",
     "ts-node": "^8.3.0",
-    "tslint": "^5.19.0",
+    "tslint": "^5.20.0",
     "tslint-eslint-rules": "^5.4.0",
     "typescript": "^3.6.2"
   },
@@ -86,8 +86,8 @@
     "anyBranch": false
   },
   "dependencies": {
-    "@poppinss/utils": "^1.0.5",
-    "@types/ioredis": "^4.0.16",
+    "@poppinss/utils": "^2.0.0",
+    "@types/ioredis": "^4.0.17",
     "emittery": "^0.4.1",
     "ioredis": "^4.14.0"
   },
@@ -95,6 +95,15 @@
     "@adonisjs/core": "2.x.x"
   },
   "adonisjs": {
-    "instructions": "./build/instructions.js"
+    "templates": {
+      "config": [{ "src": "config.txt", "dest": "redis" }],
+      "constracts": [{ "src": "contract.txt", "dest": "redis" }]
+    },
+    "env": {
+      "REDIS_CONNECTION": "default",
+      "REDIS_HOST": "127.0.0.1",
+      "REDIS_PORT": "6379",
+      "REDIS_PASSWORD": ""
+    }
   }
 }

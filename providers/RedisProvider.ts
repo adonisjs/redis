@@ -20,7 +20,7 @@ export default class RedisProvider {
   public register () {
     this.$container.singleton('Adonis/Addons/Redis', () => {
       const config = this.$container.use('Adonis/Core/Config').get('redis', {})
-      return new Redis(config)
+      return new Redis(this.$container, config)
     })
   }
 }
