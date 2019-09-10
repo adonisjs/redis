@@ -4,11 +4,10 @@
   "description": "AdonisJs addon for Redis",
   "main": "build/index.js",
   "files": [
-    "build/src",
     "build/adonis-typings",
     "build/providers",
-    "build/templates",
-    "build/instructions.js"
+    "build/src",
+    "build/templates"
   ],
   "types": "build/adonis-typings/index.d.ts",
   "scripts": {
@@ -17,7 +16,7 @@
     "test": "docker-compose build && docker-compose run --rm tests",
     "lint": "tslint --project tsconfig.json",
     "clean": "del build",
-    "copyfiles": "copyfiles \"config/**/*.txt\" \"contracts/**/*.txt\" build",
+    "copyfiles": "copyfiles \"templates/**/*.txt\" build",
     "compile": "npm run lint && npm run clean && tsc",
     "build": "npm run compile && npm run copyfiles",
     "commit": "git-cz",
