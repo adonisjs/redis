@@ -190,6 +190,12 @@ declare module '@ioc:Adonis/Addons/Redis' {
    * ```
    */
   export interface RedisContract extends Emittery {
+    /**
+     * A boolean to know whether health checks have been enabled on one
+     * or more redis connections or not.
+     */
+    healthChecksEnabled: boolean,
+
     on (event: 'connect', callback: ((data: [Factory]) => any)): Emittery.UnsubscribeFn
     on (event: 'ready', callback: ((data: [Factory]) => any)): Emittery.UnsubscribeFn
     on (event: 'error', callback: ((data: [Factory, any]) => any)): Emittery.UnsubscribeFn

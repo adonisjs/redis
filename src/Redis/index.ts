@@ -35,6 +35,14 @@ export class Redis extends Emitter implements RedisContract {
   private _healthCheckConnections = Object.keys(this._config.connections)
     .filter((connection) => this._config.connections[connection].healthCheck)
 
+  /**
+   * A boolean to know whether health checks have been enabled on one
+   * or more redis connections or not.
+   */
+  public get healthChecksEnabled () {
+    return this._healthCheckConnections.length > 0
+  }
+
   constructor (private _container: IocContract, private _config: RedisConfigContract) {
     super()
   }

@@ -28,8 +28,10 @@ export default class RedisProvider {
    * Registering the health check checker with HealthCheck service
    */
   public boot () {
-    this.$container.with(['Adonis/Core/HealthCheck'], (HealthCheck) => {
-      HealthCheck.addChecker('redis', 'Adonis/Addons/Redis')
+    this.$container.with(['Adonis/Core/HealthCheck', 'Adonis/Addons/Redis'], (HealthCheck, Redis) => {
+      if (Redis.healthChecksEnabled) {
+        HealthCheck.addChecker('redis', 'Adonis/Addons/Redis')
+      }
     })
   }
 }
