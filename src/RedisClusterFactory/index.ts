@@ -29,7 +29,7 @@ export class RedisClusterFactory extends AbstractFactory<Redis.Cluster> {
     container: IocContract,
   ) {
     super(connectionName, container)
-    this.ioConnection = new Redis.Cluster(this._config.clusters, this._config.clusterOptions)
+    this.ioConnection = new Redis.Cluster(this._config.clusters as [], this._config.clusterOptions)
     this.$proxyConnectionEvents()
   }
 
@@ -38,7 +38,7 @@ export class RedisClusterFactory extends AbstractFactory<Redis.Cluster> {
    * invoke this method when first subscription is created.
    */
   protected $makeSubscriberConnection () {
-    this.ioSubscriberConnection = new Redis.Cluster(this._config.clusters, this._config.clusterOptions)
+    this.ioSubscriberConnection = new Redis.Cluster(this._config.clusters as [], this._config.clusterOptions)
   }
 
   /**
