@@ -6,6 +6,7 @@
  */
 
 import { RedisConfigContract } from '@ioc:Adonis/Addons/Redis'
+import Env from '@ioc:Adonis/Core/Env'
 
 /*
 |--------------------------------------------------------------------------
