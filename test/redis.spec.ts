@@ -152,7 +152,6 @@ test.group('Redis', () => {
     })
 
     const report = await redis.report()
-    console.log(report)
 
     assert.deepEqual(report.health, {
       healthy: false,
