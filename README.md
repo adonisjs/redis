@@ -9,9 +9,10 @@
 
 This is a first party addon to add support for using Redis server with AdonisJs. In a nutshell:
 
-1. It allows having multiple redis connections by defining them inside `start/redis(.js|.ts)` file.
+1. It allows having multiple redis connections by defining them inside `config/redis(.js|.ts)` file.
 2. Eases the API for pub/sub.
 3. Support for cluster and sentinel.
+4. Ships with health checker that you can access using the `HealthCheck` service of AdonisJs.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
