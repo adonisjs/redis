@@ -101,7 +101,7 @@
           "dest": "redis"
         }
       ],
-      "constracts": [
+      "contracts": [
         {
           "src": "contract.txt",
           "dest": "redis"
