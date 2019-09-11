@@ -2,7 +2,7 @@
   "name": "@adonisjs/redis",
   "version": "3.1.1",
   "description": "AdonisJs addon for Redis",
-  "main": "build/index.js",
+  "main": "build/providers/RedisProvider.js",
   "files": [
     "build/adonis-typings",
     "build/providers",
