@@ -1,6 +1,6 @@
 {
   "name": "@adonisjs/redis",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "description": "AdonisJs addon for Redis",
   "main": "build/index.js",
   "files": [
@@ -95,8 +95,18 @@
   },
   "adonisjs": {
     "templates": {
-      "config": [{ "src": "config.txt", "dest": "redis" }],
-      "constracts": [{ "src": "contract.txt", "dest": "redis" }]
+      "config": [
+        {
+          "src": "config.txt",
+          "dest": "redis"
+        }
+      ],
+      "constracts": [
+        {
+          "src": "contract.txt",
+          "dest": "redis"
+        }
+      ]
     },
     "env": {
       "REDIS_CONNECTION": "default",
