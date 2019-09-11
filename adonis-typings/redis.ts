@@ -8,6 +8,8 @@
 */
 
 declare module '@ioc:Adonis/Addons/Redis' {
+  import Emittery from 'emittery'
+  import { EventEmitter } from 'events'
   import { Redis, RedisOptions, ClusterOptions, Cluster, NodeRole } from 'ioredis'
 
   /**
@@ -25,6 +27,16 @@ declare module '@ioc:Adonis/Addons/Redis' {
   > = RedisConnectionsList[T] extends ClusterConfigContract
     ? RedisClusterFactoryContract
     : RedisFactoryContract
+
+  /**
+   * Shape of the report node for the redis connection report
+   */
+  export type ReportNode = {
+    connection: string,
+    status: string,
+    used_memory: string,
+    error: any,
+  }
 
   /**
    * Pubsub subscriber
@@ -48,12 +60,15 @@ declare module '@ioc:Adonis/Addons/Redis' {
   export type ClusterConfigContract = {
     clusters: { host: string, port: number }[],
     clusterOptions?: ClusterOptions,
+    healthCheck?: boolean,
   }
 
   /**
    * Shape of redis connection config
    */
-  export type ConnectionConfigContract = RedisOptions
+  export type ConnectionConfigContract = RedisOptions & {
+    healthCheck?: boolean,
+  }
 
   /**
    * We extract the list of commands from the Redis, since we
@@ -69,13 +84,14 @@ declare module '@ioc:Adonis/Addons/Redis' {
     'unsubscribe' |
     'psubscribe' |
     'punsubscribe' |
-    'quit'
+    'quit' |
+    keyof EventEmitter
   >
 
   /**
    * Redis factory interface
    */
-  export interface RedisFactoryContract extends RedisCommandsContract, RedisPubSubContract {
+  export interface RedisFactoryContract extends RedisCommandsContract, RedisPubSubContract, Emittery {
     status: string
     connectionName: string,
     subscriberStatus?: string
@@ -84,23 +100,69 @@ declare module '@ioc:Adonis/Addons/Redis' {
     connect (callback?: () => void): Promise<any>
     disconnect (): void
     duplicate (): Redis
+    getReport (checkForMemory?: boolean): Promise<ReportNode>
     quit (): Promise<void>
+
+    on (event: 'connect', callback: ((data: [this]) => any)): Emittery.UnsubscribeFn
+    on (event: 'ready', callback: ((data: [this]) => any)): Emittery.UnsubscribeFn
+    on (event: 'error', callback: ((data: [this, any]) => any)): Emittery.UnsubscribeFn
+    on (event: 'close', callback: ((data: [this]) => any)): Emittery.UnsubscribeFn
+    on (event: 'reconnecting', callback: ((data: [this]) => any)): Emittery.UnsubscribeFn
+    on (event: 'end', callback: ((data: [this]) => any)): Emittery.UnsubscribeFn
+
+    on (event: 'subscriber:connect', callback: ((data: [this]) => any)): Emittery.UnsubscribeFn
+    on (event: 'subscriber:ready', callback: ((data: [this]) => any)): Emittery.UnsubscribeFn
+    on (event: 'subscriber:error', callback: ((data: [this, any]) => any)): Emittery.UnsubscribeFn
+    on (event: 'subscriber:close', callback: ((data: [this]) => any)): Emittery.UnsubscribeFn
+    on (event: 'subscriber:reconnecting', callback: ((data: [this]) => any)): Emittery.UnsubscribeFn
+    on (event: 'subscriber:end', callback: ((data: [this]) => any)): Emittery.UnsubscribeFn
+
+    on (event: 'subscription:error', callback: ((data: [this, any]) => any)): Emittery.UnsubscribeFn
+    on (event: 'subscription:ready', callback: ((data: [this, number]) => any)): Emittery.UnsubscribeFn
+
+    on (event: 'psubscription:error', callback: ((data: [this, any]) => any)): Emittery.UnsubscribeFn
+    on (event: 'psubscription:ready', callback: ((data: [this, number]) => any)): Emittery.UnsubscribeFn
   }
 
   /**
    * Redis cluster factory interface
    */
-  export interface RedisClusterFactoryContract extends RedisCommandsContract, RedisPubSubContract {
+  export interface RedisClusterFactoryContract extends RedisCommandsContract, RedisPubSubContract, Emittery {
     status: string
     connectionName: string,
     subscriberStatus?: string
     ioConnection: Cluster
     ioSubscriberConnection?: Cluster
+    getReport (checkForMemory?: boolean): Promise<ReportNode>
     connect (callback?: () => void): Promise<any>
     nodes (role?: NodeRole): Redis[]
     disconnect (): void
     duplicate (): Cluster
     quit (): Promise<void>
+
+    on (event: 'connect', callback: ((data: [this]) => any)): Emittery.UnsubscribeFn
+    on (event: 'ready', callback: ((data: [this]) => any)): Emittery.UnsubscribeFn
+    on (event: 'error', callback: ((data: [this, any]) => any)): Emittery.UnsubscribeFn
+    on (event: 'close', callback: ((data: [this]) => any)): Emittery.UnsubscribeFn
+    on (event: 'reconnecting', callback: ((data: [this]) => any)): Emittery.UnsubscribeFn
+    on (event: 'end', callback: ((data: [this]) => any)): Emittery.UnsubscribeFn
+
+    on (event: 'subscriber:connect', callback: ((data: [this]) => any)): Emittery.UnsubscribeFn
+    on (event: 'subscriber:ready', callback: ((data: [this]) => any)): Emittery.UnsubscribeFn
+    on (event: 'subscriber:error', callback: ((data: [this, any]) => any)): Emittery.UnsubscribeFn
+    on (event: 'subscriber:close', callback: ((data: [this]) => any)): Emittery.UnsubscribeFn
+    on (event: 'subscriber:reconnecting', callback: ((data: [this]) => any)): Emittery.UnsubscribeFn
+    on (event: 'subscriber:end', callback: ((data: [this]) => any)): Emittery.UnsubscribeFn
+
+    on (event: 'subscription:error', callback: ((data: [this, any]) => any)): Emittery.UnsubscribeFn
+    on (event: 'subscription:ready', callback: ((data: [this, number]) => any)): Emittery.UnsubscribeFn
+
+    on (event: 'psubscription:error', callback: ((data: [this, any]) => any)): Emittery.UnsubscribeFn
+    on (event: 'psubscription:ready', callback: ((data: [this, number]) => any)): Emittery.UnsubscribeFn
+
+    on (event: 'node:added', callback: ((data: [this, Redis]) => any)): Emittery.UnsubscribeFn
+    on (event: 'node:removed', callback: ((data: [this, Redis]) => any)): Emittery.UnsubscribeFn
+    on (event: 'node:error', callback: ((data: [this, any, string]) => any)): Emittery.UnsubscribeFn
   }
 
   /**
@@ -111,6 +173,8 @@ declare module '@ioc:Adonis/Addons/Redis' {
     connection: keyof RedisConnectionsList,
     connections: { [P in keyof RedisConnectionsList]: RedisConnectionsList[P] },
   }
+
+  type Factory = RedisFactoryContract | RedisClusterFactoryContract
 
   /**
    * Redis class exposes the API to intertact with a redis server. You can make
@@ -124,17 +188,30 @@ declare module '@ioc:Adonis/Addons/Redis' {
    * Redis.get('some-key') // runs on default connection
    * ```
    */
-  export interface RedisContract extends Omit<
-    GetFactory<RedisConfigContract['connection']>,
-    'status' |
-    'connectionName' |
-    'subscriberStatus' |
-    'ioConnection' |
-    'ioSubscriberConnection' |
-    'duplicate' |
-    'disconnect' |
-    'quit'
-  > {
+  export interface RedisContract extends Emittery {
+    on (event: 'connect', callback: ((data: [Factory]) => any)): Emittery.UnsubscribeFn
+    on (event: 'ready', callback: ((data: [Factory]) => any)): Emittery.UnsubscribeFn
+    on (event: 'error', callback: ((data: [Factory, any]) => any)): Emittery.UnsubscribeFn
+    on (event: 'close', callback: ((data: [Factory]) => any)): Emittery.UnsubscribeFn
+    on (event: 'reconnecting', callback: ((data: [Factory]) => any)): Emittery.UnsubscribeFn
+    on (event: 'end', callback: ((data: [Factory]) => any)): Emittery.UnsubscribeFn
+
+    on (event: 'subscriber:connect', callback: ((data: [Factory]) => any)): Emittery.UnsubscribeFn
+    on (event: 'subscriber:ready', callback: ((data: [Factory]) => any)): Emittery.UnsubscribeFn
+    on (event: 'subscriber:error', callback: ((data: [Factory, any]) => any)): Emittery.UnsubscribeFn
+    on (event: 'subscriber:close', callback: ((data: [Factory]) => any)): Emittery.UnsubscribeFn
+    on (event: 'subscriber:reconnecting', callback: ((data: [Factory]) => any)): Emittery.UnsubscribeFn
+    on (event: 'subscriber:end', callback: ((data: [Factory]) => any)): Emittery.UnsubscribeFn
+
+    on (event: 'subscription:error', callback: ((data: [Factory, any]) => any)): Emittery.UnsubscribeFn
+    on (event: 'subscription:ready', callback: ((data: [Factory, number]) => any)): Emittery.UnsubscribeFn
+
+    on (event: 'psubscription:error', callback: ((data: [Factory, any]) => any)): Emittery.UnsubscribeFn
+    on (event: 'psubscription:ready', callback: ((data: [Factory, number]) => any)): Emittery.UnsubscribeFn
+
+    on (event: 'node:added', callback: ((data: [Factory, Redis]) => any)): Emittery.UnsubscribeFn
+    on (event: 'node:removed', callback: ((data: [Factory, Redis]) => any)): Emittery.UnsubscribeFn
+    on (event: 'node:error', callback: ((data: [Factory, any, string]) => any)): Emittery.UnsubscribeFn
 
     /**
      * Fetch a named connection from the defined config inside config/redis file
@@ -150,6 +227,11 @@ declare module '@ioc:Adonis/Addons/Redis' {
      * Returns the default connection client
      */
     connection (): GetFactory<RedisConfigContract['connection']>
+
+    /**
+     * Returns the healthcheck report
+     */
+    report (): Promise<{ health: { healthy: boolean, message: string }, meta: ReportNode[] }>
 
     /**
      * Quit a named connection.

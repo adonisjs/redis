@@ -90,9 +90,59 @@ test.group('Redis factory', () => {
       done()
     })
 
-    factory.on('error', async (error) => {
+    factory.on('error', async ([_self, error]) => {
       assert.equal(error.code, 'ECONNREFUSED')
       assert.equal(error.port, 4444)
+      await factory.quit()
+    })
+  })
+
+  test('get report for connected connection', async (assert, done) => {
+    assert.plan(5)
+
+    const factory = new RedisFactory('main', {
+      host: process.env.REDIS_HOST,
+      port: Number(process.env.REDIS_PORT),
+    }, new Ioc()) as unknown as RedisFactoryContract
+
+    factory.on('end', () => {
+      assert.equal(factory.ioConnection.listenerCount('ready'), 0)
+      assert.equal(factory.ioConnection.listenerCount('end'), 0)
+      done()
+    })
+
+    factory.on('ready', async () => {
+      const report = await factory.getReport(true)
+
+      assert.equal(report.status, 'ready')
+      assert.isNull(report.error)
+      assert.isDefined(report.used_memory)
+
+      await factory.quit()
+    })
+  })
+
+  test('get report for errored connection', async (assert, done) => {
+    assert.plan(5)
+
+    const factory = new RedisFactory('main', {
+      host: process.env.REDIS_HOST,
+      port: 4444,
+    }, new Ioc()) as unknown as RedisFactoryContract
+
+    factory.on('end', () => {
+      assert.equal(factory.ioConnection.listenerCount('ready'), 0)
+      assert.equal(factory.ioConnection.listenerCount('end'), 0)
+      done()
+    })
+
+    factory.on('error', async () => {
+      const report = await factory.getReport(true)
+
+      assert.notEqual(report.status, 'ready')
+      assert.equal(report.error.code, 'ECONNREFUSED')
+      assert.equal(report.used_memory, 'unknown')
+
       await factory.quit()
     })
   })
@@ -104,6 +154,7 @@ test.group('Redis factory - Subscribe', () => {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
     }, new Ioc()) as unknown as RedisFactoryContract
+
     factory.on('subscriber:ready', async () => {
       await factory.quit()
       done()
@@ -117,7 +168,8 @@ test.group('Redis factory - Subscribe', () => {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
     }, new Ioc()) as unknown as RedisFactoryContract
-    factory.on('subscription:ready', async (count) => {
+
+    factory.on('subscription:ready', async ([_self, count]) => {
       assert.equal(count, 1)
       await factory.quit()
       done()
@@ -133,7 +185,7 @@ test.group('Redis factory - Subscribe', () => {
     }, new Ioc()) as unknown as RedisFactoryContract
     let invokedCounts = 0
 
-    factory.on('subscription:ready', async (count) => {
+    factory.on('subscription:ready', async ([_self, count]) => {
       invokedCounts++
 
       if (invokedCounts === 2) {
@@ -171,7 +223,7 @@ test.group('Redis factory - Subscribe', () => {
       port: Number(process.env.REDIS_PORT),
     }, new Ioc()) as unknown as RedisFactoryContract
 
-    factory.on('subscription:ready', (count) => {
+    factory.on('subscription:ready', ([_self, count]) => {
       if (count === 1) {
         factory.publish('news', 'breaking news at 9')
       }
@@ -230,7 +282,7 @@ test.group('Redis factory - PSubscribe', () => {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
     }, new Ioc()) as unknown as RedisFactoryContract
-    factory.on('psubscription:ready', async (count) => {
+    factory.on('psubscription:ready', async ([_self, count]) => {
       assert.equal(count, 1)
       await factory.quit()
       done()
@@ -246,7 +298,7 @@ test.group('Redis factory - PSubscribe', () => {
     }, new Ioc()) as unknown as RedisFactoryContract
     let invokedCounts = 0
 
-    factory.on('psubscription:ready', async (count) => {
+    factory.on('psubscription:ready', async ([_self, count]) => {
       invokedCounts++
 
       if (invokedCounts === 2) {
@@ -286,7 +338,7 @@ test.group('Redis factory - PSubscribe', () => {
       port: Number(process.env.REDIS_PORT),
     }, new Ioc()) as unknown as RedisFactoryContract
 
-    factory.on('psubscription:ready', (count) => {
+    factory.on('psubscription:ready', ([_self, count]) => {
       if (count === 1) {
         factory.publish('news:prime', 'breaking news at 9')
       }

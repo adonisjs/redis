@@ -9,11 +9,11 @@
 
 /// <reference path="../../adonis-typings/redis.ts" />
 
+import Emitter from 'emittery'
 import { Exception } from '@poppinss/utils'
 import { IocContract } from '@adonisjs/fold'
-import { RedisConfigContract } from '@ioc:Adonis/Addons/Redis'
+import { RedisConfigContract, RedisContract, ReportNode } from '@ioc:Adonis/Addons/Redis'
 
-import { ioMethods } from '../ioMethods'
 import { RedisFactory } from '../RedisFactory'
 import { RedisClusterFactory } from '../RedisClusterFactory'
 
@@ -21,7 +21,7 @@ import { RedisClusterFactory } from '../RedisClusterFactory'
  * Redis class exposes the API to interact with a redis server. It automatically
  * re-uses the old connections.
  */
-export class Redis {
+export class Redis extends Emitter implements RedisContract {
   /**
    * A copy of live connections. We avoid re-creating a new connection
    * everytime and re-use connections.
@@ -29,14 +29,14 @@ export class Redis {
   private _connectionPools: { [key: string]: RedisClusterFactory | RedisFactory } = {}
 
   /**
-   * A method to cleanup memory after a connection has been
-   * closed.
+   * An array of connections with health checks enabled, which means, we always
+   * create a connection for them, even when they are not used.
    */
-  private _cleanup = function cleanup (connection: RedisClusterFactory | RedisFactory) {
-    delete this._connectionPools[connection.connectionName]
-  }.bind(this)
+  private _healthCheckConnections = Object.keys(this._config.connections)
+    .filter((connection) => this._config.connections[connection].healthCheck)
 
   constructor (private _container: IocContract, private _config: RedisConfigContract) {
+    super()
   }
 
   /**
@@ -96,10 +96,16 @@ export class Redis {
       ? new RedisClusterFactory(name, config, this._container)
       : new RedisFactory(name, config, this._container)
 
+    factory.on('end', ([connection]) => {
+      delete this._connectionPools[connection.connectionName]
+    })
+
     /**
-     * Hook into end event to cleanup memory
+     * Proxying all events from each factory
      */
-    factory.on('end', this._cleanup)
+    factory.onAny((event, data) => {
+      this.emit(event, data)
+    })
 
     /**
      * Return connection
@@ -136,24 +142,32 @@ export class Redis {
   /**
    * Quit all connections
    */
-  public async quitAll (): Promise<void[]> {
-    return Promise.all(Object.keys(this._connectionPools).map((name) => this.quit(name)))
+  public async quitAll (): Promise<void> {
+    await Promise.all(Object.keys(this._connectionPools).map((name) => this.quit(name)))
   }
 
   /**
    * Disconnect all connections
    */
-  public async disconnectAll (): Promise<void[]> {
-    return Promise.all(Object.keys(this._connectionPools).map((name) => this.disconnect(name)))
+  public async disconnectAll (): Promise<void> {
+    await Promise.all(Object.keys(this._connectionPools).map((name) => this.disconnect(name)))
+  }
+
+  /**
+   * Returns the report for all connections marked for `healthChecks`
+   */
+  public async report () {
+    const reports = await Promise.all(this._healthCheckConnections.map((connection) => {
+      return this.connection(connection).getReport(true)
+    })) as ReportNode[]
+
+    const healthy = !reports.find((report) => !!report.error)
+    return {
+      health: {
+        healthy,
+        message: healthy ? 'All connections are healthy' : 'One or more redis connections are not healthy',
+      },
+      meta: reports,
+    }
   }
 }
-
-/**
- * Copy redis commands to the prototype and each command
- * is executed agains the default connection
- */
-ioMethods.forEach((method) => {
-  Redis.prototype[method] = function redisProxyFn (...args: any[]) {
-    return this.connection()[method](...args)
-  }
-})

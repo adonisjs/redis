@@ -13,7 +13,9 @@ import Emitter from 'emittery'
 import { Redis, Cluster } from 'ioredis'
 import { Exception } from '@poppinss/utils'
 import { IocContract, IocResolverContract } from '@adonisjs/fold'
-import { PubSubChannelHandler, PubSubPatternHandler } from '@ioc:Adonis/Addons/Redis'
+import { PubSubChannelHandler, PubSubPatternHandler, ReportNode } from '@ioc:Adonis/Addons/Redis'
+
+const sleep = () => new Promise((resolve) => setTimeout(resolve, 1000))
 
 /**
  * Abstract factory implements the shared functionality required by Redis cluster
@@ -25,6 +27,17 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
 
   protected $subscriptions: Map<string, PubSubChannelHandler> = new Map()
   protected $psubscriptions: Map<string, PubSubPatternHandler> = new Map()
+
+  /**
+   * Number of times `getReport` was deferred, at max we defer it for 3 times
+   */
+  private _deferredReportAttempts = 0
+
+  /**
+   * The last error emitted by the `error` event. We set it to `null` after
+   * the `ready` event
+   */
+  private _lastError?: any
 
   /**
    * IocResolver to resolve bindings
@@ -42,13 +55,22 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
   }
 
   /**
+   * Returns the memory usage for a given connection
+   */
+  private async _getUsedMemory () {
+    const memory = await (this.ioConnection as Redis).info('memory')
+    const memorySegment = memory.split(/\r|\r\n/).find((line) => line.trim().startsWith('used_memory_human'))
+    return memorySegment ? memorySegment.split(':')[1] : 'unknown'
+  }
+
+  /**
    * Returns status of the main connection
    */
   public get status (): string {
     return (this.ioConnection as any).status
   }
 
-    /**
+  /**
    * Returns status of the subscriber connection or
    * undefined when there is no subscriber
    * connection
@@ -78,19 +100,31 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
    * event on the actual connection and then remove listeners.
    */
   protected $proxyConnectionEvents () {
-    this.ioConnection.on('connect', () => this.emit('connect'))
-    this.ioConnection.on('ready', () => this.emit('ready'))
-    this.ioConnection.on('error', (error: any) => this.emit('error', error))
-    this.ioConnection.on('close', () => this.emit('close'))
-    this.ioConnection.on('reconnecting', () => this.emit('reconnecting'))
+    this.ioConnection.on('connect', () => this.emit('connect', [this]))
+    this.ioConnection.on('ready', () => {
+      /**
+       * We must set the error to null when server is ready for accept
+       * command
+       */
+      this._lastError = null
+      this.emit('ready', [this])
+    })
+
+    this.ioConnection.on('error', (error: any) => {
+      this._lastError = error
+      this.emit('error', [this, error])
+    })
+
+    this.ioConnection.on('close', () => this.emit('close', [this]))
+    this.ioConnection.on('reconnecting', () => this.emit('reconnecting', [this]))
 
     /**
      * Cluster only events
      */
-    this.ioConnection.on('+node', (node: Redis) => this.emit('node:added', node))
-    this.ioConnection.on('-node', (node: Redis) => this.emit('node:removed', node))
+    this.ioConnection.on('+node', (node: Redis) => this.emit('node:added', [this, node]))
+    this.ioConnection.on('-node', (node: Redis) => this.emit('node:removed', [this, node]))
     this.ioConnection.on('node error', (error: any, address: string) => {
-      this.emit('node:error', { error, address })
+      this.emit('node:error', [this, error, address])
     })
 
     /**
@@ -100,7 +134,7 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
       this.ioConnection.removeAllListeners()
 
       try {
-        await this.emit('end', this)
+        await this.emit('end', [this])
       } catch (error) {
       }
 
@@ -147,11 +181,11 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
      * Also make sure not to clear the events of this class on subscriber
      * disconnect
      */
-    this.ioSubscriberConnection!.on('connect', () => this.emit('subscriber:connect'))
-    this.ioSubscriberConnection!.on('ready', () => this.emit('subscriber:ready'))
-    this.ioSubscriberConnection!.on('error', (error: any) => this.emit('subscriber:error', error))
-    this.ioSubscriberConnection!.on('close', () => this.emit('subscriber:close'))
-    this.ioSubscriberConnection!.on('reconnecting', () => this.emit('subscriber:reconnecting'))
+    this.ioSubscriberConnection!.on('connect', () => this.emit('subscriber:connect', [this]))
+    this.ioSubscriberConnection!.on('ready', () => this.emit('subscriber:ready', [this]))
+    this.ioSubscriberConnection!.on('error', (error: any) => this.emit('subscriber:error', [this, error]))
+    this.ioSubscriberConnection!.on('close', () => this.emit('subscriber:close', [this]))
+    this.ioSubscriberConnection!.on('reconnecting', () => this.emit('subscriber:reconnecting', [this]))
 
     /**
      * On subscriber connection end, we must clear registered
@@ -161,7 +195,7 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
       this.ioConnection.removeAllListeners()
 
       try {
-        await this.emit('subscriber:end', this)
+        await this.emit('subscriber:end', [this])
       } catch (error) {
       }
 
@@ -222,7 +256,7 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
      */
     (this.ioSubscriberConnection as any).subscribe(channel, (error: any, count: number) => {
       if (error) {
-        this.emit('subscription:error', error)
+        this.emit('subscription:error', [this, error])
         return
       }
 
@@ -230,7 +264,7 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
         handler = this._resolveIoCBinding(handler) as PubSubChannelHandler
       }
 
-      this.emit('subscription:ready', count)
+      this.emit('subscription:ready', [this, count])
       this.$subscriptions.set(channel, handler)
     })
   }
@@ -271,7 +305,7 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
      */
     (this.ioSubscriberConnection as any).psubscribe(pattern, (error: any, count: number) => {
       if (error) {
-        this.emit('psubscription:error', error)
+        this.emit('psubscription:error', [this, error])
         return
       }
 
@@ -279,7 +313,7 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
         handler = this._resolveIoCBinding(handler) as PubSubPatternHandler
       }
 
-      this.emit('psubscription:ready', count)
+      this.emit('psubscription:ready', [this, count])
       this.$psubscriptions.set(pattern, handler)
     })
   }
@@ -290,5 +324,62 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
   public punsubscribe (pattern: string) {
     this.$psubscriptions.delete(pattern)
     return (this.ioSubscriberConnection as any).punsubscribe(pattern)
+  }
+
+  /**
+   * Returns report for the connection
+   */
+  public async getReport (checkForMemory?: boolean): Promise<ReportNode> {
+    const connection = this.ioConnection as Redis
+
+    /**
+     * When status === 'connecting' we maximum wait for 3 times and then send
+     * the report. Which means, if we are unable to connect to redis within
+     * 3 seconds, we consider the connection unstable.
+     */
+    if (connection.status === 'connecting' && this._deferredReportAttempts < 3) {
+      await sleep()
+      this._deferredReportAttempts++
+      return this.getReport(checkForMemory)
+    }
+
+    /**
+     * Returns the status with the last error when connection status
+     * is not in `connect` state.
+     */
+    if (!['ready', 'connect'].includes(connection.status)) {
+      return {
+        connection: this.connectionName,
+        status: connection.status,
+        used_memory: 'unknown',
+        error: this._lastError,
+      }
+    }
+
+    try {
+      /**
+       * Ping the server for response
+       */
+      await connection.ping()
+
+      /**
+       * Collect memory when checkForMemory = true
+       */
+      const memory = checkForMemory ? await this._getUsedMemory() : 'unknown'
+
+      return {
+        connection: this.connectionName,
+        status: connection.status,
+        used_memory: memory,
+        error: null,
+      }
+    } catch (error) {
+      return {
+        connection: this.connectionName,
+        status: connection.status,
+        used_memory: 'unknown',
+        error,
+      }
+    }
   }
 }

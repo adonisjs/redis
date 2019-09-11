@@ -123,4 +123,51 @@ test.group('Redis cluster factory', () => {
       await factory.quit()
     })
   })
+
+  test('get report for connected connection', async (assert, done) => {
+    assert.plan(5)
+
+    const factory = new RedisClusterFactory('main', {
+      clusters: nodes,
+    }, new Ioc()) as unknown as RedisClusterFactoryContract
+
+    factory.on('end', () => {
+      assert.equal(factory.ioConnection.listenerCount('ready'), 0)
+      assert.equal(factory.ioConnection.listenerCount('end'), 0)
+      done()
+    })
+
+    factory.on('ready', async () => {
+      const report = await factory.getReport(true)
+
+      assert.equal(report.status, 'ready')
+      assert.isNull(report.error)
+      assert.isDefined(report.used_memory)
+
+      await factory.quit()
+    })
+  })
+
+  test('get report for errored connection', async (assert, done) => {
+    assert.plan(5)
+
+    const factory = new RedisClusterFactory('main', {
+      clusters: [{ host: process.env.REDIS_HOST!, port: 5000 }],
+    }, new Ioc()) as unknown as RedisClusterFactory
+
+    factory.on('end', () => {
+      assert.equal(factory.ioConnection.listenerCount('ready'), 0)
+      assert.equal(factory.ioConnection.listenerCount('end'), 0)
+      done()
+    })
+
+    factory.on('error', async () => {
+      const report = await factory.getReport(true)
+      assert.notEqual(report.status, 'ready')
+      assert.match(report.error.message, /Failed to refresh/)
+      assert.equal(report.used_memory, 'unknown')
+
+      await factory.quit()
+    })
+  })
 })
