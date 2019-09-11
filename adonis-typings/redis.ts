@@ -58,7 +58,7 @@ declare module '@ioc:Adonis/Addons/Redis' {
    * Shape of cluster config
    */
   export type ClusterConfigContract = {
-    clusters: { host: string, port: number }[],
+    clusters: { host: string, port: number | string }[],
     clusterOptions?: ClusterOptions,
     healthCheck?: boolean,
   }
@@ -66,8 +66,9 @@ declare module '@ioc:Adonis/Addons/Redis' {
   /**
    * Shape of redis connection config
    */
-  export type ConnectionConfigContract = RedisOptions & {
+  export type ConnectionConfigContract = Omit<RedisOptions, 'port'> & {
     healthCheck?: boolean,
+    port?: string | number,
   }
 
   /**
