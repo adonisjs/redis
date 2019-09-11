@@ -337,7 +337,7 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
      * the report. Which means, if we are unable to connect to redis within
      * 3 seconds, we consider the connection unstable.
      */
-    if (connection.status === 'connecting' && this._deferredReportAttempts < 3) {
+    if (connection.status === 'connecting' && this._deferredReportAttempts < 3 && !this._lastError) {
       await sleep()
       this._deferredReportAttempts++
       return this.getReport(checkForMemory)
