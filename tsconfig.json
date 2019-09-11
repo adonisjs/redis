@@ -2,5 +2,8 @@
   "extends": "./node_modules/@adonisjs/mrm-preset/_tsconfig",
   "compilerOptions": {
     "esModuleInterop": true
-  }
+  },
+  "files": [
+    "./node_modules/@adonisjs/application/build/adonis-typings/application.d.ts"
+  ]
 }
