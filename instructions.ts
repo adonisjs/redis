@@ -16,15 +16,19 @@ import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 export default function instructions (
   projectRoot: string,
   _application: ApplicationContract,
-  { JsonFile }: typeof sinkStatic,
+  { JsonFile, kleur }: typeof sinkStatic,
 ) {
   const tsConfig = new JsonFile(projectRoot, 'tsconfig.json')
   const types = tsConfig.get('compilerOptions.types')
 
+  /**
+   * Adding `@adonisjs/redis` to the types, when it doesn't exists
+   * already
+   */
   if (!types.find((type: string) => type.includes('@adonisjs/redis'))) {
     types.push('@adonisjs/redis')
+    tsConfig.set('compilerOptions.types', types)
+    tsConfig.commit()
+    console.log(`  update  ${kleur.green('tsconfig.json')}`)
   }
-
-  tsConfig.set('compilerOptions.types', types)
-  tsConfig.commit()
 }
