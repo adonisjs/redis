@@ -7,8 +7,7 @@
     "build/adonis-typings",
     "build/providers",
     "build/src",
-    "build/templates",
-    "build/instructions.js"
+    "build/templates"
   ],
   "types": "build/adonis-typings/redis.d.ts",
   "scripts": {
@@ -95,7 +94,10 @@
     "@adonisjs/core": "2.x.x"
   },
   "adonisjs": {
-    "instructions": "./build/instructions.js",
+    "types": "@adonisjs/redis",
+    "providers": [
+      "@adonisjs/redis"
+    ],
     "templates": {
       "config": [
         {
