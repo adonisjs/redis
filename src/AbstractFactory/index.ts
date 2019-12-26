@@ -13,7 +13,12 @@ import Emitter from 'emittery'
 import { Redis, Cluster } from 'ioredis'
 import { Exception } from '@poppinss/utils'
 import { IocContract, IocResolverContract } from '@adonisjs/fold'
-import { PubSubChannelHandler, PubSubPatternHandler, ReportNode } from '@ioc:Adonis/Addons/Redis'
+import {
+  ReportNode,
+  PubSubChannelHandler,
+  PubSubPatternHandler,
+  RedisClusterEventsList,
+} from '@ioc:Adonis/Addons/Redis'
 
 const sleep = () => new Promise((resolve) => setTimeout(resolve, 1000))
 
@@ -21,7 +26,7 @@ const sleep = () => new Promise((resolve) => setTimeout(resolve, 1000))
  * Abstract factory implements the shared functionality required by Redis cluster
  * and normal Redis connections.
  */
-export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitter {
+export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitter.Typed<RedisClusterEventsList<any>> {
   public ioConnection: T
   public ioSubscriberConnection?: T
 
@@ -31,33 +36,33 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
   /**
    * Number of times `getReport` was deferred, at max we defer it for 3 times
    */
-  private _deferredReportAttempts = 0
+  private deferredReportAttempts = 0
 
   /**
    * The last error emitted by the `error` event. We set it to `null` after
    * the `ready` event
    */
-  private _lastError?: any
+  private lastError?: any
 
   /**
    * IocResolver to resolve bindings
    */
-  private _resolver: IocResolverContract
+  private resolver: IocResolverContract
 
   /**
    * Returns an anonymous function by parsing the IoC container
    * binding.
    */
-  private _resolveIoCBinding (handler: string): PubSubChannelHandler | PubSubPatternHandler {
+  private resolveIoCBinding (handler: string): PubSubChannelHandler | PubSubPatternHandler {
     return (...args: any[]) => {
-      return this._resolver.call(handler, undefined, args)
+      return this.resolver.call(handler, undefined, args)
     }
   }
 
   /**
    * Returns the memory usage for a given connection
    */
-  private async _getUsedMemory () {
+  private async getUsedMemory () {
     const memory = await (this.ioConnection as Redis).info('memory')
     const memorySegment = memory.split(/\r|\r\n/).find((line) => line.trim().startsWith('used_memory_human'))
     return memorySegment ? memorySegment.split(':')[1] : 'unknown'
@@ -90,13 +95,13 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
 
   constructor (public connectionName: string, container: IocContract) {
     super()
-    this._resolver = container.getResolver(undefined, 'redisListeners', 'App/Listeners')
+    this.resolver = container.getResolver(undefined, 'redisListeners', 'App/Listeners')
   }
 
   /**
    * The events proxying is required, since ioredis itself doesn't cleanup
    * listeners after closing the redis connection and since closing a
-   * connection is a async operation, we have to wait for the `end`
+   * connection is an async operation, we have to wait for the `end`
    * event on the actual connection and then remove listeners.
    */
   protected $proxyConnectionEvents () {
@@ -106,12 +111,12 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
        * We must set the error to null when server is ready for accept
        * command
        */
-      this._lastError = null
+      this.lastError = null
       this.emit('ready', [this])
     })
 
     this.ioConnection.on('error', (error: any) => {
-      this._lastError = error
+      this.lastError = error
       this.emit('error', [this, error])
     })
 
@@ -261,7 +266,7 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
       }
 
       if (typeof (handler) === 'string') {
-        handler = this._resolveIoCBinding(handler) as PubSubChannelHandler
+        handler = this.resolveIoCBinding(handler) as PubSubChannelHandler
       }
 
       this.emit('subscription:ready', [this, count])
@@ -310,7 +315,7 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
       }
 
       if (typeof (handler) === 'string') {
-        handler = this._resolveIoCBinding(handler) as PubSubPatternHandler
+        handler = this.resolveIoCBinding(handler) as PubSubPatternHandler
       }
 
       this.emit('psubscription:ready', [this, count])
@@ -337,9 +342,9 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
      * the report. Which means, if we are unable to connect to redis within
      * 3 seconds, we consider the connection unstable.
      */
-    if (connection.status === 'connecting' && this._deferredReportAttempts < 3 && !this._lastError) {
+    if (connection.status === 'connecting' && this.deferredReportAttempts < 3 && !this.lastError) {
       await sleep()
-      this._deferredReportAttempts++
+      this.deferredReportAttempts++
       return this.getReport(checkForMemory)
     }
 
@@ -352,7 +357,7 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
         connection: this.connectionName,
         status: connection.status,
         used_memory: 'unknown',
-        error: this._lastError,
+        error: this.lastError,
       }
     }
 
@@ -365,7 +370,7 @@ export abstract class AbstractFactory<T extends (Redis | Cluster)> extends Emitt
       /**
        * Collect memory when checkForMemory = true
        */
-      const memory = checkForMemory ? await this._getUsedMemory() : 'unknown'
+      const memory = checkForMemory ? await this.getUsedMemory() : 'unknown'
 
       return {
         connection: this.connectionName,

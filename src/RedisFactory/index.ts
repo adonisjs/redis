@@ -25,11 +25,11 @@ import { AbstractFactory } from '../AbstractFactory'
 export class RedisFactory extends AbstractFactory<Redis.Redis> {
   constructor (
     connectionName: string,
-    private _config: ConnectionConfigContract,
+    private config: ConnectionConfigContract,
     container: IocContract,
   ) {
     super(connectionName, container)
-    this.ioConnection = new Redis(this._config)
+    this.ioConnection = new Redis(this.config)
     this.$proxyConnectionEvents()
   }
 
@@ -38,7 +38,7 @@ export class RedisFactory extends AbstractFactory<Redis.Redis> {
    * invoke this method when first subscription is created.
    */
   protected $makeSubscriberConnection () {
-    this.ioSubscriberConnection = new Redis(this._config)
+    this.ioSubscriberConnection = new Redis(this.config)
   }
 }
 

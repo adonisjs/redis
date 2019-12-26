@@ -12,6 +12,7 @@
 import Emitter from 'emittery'
 import { Exception } from '@poppinss/utils'
 import { IocContract } from '@adonisjs/fold'
+
 import {
   ReportNode,
   RedisContract,
@@ -31,48 +32,48 @@ export class Redis extends Emitter.Typed<RedisClusterEventsList<any>> implements
    * A copy of live connections. We avoid re-creating a new connection
    * everytime and re-use connections.
    */
-  private _connectionPools: { [key: string]: RedisClusterFactory | RedisFactory } = {}
+  private connectionPools: { [key: string]: RedisClusterFactory | RedisFactory } = {}
 
   /**
    * An array of connections with health checks enabled, which means, we always
    * create a connection for them, even when they are not used.
    */
-  private _healthCheckConnections = Object.keys(this._config.connections)
-    .filter((connection) => this._config.connections[connection].healthCheck)
+  private healthCheckConnections = Object.keys(this.config.connections)
+    .filter((connection) => this.config.connections[connection].healthCheck)
 
   /**
    * A boolean to know whether health checks have been enabled on one
    * or more redis connections or not.
    */
   public get healthChecksEnabled () {
-    return this._healthCheckConnections.length > 0
+    return this.healthCheckConnections.length > 0
   }
 
-  constructor (private _container: IocContract, private _config: RedisConfigContract) {
+  constructor (private container: IocContract, private config: RedisConfigContract) {
     super()
   }
 
   /**
    * Returns default connnection name
    */
-  private _getDefaultConnection (): string {
-    return this._config.connection
+  private getDefaultConnection (): string {
+    return this.config.connection
   }
 
   /**
    * Returns an existing connection using it's name or the
    * default connection,
    */
-  private _getExistingConnection (connection?: string) {
-    connection = connection || this._getDefaultConnection()
-    return this._connectionPools[connection]
+  private getExistingConnection (connection?: string) {
+    connection = connection || this.getDefaultConnection()
+    return this.connectionPools[connection]
   }
 
   /**
    * Returns config for a given connection
    */
-  private _getConnectionConfig (name: string) {
-    return this._config.connections[name]
+  private getConnectionConfig (name: string) {
+    return this.config.connections[name]
   }
 
   /**
@@ -83,16 +84,16 @@ export class Redis extends Emitter.Typed<RedisClusterEventsList<any>> implements
      * Using default connection name when actual
      * name is missing
      */
-    name = name || this._getDefaultConnection()
+    name = name || this.getDefaultConnection()
 
     /**
      * Return cached connection
      */
-    if (this._connectionPools[name]) {
-      return this._connectionPools[name]
+    if (this.connectionPools[name]) {
+      return this.connectionPools[name]
     }
 
-    const config = this._getConnectionConfig(name)
+    const config = this.getConnectionConfig(name)
 
     /**
      * Raise error if config for the given name is missing
@@ -105,12 +106,15 @@ export class Redis extends Emitter.Typed<RedisClusterEventsList<any>> implements
      * Create connection and store inside the connection pools
      * object, so that we can re-use it later
      */
-    const factory = this._connectionPools[name] = config.clusters
-      ? new RedisClusterFactory(name, config, this._container)
-      : new RedisFactory(name, config, this._container)
+    const factory = this.connectionPools[name] = config.clusters
+      ? new RedisClusterFactory(name, config, this.container)
+      : new RedisFactory(name, config, this.container)
 
+    /**
+     * Stop tracking the connection after it's removed
+     */
     factory.on('end', ([connection]) => {
-      delete this._connectionPools[connection.connectionName]
+      delete this.connectionPools[connection.connectionName]
     })
 
     /**
@@ -131,7 +135,7 @@ export class Redis extends Emitter.Typed<RedisClusterEventsList<any>> implements
    * name is defined.
    */
   public async quit (connection?: string): Promise<void> {
-    const factory = this._getExistingConnection(connection)
+    const factory = this.getExistingConnection(connection)
     if (!factory) {
       return
     }
@@ -144,7 +148,7 @@ export class Redis extends Emitter.Typed<RedisClusterEventsList<any>> implements
    * name is defined.
    */
   public async disconnect (connection?: string): Promise<void> {
-    const factory = this._getExistingConnection(connection)
+    const factory = this.getExistingConnection(connection)
     if (!factory) {
       return
     }
@@ -156,21 +160,21 @@ export class Redis extends Emitter.Typed<RedisClusterEventsList<any>> implements
    * Quit all connections
    */
   public async quitAll (): Promise<void> {
-    await Promise.all(Object.keys(this._connectionPools).map((name) => this.quit(name)))
+    await Promise.all(Object.keys(this.connectionPools).map((name) => this.quit(name)))
   }
 
   /**
    * Disconnect all connections
    */
   public async disconnectAll (): Promise<void> {
-    await Promise.all(Object.keys(this._connectionPools).map((name) => this.disconnect(name)))
+    await Promise.all(Object.keys(this.connectionPools).map((name) => this.disconnect(name)))
   }
 
   /**
    * Returns the report for all connections marked for `healthChecks`
    */
   public async report () {
-    const reports = await Promise.all(this._healthCheckConnections.map((connection) => {
+    const reports = await Promise.all(this.healthCheckConnections.map((connection) => {
       return this.connection(connection).getReport(true)
     })) as ReportNode[]
 
