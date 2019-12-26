@@ -74,17 +74,17 @@ declare module '@ioc:Adonis/Addons/Redis' {
    * need it for cluster too.
    */
   export type RedisCommandsContract = Omit<Redis,
-    'Promise' |
-    'status' |
-    'connect' |
-    'disconnect' |
-    'duplicate' |
-    'subscribe' |
-    'unsubscribe' |
-    'psubscribe' |
-    'punsubscribe' |
-    'quit' |
-    keyof EventEmitter
+  'Promise' |
+  'status' |
+  'connect' |
+  'disconnect' |
+  'duplicate' |
+  'subscribe' |
+  'unsubscribe' |
+  'psubscribe' |
+  'punsubscribe' |
+  'quit' |
+  keyof EventEmitter
   >
 
   /**
@@ -125,7 +125,7 @@ declare module '@ioc:Adonis/Addons/Redis' {
    * Redis factory interface
    */
   export interface RedisFactoryContract extends RedisCommandsContract, RedisPubSubContract, Emittery.Typed<
-    RedisEventsList<RedisFactoryContract>
+  RedisEventsList<RedisFactoryContract>
   > {
     status: string
     connectionName: string,
@@ -143,7 +143,7 @@ declare module '@ioc:Adonis/Addons/Redis' {
    * Redis cluster factory interface
    */
   export interface RedisClusterFactoryContract extends RedisCommandsContract, RedisPubSubContract, Emittery.Typed<
-    RedisClusterEventsList<RedisClusterFactoryContract>
+  RedisClusterEventsList<RedisClusterFactoryContract>
   > {
     status: string
     connectionName: string,

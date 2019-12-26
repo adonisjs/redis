@@ -43,7 +43,7 @@ test.group('Redis', () => {
     const redis = new Redis(new Ioc(), {
       connection: 'primary',
       connections: {
-          primary: {
+        primary: {
           host: process.env.REDIS_HOST,
           port: Number(process.env.REDIS_PORT),
         },
@@ -62,7 +62,7 @@ test.group('Redis', () => {
     const redis = new Redis(new Ioc(), {
       connection: 'primary',
       connections: {
-          primary: {
+        primary: {
           clusters: process.env.REDIS_CLUSTER_PORTS!.split(',').map((port) => {
             return { host: process.env.REDIS_HOST!, port: Number(port) }
           }),
