@@ -45,7 +45,6 @@
     "@adonisjs/application": "^1.3.2",
     "@adonisjs/fold": "^6.2.3",
     "@adonisjs/mrm-preset": "^2.2.3",
-    "@adonisjs/sink": "^2.4.2",
     "@types/node": "^13.1.0",
     "commitizen": "^4.0.3",
     "copyfiles": "^2.1.1",
@@ -91,10 +90,6 @@
     "ioredis": "^4.14.1"
   },
   "adonisjs": {
-    "types": "@adonisjs/redis",
-    "providers": [
-      "@adonisjs/redis"
-    ],
     "templates": {
       "config": [
         {
@@ -109,6 +104,10 @@
         }
       ]
     },
+    "types": "@adonisjs/redis",
+    "providers": [
+      "@adonisjs/redis"
+    ],
     "env": {
       "REDIS_CONNECTION": "local",
       "REDIS_HOST": "127.0.0.1",
