@@ -90,9 +90,6 @@
     "emittery": "^0.5.1",
     "ioredis": "^4.14.1"
   },
-  "peerDependencies": {
-    "@adonisjs/core": "2.x.x"
-  },
   "adonisjs": {
     "types": "@adonisjs/redis",
     "providers": [
