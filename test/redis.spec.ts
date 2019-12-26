@@ -93,7 +93,7 @@ test.group('Redis', () => {
 
     const connection = redis.connection()
     connection.on('end', () => {
-      assert.lengthOf(Object.keys(redis['connectionPools']), 0)
+      assert.equal(redis.activeConnectionsCount, 0)
       done()
     })
 

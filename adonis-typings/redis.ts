@@ -188,6 +188,11 @@ declare module '@ioc:Adonis/Addons/Redis' {
      */
     healthChecksEnabled: boolean,
 
+    activeConnectionsCount: number,
+    activeConnections: {
+      [key: string]: RedisFactoryContract | RedisClusterFactoryContract,
+    }
+
     /**
      * Fetch a named connection from the defined config inside config/redis file
      */

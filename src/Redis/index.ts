@@ -17,7 +17,9 @@ import {
   ReportNode,
   RedisContract,
   RedisConfigContract,
+  RedisFactoryContract,
   RedisClusterEventsList,
+  RedisClusterFactoryContract,
 } from '@ioc:Adonis/Addons/Redis'
 
 import { RedisFactory } from '../RedisFactory'
@@ -29,12 +31,6 @@ import { RedisClusterFactory } from '../RedisClusterFactory'
  */
 export class Redis extends Emitter.Typed<RedisClusterEventsList<any>> implements RedisContract {
   /**
-   * A copy of live connections. We avoid re-creating a new connection
-   * everytime and re-use connections.
-   */
-  private connectionPools: { [key: string]: RedisClusterFactory | RedisFactory } = {}
-
-  /**
    * An array of connections with health checks enabled, which means, we always
    * create a connection for them, even when they are not used.
    */
@@ -42,11 +38,24 @@ export class Redis extends Emitter.Typed<RedisClusterEventsList<any>> implements
     .filter((connection) => this.config.connections[connection].healthCheck)
 
   /**
+   * A copy of live connections. We avoid re-creating a new connection
+   * everytime and re-use connections.
+   */
+  public activeConnections: { [key: string]: RedisClusterFactoryContract | RedisFactoryContract } = {}
+
+  /**
    * A boolean to know whether health checks have been enabled on one
    * or more redis connections or not.
    */
   public get healthChecksEnabled () {
     return this.healthCheckConnections.length > 0
+  }
+
+  /**
+   * Returns the length of active connections
+   */
+  public get activeConnectionsCount () {
+    return Object.keys(this.activeConnections).length
   }
 
   constructor (private container: IocContract, private config: RedisConfigContract) {
@@ -66,7 +75,7 @@ export class Redis extends Emitter.Typed<RedisClusterEventsList<any>> implements
    */
   private getExistingConnection (connection?: string) {
     connection = connection || this.getDefaultConnection()
-    return this.connectionPools[connection]
+    return this.activeConnections[connection]
   }
 
   /**
@@ -89,8 +98,8 @@ export class Redis extends Emitter.Typed<RedisClusterEventsList<any>> implements
     /**
      * Return cached connection
      */
-    if (this.connectionPools[name]) {
-      return this.connectionPools[name]
+    if (this.activeConnections[name]) {
+      return this.activeConnections[name]
     }
 
     const config = this.getConnectionConfig(name)
@@ -106,15 +115,15 @@ export class Redis extends Emitter.Typed<RedisClusterEventsList<any>> implements
      * Create connection and store inside the connection pools
      * object, so that we can re-use it later
      */
-    const factory = this.connectionPools[name] = config.clusters
-      ? new RedisClusterFactory(name, config, this.container)
-      : new RedisFactory(name, config, this.container)
+    const factory = this.activeConnections[name] = config.clusters
+      ? new RedisClusterFactory(name, config, this.container) as unknown as RedisClusterFactoryContract
+      : new RedisFactory(name, config, this.container) as unknown as RedisFactoryContract
 
     /**
      * Stop tracking the connection after it's removed
      */
-    factory.on('end', ([connection]) => {
-      delete this.connectionPools[connection.connectionName]
+    (factory as any).on('end', ([connection]) => {
+      delete this.activeConnections[connection.connectionName]
     })
 
     /**
@@ -160,14 +169,14 @@ export class Redis extends Emitter.Typed<RedisClusterEventsList<any>> implements
    * Quit all connections
    */
   public async quitAll (): Promise<void> {
-    await Promise.all(Object.keys(this.connectionPools).map((name) => this.quit(name)))
+    await Promise.all(Object.keys(this.activeConnections).map((name) => this.quit(name)))
   }
 
   /**
    * Disconnect all connections
    */
   public async disconnectAll (): Promise<void> {
-    await Promise.all(Object.keys(this.connectionPools).map((name) => this.disconnect(name)))
+    await Promise.all(Object.keys(this.activeConnections).map((name) => this.disconnect(name)))
   }
 
   /**
