@@ -12,7 +12,12 @@
 import Emitter from 'emittery'
 import { Exception } from '@poppinss/utils'
 import { IocContract } from '@adonisjs/fold'
-import { RedisConfigContract, RedisContract, ReportNode } from '@ioc:Adonis/Addons/Redis'
+import {
+  ReportNode,
+  RedisContract,
+  RedisConfigContract,
+  RedisClusterEventsList,
+} from '@ioc:Adonis/Addons/Redis'
 
 import { RedisFactory } from '../RedisFactory'
 import { RedisClusterFactory } from '../RedisClusterFactory'
@@ -21,7 +26,7 @@ import { RedisClusterFactory } from '../RedisClusterFactory'
  * Redis class exposes the API to interact with a redis server. It automatically
  * re-uses the old connections.
  */
-export class Redis extends Emitter implements RedisContract {
+export class Redis extends Emitter.Typed<RedisClusterEventsList<any>> implements RedisContract {
   /**
    * A copy of live connections. We avoid re-creating a new connection
    * everytime and re-use connections.
@@ -111,7 +116,7 @@ export class Redis extends Emitter implements RedisContract {
     /**
      * Proxying all events from each factory
      */
-    factory.onAny((event, data) => {
+    factory.onAny((event: any, data) => {
       this.emit(event, data)
     })
 
