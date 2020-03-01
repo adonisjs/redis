@@ -42,23 +42,23 @@
     "tag": "alpha"
   },
   "devDependencies": {
-    "@adonisjs/application": "^1.3.4",
+    "@adonisjs/application": "^1.3.6",
     "@adonisjs/fold": "^6.3.3",
     "@adonisjs/mrm-preset": "^2.2.4",
-    "@types/node": "^13.7.0",
+    "@types/node": "^13.7.7",
     "commitizen": "^4.0.3",
     "copyfiles": "^2.2.0",
     "cz-conventional-changelog": "^3.1.0",
     "del-cli": "^3.0.0",
     "doctoc": "^1.4.0",
     "eslint": "^6.8.0",
-    "eslint-plugin-adonis": "^1.0.6",
-    "husky": "^4.2.1",
+    "eslint-plugin-adonis": "^1.0.8",
+    "husky": "^4.2.3",
     "japa": "^3.0.1",
-    "mrm": "^2.0.4",
+    "mrm": "^2.1.0",
     "np": "^5.2.1",
     "ts-node": "^8.6.2",
-    "typescript": "^3.7.5"
+    "typescript": "^3.8.3"
   },
   "nyc": {
     "exclude": [
@@ -85,9 +85,9 @@
   },
   "dependencies": {
     "@poppinss/utils": "^2.1.2",
-    "@types/ioredis": "^4.14.7",
+    "@types/ioredis": "^4.14.8",
     "emittery": "^0.5.1",
-    "ioredis": "^4.14.1"
+    "ioredis": "^4.16.0"
   },
   "adonisjs": {
     "templates": {
