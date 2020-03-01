@@ -6,7 +6,7 @@
 
 <div align="center">
   <h3>Redis</h3>
-  <p>Redis provider for AdonisJs with support for multiple redis connections, cluster, pub/sub and much more</p>
+  <p>Redis provider for AdonisJS with support for multiple redis connections, cluster, pub/sub and much more</p>
 </div>
 
 <br />
@@ -23,7 +23,7 @@
       Website
     </a>
     <span> | </span>
-    <a href="https://adonisjs.com/docs">
+    <a href="https://adonisjs.com/guides/quick-start">
       Guides
     </a>
     <span> | </span>
