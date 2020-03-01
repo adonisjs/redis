@@ -21,6 +21,7 @@ import {
   RedisClusterEventsList,
   RedisClusterFactoryContract,
 } from '@ioc:Adonis/Addons/Redis'
+import { HealthReportEntry } from '@ioc:Adonis/Core/HealthCheck'
 
 import { RedisFactory } from '../RedisFactory'
 import { RedisClusterFactory } from '../RedisClusterFactory'
@@ -189,6 +190,7 @@ export class Redis extends Emitter.Typed<RedisClusterEventsList<any>> implements
 
     const healthy = !reports.find((report) => !!report.error)
     return {
+      displayName: 'Redis',
       health: {
         healthy,
         message: healthy ? 'All connections are healthy' : 'One or more redis connections are not healthy',

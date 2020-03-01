@@ -13,6 +13,7 @@ import Emitter from 'emittery'
 import { Redis, Cluster } from 'ioredis'
 import { Exception } from '@poppinss/utils'
 import { IocContract, IocResolverContract } from '@adonisjs/fold'
+
 import {
   ReportNode,
   PubSubChannelHandler,

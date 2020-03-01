@@ -10,6 +10,7 @@
 declare module '@ioc:Adonis/Addons/Redis' {
   import Emittery from 'emittery'
   import { EventEmitter } from 'events'
+  import { HealthReportEntry } from '@ioc:Adonis/Core/HealthCheck'
   import { Redis, RedisOptions, ClusterOptions, Cluster, NodeRole } from 'ioredis'
 
   /**
@@ -211,7 +212,7 @@ declare module '@ioc:Adonis/Addons/Redis' {
     /**
      * Returns the healthcheck report
      */
-    report (): Promise<{ health: { healthy: boolean, message: string }, meta: ReportNode[] }>
+    report (): Promise<HealthReportEntry & { meta: ReportNode[] }>
 
     /**
      * Quit a named connection.
