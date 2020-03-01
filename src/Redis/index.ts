@@ -21,7 +21,6 @@ import {
   RedisClusterEventsList,
   RedisClusterFactoryContract,
 } from '@ioc:Adonis/Addons/Redis'
-import { HealthReportEntry } from '@ioc:Adonis/Core/HealthCheck'
 
 import { RedisFactory } from '../RedisFactory'
 import { RedisClusterFactory } from '../RedisClusterFactory'
