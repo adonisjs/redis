@@ -11,43 +11,43 @@
 
 import Redis from 'ioredis'
 import { IocContract } from '@adonisjs/fold'
-import { ConnectionConfigContract } from '@ioc:Adonis/Addons/Redis'
+import { RedisConnectionConfig } from '@ioc:Adonis/Addons/Redis'
 
 import { ioMethods } from '../ioMethods'
-import { AbstractFactory } from '../AbstractFactory'
+import { AbstractConnection } from '../AbstractConnection'
 
 /**
- * Redis factory exposes the API to run Redis commands using `ioredis` as the
- * underlying client. The factory abstracts the need of creating and managing
+ * Redis connection exposes the API to run Redis commands using `ioredis` as the
+ * underlying client. The class abstracts the need of creating and managing
  * multiple pub/sub connections by hand, since it handles that internally
  * by itself.
  */
-export class RedisFactory extends AbstractFactory<Redis.Redis> {
+export class RedisConnection extends AbstractConnection<Redis.Redis> {
   constructor (
     connectionName: string,
-    private config: ConnectionConfigContract,
+    private config: RedisConnectionConfig,
     container: IocContract,
   ) {
     super(connectionName, container)
     this.ioConnection = new Redis(this.config)
-    this.$proxyConnectionEvents()
+    this.proxyConnectionEvents()
   }
 
   /**
-   * Creates the subscriber connection, the [[AbstractFactory]] will
+   * Creates the subscriber connection, the [[AbstractConnection]] will
    * invoke this method when first subscription is created.
    */
-  protected $makeSubscriberConnection () {
+  protected makeSubscriberConnection () {
     this.ioSubscriberConnection = new Redis(this.config)
   }
 }
 
 /**
- * Since types in AdonisJs are derived from interfaces, we take the leverage
+ * Since types in AdonisJS are derived from interfaces, we take the leverage
  * of dynamically adding redis methods to the class prototype.
  */
 ioMethods.forEach((method) => {
-  RedisFactory.prototype[method] = function redisFactoryProxyFn (...args: any[]) {
+  RedisConnection.prototype[method] = function redisConnectionProxyFn (...args: any[]) {
     return this.ioConnection[method](...args)
   }
 })

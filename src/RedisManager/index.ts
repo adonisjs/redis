@@ -9,27 +9,24 @@
 
 /// <reference path="../../adonis-typings/redis.ts" />
 
-import Emitter from 'emittery'
 import { Exception } from '@poppinss/utils'
 import { IocContract } from '@adonisjs/fold'
 
 import {
-  ReportNode,
-  RedisContract,
-  RedisConfigContract,
-  RedisFactoryContract,
-  RedisClusterEventsList,
-  RedisClusterFactoryContract,
+  RedisConfig,
+  HealthReportNode,
+  RedisManagerContract,
+  RedisConnectionContract,
+  RedisClusterConnectionContract,
 } from '@ioc:Adonis/Addons/Redis'
 
-import { RedisFactory } from '../RedisFactory'
-import { RedisClusterFactory } from '../RedisClusterFactory'
+import { RedisConnection } from '../RedisConnection'
+import { RedisClusterConnection } from '../RedisClusterConnection'
 
 /**
- * Redis class exposes the API to interact with a redis server. It automatically
- * re-uses the old connections.
+ * Redis manager exposes the API to interact with a redis server.
  */
-export class Redis extends Emitter.Typed<RedisClusterEventsList<any>> implements RedisContract {
+export class RedisManager implements RedisManagerContract {
   /**
    * An array of connections with health checks enabled, which means, we always
    * create a connection for them, even when they are not used.
@@ -41,7 +38,7 @@ export class Redis extends Emitter.Typed<RedisClusterEventsList<any>> implements
    * A copy of live connections. We avoid re-creating a new connection
    * everytime and re-use connections.
    */
-  public activeConnections: { [key: string]: RedisClusterFactoryContract | RedisFactoryContract } = {}
+  public activeConnections: { [key: string]: RedisClusterConnectionContract | RedisConnectionContract } = {}
 
   /**
    * A boolean to know whether health checks have been enabled on one
@@ -58,8 +55,7 @@ export class Redis extends Emitter.Typed<RedisClusterEventsList<any>> implements
     return Object.keys(this.activeConnections).length
   }
 
-  constructor (private container: IocContract, private config: RedisConfigContract) {
-    super()
+  constructor (private container: IocContract, private config: RedisConfig) {
   }
 
   /**
@@ -108,7 +104,7 @@ export class Redis extends Emitter.Typed<RedisClusterEventsList<any>> implements
      * Raise error if config for the given name is missing
      */
     if (!config) {
-      throw new Exception(`Define config for ${name} connection inside config/redis file`)
+      throw new Exception(`Define config for "${name}" connection inside config/redis file`)
     }
 
     /**
@@ -116,21 +112,17 @@ export class Redis extends Emitter.Typed<RedisClusterEventsList<any>> implements
      * object, so that we can re-use it later
      */
     const factory = this.activeConnections[name] = config.clusters
-      ? new RedisClusterFactory(name, config, this.container) as unknown as RedisClusterFactoryContract
-      : new RedisFactory(name, config, this.container) as unknown as RedisFactoryContract
+      ? new RedisClusterConnection(name, config, this.container) as unknown as RedisClusterConnectionContract
+      : new RedisConnection(name, config, this.container) as unknown as RedisConnectionContract
 
     /**
      * Stop tracking the connection after it's removed
      */
-    (factory as any).on('end', ([connection]) => {
+    factory.on('end', (connection) => {
       delete this.activeConnections[connection.connectionName]
     })
 
-    /**
-     * Proxying all events from each factory
-     */
-    factory.onAny((event: any, data) => {
-      this.emit(event, data)
+    factory.on('error', () => {
     })
 
     /**
@@ -185,7 +177,7 @@ export class Redis extends Emitter.Typed<RedisClusterEventsList<any>> implements
   public async report () {
     const reports = await Promise.all(this.healthCheckConnections.map((connection) => {
       return this.connection(connection).getReport(true)
-    })) as ReportNode[]
+    })) as HealthReportNode[]
 
     const healthy = !reports.find((report) => !!report.error)
     return {

@@ -11,13 +11,13 @@
 
 import test from 'japa'
 import { Ioc } from '@adonisjs/fold'
-import { RedisContract } from '@ioc:Adonis/Addons/Redis'
+import { RedisManagerContract } from '@ioc:Adonis/Addons/Redis'
 
-import { Redis } from '../src/Redis'
+import { RedisManager } from '../src/RedisManager'
 
 test.group('Redis', () => {
-  test('run redis commands using default connection', async (assert, done) => {
-    const redis = new Redis(new Ioc(), {
+  test('run redis commands using default connection', async (assert) => {
+    const redis = new RedisManager(new Ioc(), {
       connection: 'primary',
       connections: {
         primary: {
@@ -25,22 +25,18 @@ test.group('Redis', () => {
           port: Number(process.env.REDIS_PORT),
         },
       },
-    } as any) as unknown as RedisContract
+    } as any) as unknown as RedisManagerContract
 
     await redis.connection().set('greeting', 'hello-world')
     const greeting = await redis.connection().get('greeting')
     assert.equal(greeting, 'hello-world')
 
-    redis.on('end', () => {
-      done()
-    })
-
     await redis.connection().del('greeting')
     await redis.quit('primary')
   })
 
-  test('re-use connection when connection method is called', async (assert, done) => {
-    const redis = new Redis(new Ioc(), {
+  test('re-use connection when connection method is called', async (assert) => {
+    const redis = new RedisManager(new Ioc(), {
       connection: 'primary',
       connections: {
         primary: {
@@ -48,40 +44,33 @@ test.group('Redis', () => {
           port: Number(process.env.REDIS_PORT),
         },
       },
-    } as any) as unknown as RedisContract
-
-    redis.on('end', () => {
-      done()
-    })
+    } as any) as unknown as RedisManagerContract
 
     assert.deepEqual(redis.connection(), redis.connection('primary'))
     await redis.quit()
   })
 
   test('connect to redis cluster when cluster array is defined', async (assert, done) => {
-    const redis = new Redis(new Ioc(), {
-      connection: 'primary',
+    const redis = new RedisManager(new Ioc(), {
+      connection: 'cluster',
       connections: {
-        primary: {
+        cluster: {
           clusters: process.env.REDIS_CLUSTER_PORTS!.split(',').map((port) => {
             return { host: process.env.REDIS_HOST!, port: Number(port) }
           }),
         },
       },
-    } as any) as unknown as RedisContract
+    } as any) as unknown as RedisManagerContract
 
-    redis.on('end', () => {
-      done()
-    })
-
-    redis.connection().on('ready', async () => {
-      assert.equal(redis.connection().nodes().length, 6)
+    redis.connection('cluster').on('ready', async () => {
+      assert.equal(redis.connection('cluster').nodes().length, 6)
       await redis.quit()
+      done()
     })
   })
 
   test('on disconnect clear connection from tracked list', async (assert, done) => {
-    const redis = new Redis(new Ioc(), {
+    const redis = new RedisManager(new Ioc(), {
       connection: 'primary',
       connections: {
         primary: {
@@ -89,7 +78,7 @@ test.group('Redis', () => {
           port: Number(process.env.REDIS_PORT),
         },
       },
-    } as any) as unknown as RedisContract
+    } as any) as unknown as RedisManagerContract
 
     const connection = redis.connection()
     connection.on('end', () => {
@@ -102,8 +91,8 @@ test.group('Redis', () => {
     })
   })
 
-  test('get report for connections marked for healthChecks', async (assert, done) => {
-    const redis = new Redis(new Ioc(), {
+  test('get report for connections marked for healthChecks', async (assert) => {
+    const redis = new RedisManager(new Ioc(), {
       connection: 'primary',
       connections: {
         primary: {
@@ -117,10 +106,6 @@ test.group('Redis', () => {
         },
       },
     } as any)
-
-    redis.on('end', () => {
-      done()
-    })
 
     const report = await redis.report()
     assert.deepEqual(report.health, { healthy: true, message: 'All connections are healthy' })
@@ -130,8 +115,8 @@ test.group('Redis', () => {
     await redis.quit()
   })
 
-  test('generate correct report when one of the connections are broken', async (assert, done) => {
-    const redis = new Redis(new Ioc(), {
+  test('generate correct report when one of the connections are broken', async (assert) => {
+    const redis = new RedisManager(new Ioc(), {
       connection: 'primary',
       connections: {
         primary: {
@@ -146,10 +131,6 @@ test.group('Redis', () => {
         },
       },
     } as any)
-
-    redis.on('end', () => {
-      done()
-    })
 
     const report = await redis.report()
 

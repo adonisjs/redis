@@ -8,35 +8,29 @@
 */
 
 declare module '@ioc:Adonis/Addons/Redis' {
-  import Emittery from 'emittery'
   import { EventEmitter } from 'events'
   import { HealthReportEntry } from '@ioc:Adonis/Core/HealthCheck'
   import { Redis, RedisOptions, ClusterOptions, Cluster, NodeRole } from 'ioredis'
 
-  /**
-   * List of connections from the config interface by excluding the
-   * connection property.
-   */
-  export interface RedisConnectionsList {
-  }
-
+  /*
+  |--------------------------------------------------------------------------
+  | Helpers
+  |--------------------------------------------------------------------------
+  */
   /**
    * Returns factory for a given connection by inspecting it's config.
    */
-  type GetFactory<T extends keyof RedisConnectionsList> = RedisConnectionsList[T] extends ClusterConfigContract
-    ? RedisClusterFactoryContract
-    : RedisFactoryContract
+  type GetConnectionFactoryType<
+    T extends keyof RedisConnectionsList
+  > = RedisConnectionsList[T] extends RedisClusterConfig
+    ? RedisClusterConnectionContract
+    : RedisConnectionContract
 
-  /**
-   * Shape of the report node for the redis connection report
-   */
-  export type ReportNode = {
-    connection: string,
-    status: string,
-    used_memory: string,
-    error: any,
-  }
-
+  /*
+  |--------------------------------------------------------------------------
+  | PubSub
+  |--------------------------------------------------------------------------
+  */
   /**
    * Pubsub subscriber
    */
@@ -54,177 +48,124 @@ declare module '@ioc:Adonis/Addons/Redis' {
   }
 
   /**
-   * Shape of cluster config
+   * Shape of the report node for the redis connection report
    */
-  export type ClusterConfigContract = {
-    clusters: { host: string, port: number | string }[],
-    clusterOptions?: ClusterOptions,
-    healthCheck?: boolean,
+  export type HealthReportNode = {
+    connection: string,
+    status: string,
+    used_memory: string,
+    error: any,
   }
 
   /**
-   * Shape of redis connection config
+   * List of commands on the IORedis. We omit their internal events and pub/sub
+   * handlers, since we our own.
    */
-  export type ConnectionConfigContract = Omit<RedisOptions, 'port'> & {
-    healthCheck?: boolean,
-    port?: string | number,
-  }
-
-  /**
-   * We extract the list of commands from the Redis, since we
-   * need it for cluster too.
-   */
-  export type RedisCommandsContract = Omit<Redis,
-  'Promise' |
-  'status' |
-  'connect' |
-  'disconnect' |
-  'duplicate' |
-  'subscribe' |
-  'unsubscribe' |
-  'psubscribe' |
-  'punsubscribe' |
-  'quit' |
-  keyof EventEmitter
+  export type IORedisCommands = Omit<Redis,
+    'Promise' |
+    'status' |
+    'connect' |
+    'disconnect' |
+    'duplicate' |
+    'subscribe' |
+    'unsubscribe' |
+    'psubscribe' |
+    'punsubscribe' |
+    'quit' |
+    keyof EventEmitter
   >
 
+  /*
+  |--------------------------------------------------------------------------
+  | Redis Connections
+  |--------------------------------------------------------------------------
+  */
   /**
-   * List of typed events emitted by the redis factory
+   * Standard Redis Connection
    */
-  export interface RedisEventsList<T extends Factory> {
-    connect: [T],
-    ready: [T],
-    error: [T, any],
-    close: [T],
-    reconnecting: [T],
-    end: [T],
-
-    'subscriber:connect': [T],
-    'subscriber:ready': [T],
-    'subscriber:error': [T, any],
-    'subscriber:close': [T],
-    'subscriber:reconnecting': [T],
-    'subscriber:end': [T],
-
-    'subscription:error': [T, any],
-    'subscription:ready': [T, number],
-
-    'psubscription:error': [T, any],
-    'psubscription:ready': [T, number],
-  }
-
-  /**
-   * List of typed events emitted by the redis cluster factory
-   */
-  export interface RedisClusterEventsList<T extends Factory> extends RedisEventsList<T> {
-    'node:added': [T, Redis],
-    'node:removed': [T, Redis],
-    'node:error': [T, any, string],
-  }
-
-  /**
-   * Redis factory interface
-   */
-  export interface RedisFactoryContract extends RedisCommandsContract, RedisPubSubContract, Emittery.Typed<
-  RedisEventsList<RedisFactoryContract>
-  > {
+  export interface RedisConnectionContract extends IORedisCommands, RedisPubSubContract, EventEmitter {
     status: string
-    connectionName: string,
+    connectionName: string
     subscriberStatus?: string
     ioConnection: Redis
     ioSubscriberConnection?: Redis
+
     connect (callback?: () => void): Promise<any>
-    disconnect (): void
+    disconnect (): Promise<void>
     duplicate (): Redis
-    getReport (checkForMemory?: boolean): Promise<ReportNode>
+    getReport (checkForMemory?: boolean): Promise<HealthReportNode>
     quit (): Promise<void>
   }
 
   /**
    * Redis cluster factory interface
    */
-  export interface RedisClusterFactoryContract extends RedisCommandsContract, RedisPubSubContract, Emittery.Typed<
-  RedisClusterEventsList<RedisClusterFactoryContract>
-  > {
+  export interface RedisClusterConnectionContract extends IORedisCommands, RedisPubSubContract, EventEmitter {
     status: string
     connectionName: string,
     subscriberStatus?: string
     ioConnection: Cluster
     ioSubscriberConnection?: Cluster
-    getReport (checkForMemory?: boolean): Promise<ReportNode>
+
+    getReport (checkForMemory?: boolean): Promise<HealthReportNode>
     connect (callback?: () => void): Promise<any>
     nodes (role?: NodeRole): Redis[]
-    disconnect (): void
+    disconnect (): Promise<void>
     duplicate (): Cluster
     quit (): Promise<void>
   }
 
-  /**
-   * Define the config properties on this interface and they will appear
-   * everywhere.
-   */
-  export interface RedisConfigContract {
-    connection: keyof RedisConnectionsList,
-    connections: { [P in keyof RedisConnectionsList]: RedisConnectionsList[P] },
-  }
-
-  type Factory = RedisFactoryContract | RedisClusterFactoryContract
+  type Connection = RedisClusterConnectionContract | RedisConnectionContract
 
   /**
-   * Redis class exposes the API to intertact with a redis server. You can make
+   * Redis manager exposes the API to intertact with a redis server. One can make
    * use of multiple redis connections by defining them inside `config/redis`
    * file.
    *
    * ```ts
    * Redis.connection() // default connection
    * Redis.connection('primary') // named connection
-   *
-   * Redis.get('some-key') // runs on default connection
    * ```
    */
-  export interface RedisContract extends Emittery.Typed<RedisClusterEventsList<Factory>> {
+  export interface RedisManagerContract {
     /**
      * A boolean to know whether health checks have been enabled on one
      * or more redis connections or not.
      */
     healthChecksEnabled: boolean,
 
+    /**
+     * Number of active redis connection.
+     */
     activeConnectionsCount: number,
-    activeConnections: {
-      [key: string]: RedisFactoryContract | RedisClusterFactoryContract,
-    }
+    activeConnections: { [key: string]: Connection }
 
     /**
      * Fetch a named connection from the defined config inside config/redis file
      */
-    connection<Connection extends keyof RedisConnectionsList> (name: Connection): GetFactory<Connection>
-
-    /**
-     * Fetch a named connection from the defined config inside config/redis file
-     */
-    connection (name: string): RedisFactoryContract | RedisClusterFactoryContract
+    connection<Connection extends keyof RedisConnectionsList> (
+      name: Connection,
+    ): GetConnectionFactoryType<Connection>
 
     /**
      * Returns the default connection client
      */
-    connection (): GetFactory<RedisConfigContract['connection']>
+    connection (): GetConnectionFactoryType<RedisConfig['connection']>
 
     /**
      * Returns the healthcheck report
      */
-    report (): Promise<HealthReportEntry & { meta: ReportNode[] }>
+    report (): Promise<HealthReportEntry & { meta: HealthReportNode[] }>
 
     /**
      * Quit a named connection.
      */
-    quit<Connection extends keyof RedisConnectionsList> (name: Connection): Promise<void>
-    quit (name?: string): Promise<void>
+    quit<Connection extends keyof RedisConnectionsList> (name?: Connection): Promise<void>
 
     /**
      * Forcefully disconnect a named connection.
      */
-    disconnect<Connection extends keyof RedisConnectionsList> (name: Connection): Promise<void>
-    disconnect (name?: string): Promise<void>
+    disconnect<Connection extends keyof RedisConnectionsList> (name?: Connection): Promise<void>
 
     /**
      * Quit all redis connections
@@ -237,6 +178,44 @@ declare module '@ioc:Adonis/Addons/Redis' {
     disconnectAll (): Promise<void>
   }
 
-  const Redis: RedisContract
+  /*
+  |--------------------------------------------------------------------------
+  | Config
+  |--------------------------------------------------------------------------
+  */
+  /**
+   * Shape of standard Redis connection config
+   */
+  export type RedisConnectionConfig = Omit<RedisOptions, 'port'> & {
+    healthCheck?: boolean,
+    port?: string | number,
+  }
+
+  /**
+   * Shape of cluster config
+   */
+  export type RedisClusterConfig = {
+    clusters: { host: string, port: number | string }[],
+    clusterOptions?: ClusterOptions,
+    healthCheck?: boolean,
+  }
+
+  /**
+   * A list of typed connections defined in the user land using
+   * the contracts file
+   */
+  export interface RedisConnectionsList {
+  }
+
+  /**
+   * Define the config properties on this interface and they will appear
+   * everywhere.
+   */
+  export interface RedisConfig {
+    connection: keyof RedisConnectionsList,
+    connections: { [P in keyof RedisConnectionsList]: RedisConnectionsList[P] },
+  }
+
+  const Redis: RedisManagerContract
   export default Redis
 }

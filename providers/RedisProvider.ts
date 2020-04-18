@@ -8,7 +8,7 @@
 */
 
 import { IocContract } from '@adonisjs/fold'
-import { Redis } from '../src/Redis'
+import { RedisManager } from '../src/RedisManager'
 
 export default class RedisProvider {
   constructor (protected $container: IocContract) {
@@ -20,7 +20,7 @@ export default class RedisProvider {
   public register () {
     this.$container.singleton('Adonis/Addons/Redis', () => {
       const config = this.$container.use('Adonis/Core/Config').get('redis', {})
-      return new Redis(this.$container, config)
+      return new RedisManager(this.$container, config)
     })
   }
 
@@ -30,7 +30,7 @@ export default class RedisProvider {
   public boot () {
     this.$container.with(['Adonis/Core/HealthCheck', 'Adonis/Addons/Redis'], (
       HealthCheck,
-      RedisBinding: Redis,
+      RedisBinding: RedisManager,
     ) => {
       if (RedisBinding.healthChecksEnabled) {
         HealthCheck.addChecker('redis', 'Adonis/Addons/Redis')

@@ -11,33 +11,32 @@
 
 import Redis from 'ioredis'
 import { IocContract } from '@adonisjs/fold'
-import { ClusterConfigContract } from '@ioc:Adonis/Addons/Redis'
+import { RedisClusterConfig } from '@ioc:Adonis/Addons/Redis'
 
 import { ioMethods } from '../ioMethods'
-import { AbstractFactory } from '../AbstractFactory'
+import { AbstractConnection } from '../AbstractConnection'
 
 /**
- * Redis cluster factory exposes the API to run Redis commands using `ioredis` as the
- * underlying client. The factory abstracts the need of creating and managing
- * multiple pub/sub connections by hand, since it handles that internally
- * by itself.
+ * Redis cluster connection exposes the API to run Redis commands using `ioredis` as the
+ * underlying client. The class abstracts the need of creating and managing multiple
+ * pub/sub connections by hand, since it handles that internally by itself.
  */
-export class RedisClusterFactory extends AbstractFactory<Redis.Cluster> {
+export class RedisClusterConnection extends AbstractConnection<Redis.Cluster> {
   constructor (
     connectionName: string,
-    private config: ClusterConfigContract,
+    private config: RedisClusterConfig,
     container: IocContract,
   ) {
     super(connectionName, container)
-    this.ioConnection = new Redis.Cluster(this.config.clusters as [], this.config.clusterOptions)
-    this.$proxyConnectionEvents()
+    this.ioConnection = new Redis.Cluster(this.config.clusters as any[], this.config.clusterOptions)
+    this.proxyConnectionEvents()
   }
 
   /**
-   * Creates the subscriber connection, the [[AbstractFactory]] will
+   * Creates the subscriber connection, the [[AbstractConnection]] will
    * invoke this method when first subscription is created.
    */
-  protected $makeSubscriberConnection () {
+  protected makeSubscriberConnection () {
     this.ioSubscriberConnection = new Redis.Cluster(this.config.clusters as [], this.config.clusterOptions)
   }
 
@@ -50,7 +49,7 @@ export class RedisClusterFactory extends AbstractFactory<Redis.Cluster> {
 }
 
 ioMethods.forEach((method) => {
-  RedisClusterFactory.prototype[method] = function redisFactoryProxyFn (...args: any[]) {
+  RedisClusterConnection.prototype[method] = function redisConnectionProxyFn (...args: any[]) {
     return this.ioConnection[method](...args)
   }
 })

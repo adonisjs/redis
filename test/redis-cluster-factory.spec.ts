@@ -11,8 +11,8 @@
 
 import test from 'japa'
 import { Ioc } from '@adonisjs/fold'
-import { RedisClusterFactory } from '../src/RedisClusterFactory'
-import { RedisClusterFactoryContract } from '@ioc:Adonis/Addons/Redis'
+import { RedisClusterConnection } from '../src/RedisClusterConnection'
+import { RedisClusterConnectionContract } from '@ioc:Adonis/Addons/Redis'
 
 const nodes = process.env.REDIS_CLUSTER_PORTS!.split(',').map((port) => {
   return { host: process.env.REDIS_HOST!, port: Number(port) }
@@ -20,9 +20,9 @@ const nodes = process.env.REDIS_CLUSTER_PORTS!.split(',').map((port) => {
 
 test.group('Redis cluster factory', () => {
   test('emit ready when connected to redis server', (assert, done) => {
-    const factory = new RedisClusterFactory('main', {
+    const factory = new RedisClusterConnection('main', {
       clusters: nodes,
-    }, new Ioc()) as unknown as RedisClusterFactoryContract
+    }, new Ioc()) as unknown as RedisClusterConnectionContract
 
     factory.on('ready', async () => {
       assert.isTrue(true)
@@ -32,9 +32,9 @@ test.group('Redis cluster factory', () => {
   })
 
   test('emit node connection event', (assert, done) => {
-    const factory = new RedisClusterFactory('main', {
+    const factory = new RedisClusterConnection('main', {
       clusters: [{ host: process.env.REDIS_HOST!!, port: 7000 }],
-    }, new Ioc()) as unknown as RedisClusterFactoryContract
+    }, new Ioc()) as unknown as RedisClusterConnectionContract
 
     factory.on('node:added', async () => {
       assert.isTrue(true)
@@ -44,9 +44,9 @@ test.group('Redis cluster factory', () => {
   })
 
   test('execute redis commands', async (assert) => {
-    const factory = new RedisClusterFactory('main', {
+    const factory = new RedisClusterConnection('main', {
       clusters: nodes,
-    }, new Ioc()) as unknown as RedisClusterFactoryContract
+    }, new Ioc()) as unknown as RedisClusterConnectionContract
 
     await factory.set('greeting', 'hello world')
     const greeting = await factory.get('greeting')
@@ -57,9 +57,11 @@ test.group('Redis cluster factory', () => {
   })
 
   test('clean event listeners on quit', async (assert, done) => {
-    const factory = new RedisClusterFactory('main', {
+    assert.plan(2)
+
+    const factory = new RedisClusterConnection('main', {
       clusters: nodes,
-    }, new Ioc()) as unknown as RedisClusterFactoryContract
+    }, new Ioc()) as unknown as RedisClusterConnectionContract
 
     factory.on('end', () => {
       assert.equal(factory.ioConnection.listenerCount('ready'), 0)
@@ -73,9 +75,11 @@ test.group('Redis cluster factory', () => {
   })
 
   test('clean event listeners on disconnect', async (assert, done) => {
-    const factory = new RedisClusterFactory('main', {
+    assert.plan(2)
+
+    const factory = new RedisClusterConnection('main', {
       clusters: nodes,
-    }, new Ioc()) as unknown as RedisClusterFactoryContract
+    }, new Ioc()) as unknown as RedisClusterConnectionContract
 
     factory.on('end', () => {
       assert.equal(factory.ioConnection.listenerCount('ready'), 0)
@@ -89,14 +93,19 @@ test.group('Redis cluster factory', () => {
   })
 
   test('get event for connection errors', async (assert, done) => {
-    const factory = new RedisClusterFactory('main', {
+    assert.plan(2)
+
+    const factory = new RedisClusterConnection('main', {
       clusters: [{ host: process.env.REDIS_HOST!, port: 5000 }],
-    }, new Ioc()) as unknown as RedisClusterFactoryContract
+    }, new Ioc()) as unknown as RedisClusterConnectionContract
 
     factory.on('end', () => {
       assert.equal(factory.ioConnection.listenerCount('ready'), 0)
       assert.equal(factory.ioConnection.listenerCount('end'), 0)
       done()
+    })
+
+    factory.on('error', () => {
     })
 
     /**
@@ -108,9 +117,11 @@ test.group('Redis cluster factory', () => {
   })
 
   test('access cluster nodes', async (assert, done) => {
-    const factory = new RedisClusterFactory('main', {
+    assert.plan(3)
+
+    const factory = new RedisClusterConnection('main', {
       clusters: nodes,
-    }, new Ioc()) as unknown as RedisClusterFactoryContract
+    }, new Ioc()) as unknown as RedisClusterConnectionContract
 
     factory.on('end', () => {
       assert.equal(factory.ioConnection.listenerCount('ready'), 0)
@@ -127,9 +138,9 @@ test.group('Redis cluster factory', () => {
   test('get report for connected connection', async (assert, done) => {
     assert.plan(5)
 
-    const factory = new RedisClusterFactory('main', {
+    const factory = new RedisClusterConnection('main', {
       clusters: nodes,
-    }, new Ioc()) as unknown as RedisClusterFactoryContract
+    }, new Ioc()) as unknown as RedisClusterConnectionContract
 
     factory.on('end', () => {
       assert.equal(factory.ioConnection.listenerCount('ready'), 0)
@@ -151,9 +162,9 @@ test.group('Redis cluster factory', () => {
   test('get report for errored connection', async (assert, done) => {
     assert.plan(5)
 
-    const factory = new RedisClusterFactory('main', {
+    const factory = new RedisClusterConnection('main', {
       clusters: [{ host: process.env.REDIS_HOST!, port: 5000 }],
-    }, new Ioc()) as unknown as RedisClusterFactory
+    }, new Ioc()) as unknown as RedisClusterConnectionContract
 
     factory.on('end', () => {
       assert.equal(factory.ioConnection.listenerCount('ready'), 0)
