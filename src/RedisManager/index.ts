@@ -12,6 +12,7 @@
 import { Exception } from '@poppinss/utils'
 import { IocContract } from '@adonisjs/fold'
 
+import { EmitterContract } from '@ioc:Adonis/Core/Event'
 import {
   RedisConfig,
   HealthReportNode,
@@ -38,7 +39,9 @@ export class RedisManager implements RedisManagerContract {
    * A copy of live connections. We avoid re-creating a new connection
    * everytime and re-use connections.
    */
-  public activeConnections: { [key: string]: RedisClusterConnectionContract | RedisConnectionContract } = {}
+  public activeConnections: {
+    [key: string]: RedisClusterConnectionContract | RedisConnectionContract
+  } = {}
 
   /**
    * A boolean to know whether health checks have been enabled on one
@@ -55,7 +58,11 @@ export class RedisManager implements RedisManagerContract {
     return Object.keys(this.activeConnections).length
   }
 
-  constructor (private container: IocContract, private config: RedisConfig) {
+  constructor (
+    private container: IocContract,
+    private config: RedisConfig,
+    private emitter: EmitterContract,
+  ) {
   }
 
   /**
@@ -120,10 +127,11 @@ export class RedisManager implements RedisManagerContract {
      */
     factory.on('end', (connection) => {
       delete this.activeConnections[connection.connectionName]
+      this.emitter.emit('redis:end', connection)
     })
 
-    factory.on('error', () => {
-    })
+    factory.on('ready', (connection) => this.emitter.emit('redis:ready', connection))
+    factory.on('error', (error, connection) => this.emitter.emit('redis:error', [error, connection]))
 
     /**
      * Return connection

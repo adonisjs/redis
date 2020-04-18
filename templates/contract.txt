@@ -7,6 +7,6 @@
 
 declare module '@ioc:Adonis/Addons/Redis' {
   interface RedisConnectionsList {
-    local: ConnectionConfigContract,
+    local: RedisConnectionConfig,
   }
 }

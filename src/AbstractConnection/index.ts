@@ -18,9 +18,11 @@ import {
   HealthReportNode,
   PubSubChannelHandler,
   PubSubPatternHandler,
-  // RedisClusterEventsList,
 } from '@ioc:Adonis/Addons/Redis'
 
+/**
+ * Helper to sleep
+ */
 const sleep = () => new Promise((resolve) => setTimeout(resolve, 1000))
 
 /**
@@ -39,12 +41,6 @@ export abstract class AbstractConnection<T extends (Redis | Cluster)> extends Ev
   public ioSubscriberConnection?: T
 
   /**
-   * A list of active subscription and pattern subscription
-   */
-  protected subscriptions: Map<string, PubSubChannelHandler> = new Map()
-  protected psubscriptions: Map<string, PubSubPatternHandler> = new Map()
-
-  /**
    * Number of times `getReport` was deferred, at max we defer it for 3 times
    */
   private deferredReportAttempts = 0
@@ -59,6 +55,12 @@ export abstract class AbstractConnection<T extends (Redis | Cluster)> extends Ev
    * IoCResolver to resolve bindings
    */
   private resolver: IocResolverContract
+
+  /**
+   * A list of active subscription and pattern subscription
+   */
+  protected subscriptions: Map<string, PubSubChannelHandler> = new Map()
+  protected psubscriptions: Map<string, PubSubPatternHandler> = new Map()
 
   /**
    * Returns an anonymous function by parsing the IoC container

@@ -5,8 +5,8 @@
  * file.
  */
 
-import { RedisConfigContract } from '@ioc:Adonis/Addons/Redis'
 import Env from '@ioc:Adonis/Core/Env'
+import { RedisConfig } from '@ioc:Adonis/Addons/Redis'
 
 /*
 |--------------------------------------------------------------------------
@@ -21,7 +21,7 @@ import Env from '@ioc:Adonis/Core/Env'
 |
 | Make sure to check `contracts/redis.ts` file for defining extra connections
 */
-const redisConfig: RedisConfigContract = {
+const redisConfig: RedisConfig = {
   connection: Env.get('REDIS_CONNECTION', 'local') as 'local',
 
   connections: {
