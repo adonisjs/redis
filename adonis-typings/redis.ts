@@ -148,9 +148,14 @@ declare module '@ioc:Adonis/Addons/Redis' {
     ): GetConnectionFactoryType<Connection>
 
     /**
+     * Untyped connection
+     */
+    connection (name: string): RedisConnectionContract | RedisClusterConnectionContract
+
+    /**
      * Returns the default connection client
      */
-    connection (): GetConnectionFactoryType<RedisConfig['connection']>
+    connection (): RedisConnectionContract | RedisClusterConnectionContract
 
     /**
      * Returns the healthcheck report
@@ -161,11 +166,13 @@ declare module '@ioc:Adonis/Addons/Redis' {
      * Quit a named connection.
      */
     quit<Connection extends keyof RedisConnectionsList> (name?: Connection): Promise<void>
+    quit (name?: string): Promise<void>
 
     /**
      * Forcefully disconnect a named connection.
      */
     disconnect<Connection extends keyof RedisConnectionsList> (name?: Connection): Promise<void>
+    disconnect (name?: string): Promise<void>
 
     /**
      * Quit all redis connections
