@@ -9,10 +9,10 @@
 
 /// <reference path="../../adonis-typings/redis.ts" />
 
-import { Exception } from '@poppinss/utils'
 import { IocContract } from '@adonisjs/fold'
-
 import { EmitterContract } from '@ioc:Adonis/Core/Event'
+import { Exception, ManagerConfigValidator } from '@poppinss/utils'
+
 import {
   RedisConfig,
   HealthReportNode,
@@ -63,6 +63,16 @@ export class RedisManager implements RedisManagerContract {
     private config: RedisConfig,
     private emitter: EmitterContract,
   ) {
+    this.validateConfig()
+  }
+
+  /**
+   * Validate config at runtime
+   */
+  private validateConfig () {
+    const validator = new ManagerConfigValidator(this.config, 'redis', 'config/redis')
+    validator.validateDefault('connection')
+    validator.validateList('connections', 'connection')
   }
 
   /**
@@ -76,9 +86,9 @@ export class RedisManager implements RedisManagerContract {
    * Returns an existing connection using it's name or the
    * default connection,
    */
-  private getExistingConnection (connection?: string) {
-    connection = connection || this.getDefaultConnection()
-    return this.activeConnections[connection]
+  private getExistingConnection (name?: string) {
+    name = name || this.getDefaultConnection()
+    return this.activeConnections[name]
   }
 
   /**
@@ -93,8 +103,7 @@ export class RedisManager implements RedisManagerContract {
    */
   public connection (name?: string): any {
     /**
-     * Using default connection name when actual
-     * name is missing
+     * Using default connection name when actual name is missing
      */
     name = name || this.getDefaultConnection()
 
@@ -111,58 +120,58 @@ export class RedisManager implements RedisManagerContract {
      * Raise error if config for the given name is missing
      */
     if (!config) {
-      throw new Exception(`Define config for "${name}" connection inside config/redis file`)
+      throw new Exception(`Define config for "${name}" connection inside "config/redis" file`)
     }
 
     /**
      * Create connection and store inside the connection pools
      * object, so that we can re-use it later
      */
-    const factory = this.activeConnections[name] = config.clusters
+    const connection = this.activeConnections[name] = config.clusters
       ? new RedisClusterConnection(name, config, this.container) as unknown as RedisClusterConnectionContract
       : new RedisConnection(name, config, this.container) as unknown as RedisConnectionContract
 
     /**
      * Stop tracking the connection after it's removed
      */
-    factory.on('end', (connection) => {
-      delete this.activeConnections[connection.connectionName]
-      this.emitter.emit('redis:end', connection)
+    connection.on('end', ($connection) => {
+      delete this.activeConnections[$connection.connectionName]
+      this.emitter.emit('redis:end', $connection)
     })
 
-    factory.on('ready', (connection) => this.emitter.emit('redis:ready', connection))
-    factory.on('error', (error, connection) => this.emitter.emit('redis:error', [error, connection]))
+    connection.on('ready', ($connection) => this.emitter.emit('redis:ready', $connection))
+    connection.on('error', (error, $connection) => this.emitter.emit('redis:error', [error, $connection]))
 
     /**
      * Return connection
      */
-    return factory
+    return connection
   }
 
   /**
    * Quit a named connection or the default connection when no
    * name is defined.
    */
-  public async quit (connection?: string): Promise<void> {
-    const factory = this.getExistingConnection(connection)
-    if (!factory) {
+  public async quit (name?: string): Promise<void> {
+    const connection = this.getExistingConnection(name)
+    if (!connection) {
       return
     }
 
-    return factory.quit()
+    return connection.quit()
   }
 
   /**
    * Disconnect a named connection or the default connection when no
    * name is defined.
    */
-  public async disconnect (connection?: string): Promise<void> {
-    const factory = this.getExistingConnection(connection)
-    if (!factory) {
+  public async disconnect (name?: string): Promise<void> {
+    const connection = this.getExistingConnection(name)
+    if (!connection) {
       return
     }
 
-    return factory.disconnect()
+    return connection.disconnect()
   }
 
   /**
