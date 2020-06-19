@@ -9,7 +9,7 @@
 
 /// <reference path="../../adonis-typings/redis.ts" />
 
-import Redis from 'ioredis'
+import Redis, { RedisOptions } from 'ioredis'
 import { IocContract } from '@adonisjs/fold'
 import { RedisConnectionConfig } from '@ioc:Adonis/Addons/Redis'
 
@@ -23,14 +23,28 @@ import { AbstractConnection } from '../AbstractConnection'
  * by itself.
  */
 export class RedisConnection extends AbstractConnection<Redis.Redis> {
+  private config: RedisOptions
+
   constructor (
     connectionName: string,
-    private config: RedisConnectionConfig,
+    config: RedisConnectionConfig,
     container: IocContract,
   ) {
     super(connectionName, container)
+    this.config = this.normalizeConfig(config)
+
     this.ioConnection = new Redis(this.config)
     this.proxyConnectionEvents()
+  }
+
+  /**
+   * Normalizes config option to be compatible with IORedis
+   */
+  private normalizeConfig (config: RedisConnectionConfig): RedisOptions {
+    if (typeof (config.port) === 'string') {
+      config.port = Number(config.port)
+    }
+    return config as RedisOptions
   }
 
   /**

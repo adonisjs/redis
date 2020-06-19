@@ -68,7 +68,7 @@ export abstract class AbstractConnection<T extends (Redis | Cluster)> extends Ev
    */
   private resolveIoCBinding (handler: string): PubSubChannelHandler | PubSubPatternHandler {
     return (...args: any[]) => {
-      return this.resolver.call(handler, undefined, args)
+      return this.resolver.call<any>(handler, undefined, args)
     }
   }
 
