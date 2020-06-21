@@ -92,7 +92,6 @@ declare module '@ioc:Adonis/Addons/Redis' {
 
     connect (callback?: () => void): Promise<any>
     disconnect (): Promise<void>
-    duplicate (): Redis
     getReport (checkForMemory?: boolean): Promise<HealthReportNode>
     quit (): Promise<void>
   }
@@ -111,7 +110,6 @@ declare module '@ioc:Adonis/Addons/Redis' {
     connect (callback?: () => void): Promise<any>
     nodes (role?: NodeRole): Redis[]
     disconnect (): Promise<void>
-    duplicate (): Cluster
     quit (): Promise<void>
   }
 

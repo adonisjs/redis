@@ -9,7 +9,6 @@
 
 export const ioMethods = [
   'connect',
-  'duplicate',
   'send_command',
   'bitcount',
   'get',
