@@ -16,18 +16,20 @@ import { Exception, ManagerConfigValidator } from '@poppinss/utils'
 import {
   RedisConfig,
   HealthReportNode,
-  RedisManagerContract,
+  RedisBaseManagerContract,
   RedisConnectionContract,
   RedisClusterConnectionContract,
 } from '@ioc:Adonis/Addons/Redis'
 
-import { RedisConnection } from '../RedisConnection'
 import { RedisClusterConnection } from '../RedisClusterConnection'
+import { RedisConnection } from '../RedisConnection'
+import { ioMethods } from '../ioMethods'
+import { pubsubMethods } from '../pubsubMethods'
 
 /**
  * Redis manager exposes the API to interact with a redis server.
  */
-export class RedisManager implements RedisManagerContract {
+export class RedisManager implements RedisBaseManagerContract {
   /**
    * An array of connections with health checks enabled, which means, we always
    * create a connection for them, even when they are not used.
@@ -207,3 +209,18 @@ export class RedisManager implements RedisManagerContract {
     }
   }
 }
+
+/**
+ * Since types in AdonisJS are derived from interfaces, we take the leverage
+ * of dynamically adding redis methods to the class prototype.
+ */
+pubsubMethods.forEach((method) => {
+  RedisManager.prototype[method] = function redisManagerProxyFn (...args: any[]) {
+    return this.connection()[method](...args)
+  }
+})
+ioMethods.forEach((method) => {
+  RedisManager.prototype[method] = function redisManagerProxyFn (...args: any[]) {
+    return this.connection()[method](...args)
+  }
+})

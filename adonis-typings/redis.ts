@@ -127,7 +127,7 @@ declare module '@ioc:Adonis/Addons/Redis' {
    * Redis.connection('primary') // named connection
    * ```
    */
-  export interface RedisManagerContract {
+  export interface RedisBaseManagerContract {
     /**
      * A boolean to know whether health checks have been enabled on one
      * or more redis connections or not.
@@ -221,6 +221,12 @@ declare module '@ioc:Adonis/Addons/Redis' {
   export interface RedisConfig {
     connection: keyof RedisConnectionsList,
     connections: { [P in keyof RedisConnectionsList]: RedisConnectionsList[P] },
+  }
+
+  /**
+   * Redis manager proxies all IO methods on the connection
+   */
+  export interface RedisManagerContract extends RedisBaseManagerContract, IORedisCommands, RedisPubSubContract {
   }
 
   const Redis: RedisManagerContract

@@ -20,8 +20,32 @@ const clusterNodes = process.env.REDIS_CLUSTER_PORTS!.split(',').map((port) => {
   return { host: process.env.REDIS_HOST!, port: Number(port) }
 })
 
-test.group('Redis', () => {
+test.group('Redis Manager', () => {
   test('run redis commands using default connection', async (assert) => {
+    const ioc = new Ioc()
+    const redis = new RedisManager(ioc, {
+      connection: 'primary',
+      connections: {
+        primary: {
+          host: process.env.REDIS_HOST,
+          port: Number(process.env.REDIS_PORT),
+        },
+        cluster: {
+          clusters: clusterNodes,
+        },
+      },
+    }, new Emitter(ioc)) as unknown as RedisManagerContract
+
+    await redis.set('greeting', 'hello-world')
+    const greeting = await redis.get('greeting')
+
+    assert.equal(greeting, 'hello-world')
+
+    await redis.del('greeting')
+    await redis.quit('primary')
+  })
+
+  test('run redis commands using the connection method', async (assert) => {
     const ioc = new Ioc()
     const redis = new RedisManager(ioc, {
       connection: 'primary',
@@ -162,5 +186,31 @@ test.group('Redis', () => {
     })
     assert.lengthOf(report.meta, 2)
     await redis.quit()
+  })
+
+  test('use pub/sub using the manager instance', async (assert, done) => {
+    const ioc = new Ioc()
+    const redis = new RedisManager(ioc, {
+      connection: 'primary',
+      connections: {
+        primary: {
+          host: process.env.REDIS_HOST,
+          port: Number(process.env.REDIS_PORT),
+        },
+        cluster: {
+          clusters: clusterNodes,
+        },
+      },
+    }, new Emitter(ioc)) as unknown as RedisManagerContract
+
+    redis.connection().on('subscription:ready', () => {
+      redis.publish('news', 'breaking news at 9')
+    })
+
+    redis.subscribe('news', async (message) => {
+      assert.equal(message, 'breaking news at 9')
+      await redis.quit()
+      done()
+    })
   })
 })
