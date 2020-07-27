@@ -13,11 +13,11 @@
 	"scripts": {
 		"mrm": "mrm --preset=@adonisjs/mrm-preset",
 		"pretest": "npm run lint",
-		"test": "node japaFile.js",
+		"test": "docker-compose build && docker-compose run --rm tests",
 		"clean": "del build",
 		"copyfiles": "copyfiles \"templates/**/*.txt\" build",
 		"compile": "npm run lint && npm run clean && tsc",
-		"build": "npm run compile",
+		"build": "npm run compile && npm run copyfiles",
 		"commit": "git-cz",
 		"release": "np",
 		"version": "npm run build",
@@ -28,7 +28,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/adonisjs/adonis-redis.git"
+		"url": "git+https://github.com/adonisjs/redis.git"
 	},
 	"keywords": [
 		"redis",
@@ -37,9 +37,9 @@
 	"author": "virk,adonisjs",
 	"license": "MIT",
 	"bugs": {
-		"url": "https://github.com/adonisjs/adonis-redis/issues"
+		"url": "https://github.com/adonisjs/redis/issues"
 	},
-	"homepage": "https://github.com/adonisjs/adonis-redis#readme",
+	"homepage": "https://github.com/adonisjs/redis#readme",
 	"publishConfig": {
 		"access": "public",
 		"tag": "alpha"
