@@ -143,12 +143,21 @@ export class RedisManager implements RedisBaseManagerContract {
 		 */
 		connection.on('end', ($connection) => {
 			delete this.activeConnections[$connection.connectionName]
-			this.emitter.emit('redis:end', $connection)
+			this.emitter.emit('adonis:redis:end', { connection: $connection })
 		})
 
-		connection.on('ready', ($connection) => this.emitter.emit('redis:ready', $connection))
+		/**
+		 * Forward ready event
+		 */
+		connection.on('ready', ($connection) =>
+			this.emitter.emit('adonis:redis:ready', { connection: $connection })
+		)
+
+		/**
+		 * Forward error event
+		 */
 		connection.on('error', (error, $connection) =>
-			this.emitter.emit('redis:error', [error, $connection])
+			this.emitter.emit('adonis:redis:error', { error, connection: $connection })
 		)
 
 		/**
