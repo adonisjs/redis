@@ -40,4 +40,12 @@ export default class RedisProvider {
 			}
 		)
 	}
+
+	/**
+	 * Gracefully shutdown connections when app goes down
+	 */
+	public async shutdown() {
+		const Redis: RedisManager = this.container.use('Adonis/Addons/Redis')
+		await Redis.quitAll()
+	}
 }
