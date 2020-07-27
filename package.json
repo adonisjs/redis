@@ -1,119 +1,128 @@
 {
-  "name": "@adonisjs/redis",
-  "version": "4.0.3",
-  "description": "AdonisJS addon for Redis",
-  "main": "build/providers/RedisProvider.js",
-  "files": [
-    "build/adonis-typings",
-    "build/providers",
-    "build/src",
-    "build/templates"
-  ],
-  "types": "build/adonis-typings/redis.d.ts",
-  "scripts": {
-    "mrm": "mrm --preset=@adonisjs/mrm-preset",
-    "pretest": "npm run lint",
-    "test": "docker-compose build && docker-compose run --rm tests",
-    "lint": "eslint . --ext=.ts",
-    "clean": "del build",
-    "copyfiles": "copyfiles \"templates/**/*.txt\" build",
-    "compile": "npm run lint && npm run clean && tsc",
-    "build": "npm run compile && npm run copyfiles",
-    "commit": "git-cz",
-    "release": "np",
-    "version": "npm run build"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/adonisjs/adonis-redis.git"
-  },
-  "keywords": [
-    "redis",
-    "ioredis"
-  ],
-  "author": "virk,adonisjs",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/adonisjs/adonis-redis/issues"
-  },
-  "homepage": "https://github.com/adonisjs/adonis-redis#readme",
-  "publishConfig": {
-    "access": "public",
-    "tag": "alpha"
-  },
-  "devDependencies": {
-    "@adonisjs/application": "^2.0.0",
-    "@adonisjs/core": "^5.0.0-preview-rc-1.7",
-    "@adonisjs/fold": "^6.3.5",
-    "@adonisjs/mrm-preset": "^2.4.0",
-    "@types/node": "^14.0.26",
-    "commitizen": "^4.1.2",
-    "copyfiles": "^2.3.0",
-    "cz-conventional-changelog": "^3.2.0",
-    "del-cli": "^3.0.1",
-    "eslint": "^7.5.0",
-    "eslint-plugin-adonis": "^1.0.14",
-    "husky": "^4.2.5",
-    "japa": "^3.1.1",
-    "mrm": "^2.3.3",
-    "np": "^6.3.2",
-    "ts-node": "^8.10.2",
-    "typescript": "^3.9.7"
-  },
-  "peerDependencies": {
-    "@adonisjs/core": "^5.0.0-preview-rc"
-  },
-  "dependencies": {
-    "@poppinss/utils": "^2.5.1",
-    "@types/ioredis": "^4.17.2",
-    "ioredis": "^4.17.3"
-  },
-  "nyc": {
-    "exclude": [
-      "test"
-    ],
-    "extension": [
-      ".ts"
-    ]
-  },
-  "husky": {
-    "hooks": {
-      "commit-msg": "node ./node_modules/@adonisjs/mrm-preset/validateCommit/conventional/validate.js"
-    }
-  },
-  "config": {
-    "commitizen": {
-      "path": "cz-conventional-changelog"
-    }
-  },
-  "np": {
-    "contents": ".",
-    "anyBranch": false
-  },
-  "adonisjs": {
-    "templates": {
-      "config": [
-        {
-          "src": "config.txt",
-          "dest": "redis"
-        }
-      ],
-      "contracts": [
-        {
-          "src": "contract.txt",
-          "dest": "redis"
-        }
-      ]
-    },
-    "types": "@adonisjs/redis",
-    "providers": [
-      "@adonisjs/redis"
-    ],
-    "env": {
-      "REDIS_CONNECTION": "local",
-      "REDIS_HOST": "127.0.0.1",
-      "REDIS_PORT": "6379",
-      "REDIS_PASSWORD": ""
-    }
-  }
+	"name": "@adonisjs/redis",
+	"version": "4.0.3",
+	"description": "AdonisJS addon for Redis",
+	"main": "build/providers/RedisProvider.js",
+	"files": [
+		"build/adonis-typings",
+		"build/providers",
+		"build/src",
+		"build/templates"
+	],
+	"types": "build/adonis-typings/redis.d.ts",
+	"scripts": {
+		"mrm": "mrm --preset=@adonisjs/mrm-preset",
+		"pretest": "npm run lint",
+		"test": "node japaFile.js",
+		"clean": "del build",
+		"copyfiles": "copyfiles \"templates/**/*.txt\" build",
+		"compile": "npm run lint && npm run clean && tsc",
+		"build": "npm run compile",
+		"commit": "git-cz",
+		"release": "np",
+		"version": "npm run build",
+		"prepublishOnly": "npm run build",
+		"lint": "eslint . --ext=.ts",
+		"format": "prettier --write .",
+		"sync-labels": "github-label-sync --labels ./node_modules/@adonisjs/mrm-preset/gh-labels.json adonisjs/redis"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/adonisjs/adonis-redis.git"
+	},
+	"keywords": [
+		"redis",
+		"ioredis"
+	],
+	"author": "virk,adonisjs",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/adonisjs/adonis-redis/issues"
+	},
+	"homepage": "https://github.com/adonisjs/adonis-redis#readme",
+	"publishConfig": {
+		"access": "public",
+		"tag": "alpha"
+	},
+	"devDependencies": {
+		"@adonisjs/application": "^2.0.0",
+		"@adonisjs/core": "^5.0.0-preview-rc-1.7",
+		"@adonisjs/fold": "^6.3.5",
+		"@adonisjs/mrm-preset": "^2.4.0",
+		"@types/node": "^14.0.26",
+		"commitizen": "^4.1.2",
+		"copyfiles": "^2.3.0",
+		"cz-conventional-changelog": "^3.2.0",
+		"del-cli": "^3.0.1",
+		"eslint": "^7.5.0",
+		"eslint-config-prettier": "^6.11.0",
+		"eslint-plugin-adonis": "^1.0.14",
+		"eslint-plugin-prettier": "^3.1.4",
+		"github-label-sync": "^2.0.0",
+		"husky": "^4.2.5",
+		"japa": "^3.1.1",
+		"mrm": "^2.3.3",
+		"np": "^6.3.2",
+		"npm-audit-html": "^1.4.1",
+		"prettier": "^2.0.5",
+		"ts-node": "^8.10.2",
+		"typescript": "^3.9.7"
+	},
+	"peerDependencies": {
+		"@adonisjs/core": "^5.0.0-preview-rc"
+	},
+	"dependencies": {
+		"@poppinss/utils": "^2.5.1",
+		"@types/ioredis": "^4.17.2",
+		"ioredis": "^4.17.3"
+	},
+	"nyc": {
+		"exclude": [
+			"test"
+		],
+		"extension": [
+			".ts"
+		]
+	},
+	"husky": {
+		"hooks": {
+			"commit-msg": "node ./node_modules/@adonisjs/mrm-preset/validateCommit/conventional/validate.js",
+			"pre-commit": "npm audit --production --json | ./node_modules/.bin/npm-audit-html && git add npm-audit.html"
+		}
+	},
+	"config": {
+		"commitizen": {
+			"path": "cz-conventional-changelog"
+		}
+	},
+	"np": {
+		"contents": ".",
+		"anyBranch": false
+	},
+	"adonisjs": {
+		"templates": {
+			"config": [
+				{
+					"src": "config.txt",
+					"dest": "redis"
+				}
+			],
+			"contracts": [
+				{
+					"src": "contract.txt",
+					"dest": "redis"
+				}
+			]
+		},
+		"types": "@adonisjs/redis",
+		"providers": [
+			"@adonisjs/redis"
+		],
+		"env": {
+			"REDIS_CONNECTION": "local",
+			"REDIS_HOST": "127.0.0.1",
+			"REDIS_PORT": "6379",
+			"REDIS_PASSWORD": ""
+		}
+	}
 }

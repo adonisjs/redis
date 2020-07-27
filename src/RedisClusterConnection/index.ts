@@ -1,11 +1,11 @@
 /*
-* @adonisjs/redis
-*
-* (c) Harminder Virk <virk@adonisjs.com>
-*
-* For the full copyright and license information, please view the LICENSE
-* file that was distributed with this source code.
-*/
+ * @adonisjs/redis
+ *
+ * (c) Harminder Virk <virk@adonisjs.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 /// <reference path="../../adonis-typings/redis.ts" />
 
@@ -22,34 +22,33 @@ import { AbstractConnection } from '../AbstractConnection'
  * pub/sub connections by hand, since it handles that internally by itself.
  */
 export class RedisClusterConnection extends AbstractConnection<Redis.Cluster> {
-  constructor (
-    connectionName: string,
-    private config: RedisClusterConfig,
-    container: IocContract,
-  ) {
-    super(connectionName, container)
-    this.ioConnection = new Redis.Cluster(this.config.clusters as any[], this.config.clusterOptions)
-    this.proxyConnectionEvents()
-  }
+	constructor(connectionName: string, private config: RedisClusterConfig, container: IocContract) {
+		super(connectionName, container)
+		this.ioConnection = new Redis.Cluster(this.config.clusters as any[], this.config.clusterOptions)
+		this.proxyConnectionEvents()
+	}
 
-  /**
-   * Creates the subscriber connection, the [[AbstractConnection]] will
-   * invoke this method when first subscription is created.
-   */
-  protected makeSubscriberConnection () {
-    this.ioSubscriberConnection = new Redis.Cluster(this.config.clusters as [], this.config.clusterOptions)
-  }
+	/**
+	 * Creates the subscriber connection, the [[AbstractConnection]] will
+	 * invoke this method when first subscription is created.
+	 */
+	protected makeSubscriberConnection() {
+		this.ioSubscriberConnection = new Redis.Cluster(
+			this.config.clusters as [],
+			this.config.clusterOptions
+		)
+	}
 
-  /**
-   * Returns cluster nodes
-   */
-  public nodes (role?: Redis.NodeRole) {
-    return this.ioConnection.nodes(role)
-  }
+	/**
+	 * Returns cluster nodes
+	 */
+	public nodes(role?: Redis.NodeRole) {
+		return this.ioConnection.nodes(role)
+	}
 }
 
 ioMethods.forEach((method) => {
-  RedisClusterConnection.prototype[method] = function redisConnectionProxyFn (...args: any[]) {
-    return this.ioConnection[method](...args)
-  }
+	RedisClusterConnection.prototype[method] = function redisConnectionProxyFn(...args: any[]) {
+		return this.ioConnection[method](...args)
+	}
 })

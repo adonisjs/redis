@@ -1,4 +1,4 @@
-version: "3.4"
+version: '3.4'
 services:
   tests:
     image: adonis-redis
@@ -7,11 +7,11 @@ services:
     environment:
       REDIS_HOST: 0.0.0.0
       REDIS_PORT: 7007
-      REDIS_CLUSTER_PORTS: "7000,7001,7002"
+      REDIS_CLUSTER_PORTS: '7000,7001,7002'
     depends_on:
       - redis
-    network_mode: "host"
-    command: ["/wait-for-it.sh", "0.0.0.0:7007", "--", "node", "japaFile.js"]
+    network_mode: 'host'
+    command: ['/wait-for-it.sh', '0.0.0.0:7007', '--', 'node', 'japaFile.js']
   redis:
     image: grokzen/redis-cluster
     environment:
@@ -19,4 +19,4 @@ services:
       STANDALONE: 'true'
     ports:
       - '7000-7007:7000-7007'
-    network_mode: "host"
+    network_mode: 'host'
