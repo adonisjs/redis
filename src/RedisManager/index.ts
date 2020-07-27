@@ -34,9 +34,7 @@ export class RedisManager implements RedisBaseManagerContract {
 	 * An array of connections with health checks enabled, which means, we always
 	 * create a connection for them, even when they are not used.
 	 */
-	private healthCheckConnections = Object.keys(this.config.connections).filter(
-		(connection) => this.config.connections[connection].healthCheck
-	)
+	private healthCheckConnections: string[] = []
 
 	/**
 	 * A copy of live connections. We avoid re-creating a new connection
@@ -67,6 +65,9 @@ export class RedisManager implements RedisBaseManagerContract {
 		private emitter: EmitterContract
 	) {
 		this.validateConfig()
+		this.healthCheckConnections = Object.keys(this.config.connections).filter(
+			(connection) => this.config.connections[connection].healthCheck
+		)
 	}
 
 	/**
