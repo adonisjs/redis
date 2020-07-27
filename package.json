@@ -72,7 +72,7 @@
 		"@adonisjs/core": "^5.0.0-preview-rc"
 	},
 	"dependencies": {
-		"@poppinss/utils": "^2.5.1",
+		"@poppinss/utils": "^2.5.2",
 		"@types/ioredis": "^4.17.2",
 		"ioredis": "^4.17.3"
 	},

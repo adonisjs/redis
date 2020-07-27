@@ -55,7 +55,7 @@ test.group('Redis Provider', () => {
 		const fn = () => ioc.use('Adonis/Addons/Redis')
 		assert.throw(
 			fn,
-			'Invalid "redis" config. Missing value for "connection". Make sure set it inside "config/redis"'
+			'Invalid "redis" config. Missing value for "connection". Make sure to set it inside the "config/redis" file'
 		)
 	})
 
@@ -75,7 +75,7 @@ test.group('Redis Provider', () => {
 		const fn = () => ioc.use('Adonis/Addons/Redis')
 		assert.throw(
 			fn,
-			'Invalid "redis" config. Missing value for "connection". Make sure set it inside "config/redis"'
+			'Invalid "redis" config. Missing value for "connection". Make sure to set it inside the "config/redis" file'
 		)
 	})
 
@@ -99,7 +99,7 @@ test.group('Redis Provider', () => {
 		const fn = () => ioc.use('Adonis/Addons/Redis')
 		assert.throw(
 			fn,
-			'Invalid "redis" config. Missing value for "connections". Make sure set it inside "config/redis"'
+			'Invalid "redis" config. Missing value for "connections". Make sure to set it inside the "config/redis" file'
 		)
 	})
 
@@ -124,7 +124,7 @@ test.group('Redis Provider', () => {
 		const fn = () => ioc.use('Adonis/Addons/Redis')
 		assert.throw(
 			fn,
-			'Invalid "redis" config. "local" is not defined inside "connections". Make sure set it inside "config/redis"'
+			'Invalid "redis" config. "local" is not defined inside "connections". Make sure to set it inside the "config/redis" file'
 		)
 	})
 })
