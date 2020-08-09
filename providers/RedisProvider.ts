@@ -8,7 +8,7 @@
  */
 
 import { IocContract } from '@adonisjs/fold'
-import { RedisManager } from '../src/RedisManager'
+import { RedisManagerContract } from '@ioc:Adonis/Addons/Redis'
 
 /**
  * Provider to bind redis to the container
@@ -23,6 +23,8 @@ export default class RedisProvider {
 		this.container.singleton('Adonis/Addons/Redis', () => {
 			const config = this.container.use('Adonis/Core/Config').get('redis', {})
 			const emitter = this.container.use('Adonis/Core/Event')
+			const { RedisManager } = require('../src/RedisManager')
+
 			return new RedisManager(this.container, config, emitter)
 		})
 	}
@@ -33,7 +35,7 @@ export default class RedisProvider {
 	public boot() {
 		this.container.with(
 			['Adonis/Core/HealthCheck', 'Adonis/Addons/Redis'],
-			(HealthCheck, Redis: RedisManager) => {
+			(HealthCheck, Redis: RedisManagerContract) => {
 				if (Redis.healthChecksEnabled) {
 					HealthCheck.addChecker('redis', 'Adonis/Addons/Redis')
 				}
@@ -45,7 +47,7 @@ export default class RedisProvider {
 	 * Gracefully shutdown connections when app goes down
 	 */
 	public async shutdown() {
-		const Redis: RedisManager = this.container.use('Adonis/Addons/Redis')
+		const Redis: RedisManagerContract = this.container.use('Adonis/Addons/Redis')
 		await Redis.quitAll()
 	}
 }
