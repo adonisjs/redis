@@ -158,7 +158,7 @@ test.group('Redis cluster factory', () => {
 		})
 
 		factory.on('ready', async () => {
-			assert.equal(factory.nodes().length, 6) // defined in compose file
+			assert.isAbove(factory.nodes().length, 2) // defined in compose file
 			await factory.quit()
 		})
 	})

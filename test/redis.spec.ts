@@ -118,7 +118,7 @@ test.group('Redis Manager', () => {
 		) as unknown) as RedisManagerContract
 
 		redis.connection('cluster').on('ready', async () => {
-			assert.equal(redis.connection('cluster').nodes().length, 6)
+			assert.isAbove(redis.connection('cluster').nodes().length, 2)
 			await redis.quit()
 			done()
 		})
