@@ -42,7 +42,7 @@
 	"homepage": "https://github.com/adonisjs/redis#readme",
 	"publishConfig": {
 		"access": "public",
-		"tag": "alpha"
+		"tag": "next"
 	},
 	"devDependencies": {
 		"@adonisjs/core": "^5.0.1-beta-rc-2",
