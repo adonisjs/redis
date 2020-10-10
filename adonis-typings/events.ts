@@ -11,11 +11,11 @@ declare module '@ioc:Adonis/Core/Event' {
 	import { RedisClusterConnectionContract, RedisConnectionContract } from '@ioc:Adonis/Addons/Redis'
 
 	interface EventsList {
-		'adonis:redis:ready': { connection: RedisClusterConnectionContract | RedisConnectionContract }
-		'adonis:redis:error': {
+		'redis:ready': { connection: RedisClusterConnectionContract | RedisConnectionContract }
+		'redis:error': {
 			error: any
 			connection: RedisClusterConnectionContract | RedisConnectionContract
 		}
-		'adonis:redis:end': { connection: RedisClusterConnectionContract | RedisConnectionContract }
+		'redis:end': { connection: RedisClusterConnectionContract | RedisConnectionContract }
 	}
 }

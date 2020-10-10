@@ -9,8 +9,8 @@
 
 /// <reference path="../../adonis-typings/redis.ts" />
 
-import { IocContract } from '@adonisjs/fold'
 import { EmitterContract } from '@ioc:Adonis/Core/Event'
+import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 import { Exception, ManagerConfigValidator } from '@poppinss/utils'
 
 import {
@@ -21,10 +21,10 @@ import {
 	RedisClusterConnectionContract,
 } from '@ioc:Adonis/Addons/Redis'
 
-import { RedisClusterConnection } from '../RedisClusterConnection'
-import { RedisConnection } from '../RedisConnection'
 import { ioMethods } from '../ioMethods'
 import { pubsubMethods } from '../pubsubMethods'
+import { RedisConnection } from '../RedisConnection'
+import { RedisClusterConnection } from '../RedisClusterConnection'
 
 /**
  * Redis manager exposes the API to interact with a redis server.
@@ -60,7 +60,7 @@ export class RedisManager implements RedisBaseManagerContract {
 	}
 
 	constructor(
-		private container: IocContract,
+		private application: ApplicationContract,
 		private config: RedisConfig,
 		private emitter: EmitterContract
 	) {
@@ -135,30 +135,34 @@ export class RedisManager implements RedisBaseManagerContract {
 			? ((new RedisClusterConnection(
 					name,
 					config,
-					this.container
+					this.application
 			  ) as unknown) as RedisClusterConnectionContract)
-			: ((new RedisConnection(name, config, this.container) as unknown) as RedisConnectionContract))
+			: ((new RedisConnection(
+					name,
+					config,
+					this.application
+			  ) as unknown) as RedisConnectionContract))
 
 		/**
 		 * Stop tracking the connection after it's removed
 		 */
 		connection.on('end', ($connection) => {
 			delete this.activeConnections[$connection.connectionName]
-			this.emitter.emit('adonis:redis:end', { connection: $connection })
+			this.emitter.emit('redis:end', { connection: $connection })
 		})
 
 		/**
 		 * Forward ready event
 		 */
 		connection.on('ready', ($connection) =>
-			this.emitter.emit('adonis:redis:ready', { connection: $connection })
+			this.emitter.emit('redis:ready', { connection: $connection })
 		)
 
 		/**
 		 * Forward error event
 		 */
 		connection.on('error', (error, $connection) =>
-			this.emitter.emit('adonis:redis:error', { error, connection: $connection })
+			this.emitter.emit('redis:error', { error, connection: $connection })
 		)
 
 		/**

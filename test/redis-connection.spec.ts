@@ -10,9 +10,10 @@
 /// <reference path="../adonis-typings/redis.ts" />
 
 import test from 'japa'
-import { Ioc } from '@adonisjs/fold'
-import { RedisConnection } from '../src/RedisConnection'
+import { Application } from '@adonisjs/core/build/standalone'
 import { RedisConnectionContract } from '@ioc:Adonis/Addons/Redis'
+
+import { RedisConnection } from '../src/RedisConnection'
 
 test.group('Redis factory', () => {
 	test('emit ready when connected to redis server', (assert, done) => {
@@ -22,7 +23,7 @@ test.group('Redis factory', () => {
 				host: process.env.REDIS_HOST,
 				port: Number(process.env.REDIS_PORT),
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisConnectionContract
 
 		factory.on('error', async (error) => {
@@ -43,7 +44,7 @@ test.group('Redis factory', () => {
 				host: process.env.REDIS_HOST,
 				port: Number(process.env.REDIS_PORT),
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisConnectionContract
 
 		await factory.set('greeting', 'hello world')
@@ -62,7 +63,7 @@ test.group('Redis factory', () => {
 				host: process.env.REDIS_HOST,
 				port: Number(process.env.REDIS_PORT),
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisConnectionContract
 
 		factory.on('end', () => {
@@ -83,7 +84,7 @@ test.group('Redis factory', () => {
 				host: process.env.REDIS_HOST,
 				port: Number(process.env.REDIS_PORT),
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisConnectionContract
 
 		factory.on('end', () => {
@@ -101,7 +102,7 @@ test.group('Redis factory', () => {
 		const factory = (new RedisConnection(
 			'main',
 			{ port: 4444 },
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisConnectionContract
 
 		factory.on('end', () => {
@@ -126,7 +127,7 @@ test.group('Redis factory', () => {
 				host: process.env.REDIS_HOST,
 				port: Number(process.env.REDIS_PORT),
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisConnectionContract
 
 		factory.on('end', () => {
@@ -155,7 +156,7 @@ test.group('Redis factory', () => {
 				host: process.env.REDIS_HOST,
 				port: 4444,
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisConnectionContract
 
 		factory.on('end', () => {
@@ -184,7 +185,7 @@ test.group('Redis factory - Subscribe', () => {
 				host: process.env.REDIS_HOST,
 				port: Number(process.env.REDIS_PORT),
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisConnectionContract
 
 		factory.on('subscriber:ready', async () => {
@@ -202,7 +203,7 @@ test.group('Redis factory - Subscribe', () => {
 				host: process.env.REDIS_HOST,
 				port: Number(process.env.REDIS_PORT),
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisConnectionContract
 
 		factory.on('subscription:ready', async (count) => {
@@ -221,7 +222,7 @@ test.group('Redis factory - Subscribe', () => {
 				host: process.env.REDIS_HOST,
 				port: Number(process.env.REDIS_PORT),
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisConnectionContract
 		let invokedCounts = 0
 
@@ -248,7 +249,7 @@ test.group('Redis factory - Subscribe', () => {
 				host: process.env.REDIS_HOST,
 				port: Number(process.env.REDIS_PORT),
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisConnectionContract
 		factory.subscribe('news', async (message) => {
 			assert.equal(message, 'breaking news at 9')
@@ -268,7 +269,7 @@ test.group('Redis factory - Subscribe', () => {
 				host: process.env.REDIS_HOST,
 				port: Number(process.env.REDIS_PORT),
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisConnectionContract
 
 		factory.on('subscription:ready', (count) => {
@@ -296,7 +297,7 @@ test.group('Redis factory - Subscribe', () => {
 				host: process.env.REDIS_HOST,
 				port: Number(process.env.REDIS_PORT),
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisConnectionContract
 
 		factory.on('subscription:ready', () => {
@@ -323,7 +324,7 @@ test.group('Redis factory - PSubscribe', () => {
 				host: process.env.REDIS_HOST,
 				port: Number(process.env.REDIS_PORT),
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisConnectionContract
 		factory.on('subscriber:ready', async () => {
 			await factory.quit()
@@ -340,7 +341,7 @@ test.group('Redis factory - PSubscribe', () => {
 				host: process.env.REDIS_HOST,
 				port: Number(process.env.REDIS_PORT),
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisConnectionContract
 		factory.on('psubscription:ready', async (count) => {
 			assert.equal(count, 1)
@@ -358,7 +359,7 @@ test.group('Redis factory - PSubscribe', () => {
 				host: process.env.REDIS_HOST,
 				port: Number(process.env.REDIS_PORT),
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisConnectionContract
 		let invokedCounts = 0
 
@@ -385,7 +386,7 @@ test.group('Redis factory - PSubscribe', () => {
 				host: process.env.REDIS_HOST,
 				port: Number(process.env.REDIS_PORT),
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisConnectionContract
 		factory.psubscribe('news:*', async (channel, message) => {
 			assert.equal(channel, 'news:prime')
@@ -407,7 +408,7 @@ test.group('Redis factory - PSubscribe', () => {
 				host: process.env.REDIS_HOST,
 				port: Number(process.env.REDIS_PORT),
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisConnectionContract
 
 		factory.on('psubscription:ready', (count) => {
@@ -437,7 +438,7 @@ test.group('Redis factory - PSubscribe', () => {
 				host: process.env.REDIS_HOST,
 				port: Number(process.env.REDIS_PORT),
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisConnectionContract
 
 		factory.on('psubscription:ready', () => {
@@ -457,14 +458,14 @@ test.group('Redis factory - PSubscribe', () => {
 	})
 
 	test('bind IoC container binding as subscriber', async (assert, done) => {
-		const ioc = new Ioc()
+		const app = new Application(__dirname, 'web', {})
 		const factory = (new RedisConnection(
 			'main',
 			{
 				host: process.env.REDIS_HOST,
 				port: Number(process.env.REDIS_PORT),
 			},
-			ioc
+			app
 		) as unknown) as RedisConnectionContract
 
 		class RedisListeners {
@@ -476,7 +477,7 @@ test.group('Redis factory - PSubscribe', () => {
 			}
 		}
 
-		ioc.bind('App/Listeners/RedisListeners', () => {
+		app.container.bind('App/Listeners/RedisListeners', () => {
 			return new RedisListeners()
 		})
 

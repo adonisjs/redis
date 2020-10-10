@@ -10,8 +10,8 @@
 /// <reference path="../../adonis-typings/redis.ts" />
 
 import Redis from 'ioredis'
-import { IocContract } from '@adonisjs/fold'
 import { RedisClusterConfig } from '@ioc:Adonis/Addons/Redis'
+import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
 import { ioMethods } from '../ioMethods'
 import { AbstractConnection } from '../AbstractConnection'
@@ -22,8 +22,12 @@ import { AbstractConnection } from '../AbstractConnection'
  * pub/sub connections by hand, since it handles that internally by itself.
  */
 export class RedisClusterConnection extends AbstractConnection<Redis.Cluster> {
-	constructor(connectionName: string, private config: RedisClusterConfig, container: IocContract) {
-		super(connectionName, container)
+	constructor(
+		connectionName: string,
+		private config: RedisClusterConfig,
+		application: ApplicationContract
+	) {
+		super(connectionName, application)
 		this.ioConnection = new Redis.Cluster(this.config.clusters as any[], this.config.clusterOptions)
 		this.proxyConnectionEvents()
 	}

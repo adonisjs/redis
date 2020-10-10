@@ -9,122 +9,119 @@
 
 import test from 'japa'
 import { join } from 'path'
-import { Registrar, Ioc } from '@adonisjs/fold'
-import { Config } from '@adonisjs/config/build/standalone'
-import { Emitter } from '@adonisjs/events/build/standalone'
+import { Filesystem } from '@poppinss/dev-utils'
+import { Application } from '@adonisjs/application'
+
 import { RedisManager } from '../src/RedisManager'
 
-test.group('Redis Provider', () => {
+const fs = new Filesystem(join(__dirname, 'app'))
+
+async function setup(redisConfig: any) {
+	await fs.add('.env', '')
+	await fs.add(
+		'config/app.ts',
+		`
+		export const appKey = 'averylong32charsrandomsecretkey',
+		export const http = {
+			cookie: {},
+			trustProxy: () => true,
+		}
+	`
+	)
+
+	await fs.add(
+		'config/redis.ts',
+		`
+		const redisConfig = ${JSON.stringify(redisConfig, null, 2)}
+		export default redisConfig
+	`
+	)
+
+	const app = new Application(fs.basePath, 'web', {
+		providers: ['@adonisjs/core', '../../providers/RedisProvider'],
+	})
+
+	app.setup()
+	app.registerProviders()
+	await app.bootProviders()
+
+	return app
+}
+
+test.group('Redis Provider', (group) => {
+	group.afterEach(async () => {
+		await fs.cleanup()
+	})
+
 	test('register redis provider', async (assert) => {
-		const ioc = new Ioc()
-		ioc.bind('Adonis/Core/Config', () => {
-			return new Config({
-				redis: {
-					connection: 'local',
-					connections: {
-						local: {},
-					},
-				},
-			})
+		const app = await setup({
+			connection: 'local',
+			connections: {
+				local: {},
+			},
 		})
 
-		ioc.bind('Adonis/Core/Event', () => {
-			return new Emitter(ioc)
-		})
-
-		const registrar = new Registrar(ioc, join(__dirname, '..'))
-		await registrar.useProviders(['./providers/RedisProvider']).registerAndBoot()
-
-		assert.instanceOf(ioc.use('Adonis/Addons/Redis'), RedisManager)
-		assert.deepEqual(ioc.use('Adonis/Addons/Redis'), ioc.use('Adonis/Addons/Redis'))
+		assert.instanceOf(app.container.use('Adonis/Addons/Redis'), RedisManager)
+		assert.deepEqual(
+			app.container.use('Adonis/Addons/Redis'),
+			app.container.use('Adonis/Addons/Redis')
+		)
 	})
 
 	test('raise error when config is missing', async (assert) => {
-		const ioc = new Ioc()
-		ioc.bind('Adonis/Core/Config', () => {
-			return new Config({})
-		})
+		assert.plan(1)
 
-		ioc.bind('Adonis/Core/Event', () => {
-			return new Emitter(ioc)
-		})
-
-		const registrar = new Registrar(ioc, join(__dirname, '..'))
-		await registrar.useProviders(['./providers/RedisProvider']).registerAndBoot()
-
-		const fn = () => ioc.use('Adonis/Addons/Redis')
-		assert.throw(
-			fn,
-			'Invalid "redis" config. Missing value for "connection". Make sure to set it inside the "config/redis" file'
-		)
+		try {
+			await setup({})
+		} catch (error) {
+			assert.equal(
+				error.message,
+				'Invalid "redis" config. Missing value for "connection". Make sure to set it inside the "config/redis" file'
+			)
+		}
 	})
 
 	test('raise error when primary connection is not defined', async (assert) => {
-		const ioc = new Ioc()
-		ioc.bind('Adonis/Core/Config', () => {
-			return new Config({})
-		})
+		assert.plan(1)
 
-		ioc.bind('Adonis/Core/Event', () => {
-			return new Emitter(ioc)
-		})
-
-		const registrar = new Registrar(ioc, join(__dirname, '..'))
-		await registrar.useProviders(['./providers/RedisProvider']).registerAndBoot()
-
-		const fn = () => ioc.use('Adonis/Addons/Redis')
-		assert.throw(
-			fn,
-			'Invalid "redis" config. Missing value for "connection". Make sure to set it inside the "config/redis" file'
-		)
+		try {
+			await setup({})
+		} catch (error) {
+			assert.equal(
+				error.message,
+				'Invalid "redis" config. Missing value for "connection". Make sure to set it inside the "config/redis" file'
+			)
+		}
 	})
 
 	test('raise error when connections are not defined', async (assert) => {
-		const ioc = new Ioc()
-		ioc.bind('Adonis/Core/Config', () => {
-			return new Config({
-				redis: {
-					connection: 'local',
-				},
+		assert.plan(1)
+
+		try {
+			await setup({
+				connection: 'local',
 			})
-		})
-
-		ioc.bind('Adonis/Core/Event', () => {
-			return new Emitter(ioc)
-		})
-
-		const registrar = new Registrar(ioc, join(__dirname, '..'))
-		await registrar.useProviders(['./providers/RedisProvider']).registerAndBoot()
-
-		const fn = () => ioc.use('Adonis/Addons/Redis')
-		assert.throw(
-			fn,
-			'Invalid "redis" config. Missing value for "connections". Make sure to set it inside the "config/redis" file'
-		)
+		} catch (error) {
+			assert.equal(
+				error.message,
+				'Invalid "redis" config. Missing value for "connections". Make sure to set it inside the "config/redis" file'
+			)
+		}
 	})
 
 	test('raise error when primary connection is not defined in the connections list', async (assert) => {
-		const ioc = new Ioc()
-		ioc.bind('Adonis/Core/Config', () => {
-			return new Config({
-				redis: {
-					connection: 'local',
-					connections: {},
-				},
+		assert.plan(1)
+
+		try {
+			await setup({
+				connection: 'local',
+				connections: {},
 			})
-		})
-
-		ioc.bind('Adonis/Core/Event', () => {
-			return new Emitter(ioc)
-		})
-
-		const registrar = new Registrar(ioc, join(__dirname, '..'))
-		await registrar.useProviders(['./providers/RedisProvider']).registerAndBoot()
-
-		const fn = () => ioc.use('Adonis/Addons/Redis')
-		assert.throw(
-			fn,
-			'Invalid "redis" config. "local" is not defined inside "connections". Make sure to set it inside the "config/redis" file'
-		)
+		} catch (error) {
+			assert.equal(
+				error.message,
+				'Invalid "redis" config. "local" is not defined inside "connections". Make sure to set it inside the "config/redis" file'
+			)
+		}
 	})
 })

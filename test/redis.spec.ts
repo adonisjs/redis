@@ -10,9 +10,8 @@
 /// <reference path="../adonis-typings/redis.ts" />
 
 import test from 'japa'
-import { Ioc } from '@adonisjs/fold'
-import { Emitter } from '@adonisjs/events/build/standalone'
 import { RedisManagerContract } from '@ioc:Adonis/Addons/Redis'
+import { Application, Emitter } from '@adonisjs/core/build/standalone'
 
 import { RedisManager } from '../src/RedisManager'
 
@@ -22,9 +21,9 @@ const clusterNodes = process.env.REDIS_CLUSTER_PORTS!.split(',').map((port) => {
 
 test.group('Redis Manager', () => {
 	test('run redis commands using default connection', async (assert) => {
-		const ioc = new Ioc()
+		const app = new Application(__dirname, 'web', {})
 		const redis = (new RedisManager(
-			ioc,
+			app,
 			{
 				connection: 'primary',
 				connections: {
@@ -37,7 +36,7 @@ test.group('Redis Manager', () => {
 					},
 				},
 			},
-			new Emitter(ioc)
+			new Emitter(app)
 		) as unknown) as RedisManagerContract
 
 		await redis.set('greeting', 'hello-world')
@@ -50,9 +49,9 @@ test.group('Redis Manager', () => {
 	})
 
 	test('run redis commands using the connection method', async (assert) => {
-		const ioc = new Ioc()
+		const app = new Application(__dirname, 'web', {})
 		const redis = (new RedisManager(
-			ioc,
+			app,
 			{
 				connection: 'primary',
 				connections: {
@@ -65,7 +64,7 @@ test.group('Redis Manager', () => {
 					},
 				},
 			},
-			new Emitter(ioc)
+			new Emitter(app)
 		) as unknown) as RedisManagerContract
 
 		await redis.connection().set('greeting', 'hello-world')
@@ -77,9 +76,9 @@ test.group('Redis Manager', () => {
 	})
 
 	test('re-use connection when connection method is called', async (assert) => {
-		const ioc = new Ioc()
+		const app = new Application(__dirname, 'web', {})
 		const redis = (new RedisManager(
-			ioc,
+			app,
 			{
 				connection: 'primary',
 				connections: {
@@ -92,7 +91,7 @@ test.group('Redis Manager', () => {
 					},
 				},
 			},
-			new Emitter(ioc)
+			new Emitter(app)
 		) as unknown) as RedisManagerContract
 
 		assert.deepEqual(redis.connection(), redis.connection('primary'))
@@ -100,9 +99,9 @@ test.group('Redis Manager', () => {
 	})
 
 	test('connect to redis cluster when cluster array is defined', async (assert, done) => {
-		const ioc = new Ioc()
+		const app = new Application(__dirname, 'web', {})
 		const redis = (new RedisManager(
-			ioc,
+			app,
 			{
 				connection: 'cluster',
 				connections: {
@@ -115,7 +114,7 @@ test.group('Redis Manager', () => {
 					},
 				},
 			},
-			new Emitter(ioc)
+			new Emitter(app)
 		) as unknown) as RedisManagerContract
 
 		redis.connection('cluster').on('ready', async () => {
@@ -126,9 +125,9 @@ test.group('Redis Manager', () => {
 	})
 
 	test('on disconnect clear connection from tracked list', async (assert, done) => {
-		const ioc = new Ioc()
+		const app = new Application(__dirname, 'web', {})
 		const redis = (new RedisManager(
-			ioc,
+			app,
 			{
 				connection: 'primary',
 				connections: {
@@ -141,7 +140,7 @@ test.group('Redis Manager', () => {
 					},
 				},
 			},
-			new Emitter(ioc)
+			new Emitter(app)
 		) as unknown) as RedisManagerContract
 
 		const connection = redis.connection()
@@ -156,9 +155,9 @@ test.group('Redis Manager', () => {
 	})
 
 	test('get report for connections marked for healthChecks', async (assert) => {
-		const ioc = new Ioc()
+		const app = new Application(__dirname, 'web', {})
 		const redis = new RedisManager(
-			ioc,
+			app,
 			{
 				connection: 'primary',
 				connections: {
@@ -173,7 +172,7 @@ test.group('Redis Manager', () => {
 					},
 				},
 			} as any,
-			new Emitter(ioc)
+			new Emitter(app)
 		)
 
 		const report = await redis.report()
@@ -185,9 +184,9 @@ test.group('Redis Manager', () => {
 	})
 
 	test('generate correct report when one of the connections are broken', async (assert) => {
-		const ioc = new Ioc()
+		const app = new Application(__dirname, 'web', {})
 		const redis = new RedisManager(
-			ioc,
+			app,
 			{
 				connection: 'primary',
 				connections: {
@@ -203,7 +202,7 @@ test.group('Redis Manager', () => {
 					},
 				},
 			} as any,
-			new Emitter(ioc)
+			new Emitter(app)
 		)
 
 		const report = await redis.report()
@@ -217,9 +216,9 @@ test.group('Redis Manager', () => {
 	})
 
 	test('use pub/sub using the manager instance', async (assert, done) => {
-		const ioc = new Ioc()
+		const app = new Application(__dirname, 'web', {})
 		const redis = (new RedisManager(
-			ioc,
+			app,
 			{
 				connection: 'primary',
 				connections: {
@@ -232,7 +231,7 @@ test.group('Redis Manager', () => {
 					},
 				},
 			},
-			new Emitter(ioc)
+			new Emitter(app)
 		) as unknown) as RedisManagerContract
 
 		redis.connection().on('subscription:ready', () => {

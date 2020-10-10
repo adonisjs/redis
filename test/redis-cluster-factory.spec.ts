@@ -10,9 +10,10 @@
 /// <reference path="../adonis-typings/redis.ts" />
 
 import test from 'japa'
-import { Ioc } from '@adonisjs/fold'
-import { RedisClusterConnection } from '../src/RedisClusterConnection'
+import { Application } from '@adonisjs/core/build/standalone'
 import { RedisClusterConnectionContract } from '@ioc:Adonis/Addons/Redis'
+
+import { RedisClusterConnection } from '../src/RedisClusterConnection'
 
 const nodes = process.env.REDIS_CLUSTER_PORTS!.split(',').map((port) => {
 	return { host: process.env.REDIS_HOST!, port: Number(port) }
@@ -25,7 +26,7 @@ test.group('Redis cluster factory', () => {
 			{
 				clusters: nodes,
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisClusterConnectionContract
 
 		factory.on('ready', async () => {
@@ -41,7 +42,7 @@ test.group('Redis cluster factory', () => {
 			{
 				clusters: [{ host: process.env.REDIS_HOST!!, port: 7000 }],
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisClusterConnectionContract
 
 		factory.on('node:added', async () => {
@@ -57,7 +58,7 @@ test.group('Redis cluster factory', () => {
 			{
 				clusters: nodes,
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisClusterConnectionContract
 
 		await factory.set('greeting', 'hello world')
@@ -76,7 +77,7 @@ test.group('Redis cluster factory', () => {
 			{
 				clusters: nodes,
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisClusterConnectionContract
 
 		factory.on('end', () => {
@@ -98,7 +99,7 @@ test.group('Redis cluster factory', () => {
 			{
 				clusters: nodes,
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisClusterConnectionContract
 
 		factory.on('end', () => {
@@ -120,7 +121,7 @@ test.group('Redis cluster factory', () => {
 			{
 				clusters: [{ host: process.env.REDIS_HOST!, port: 5000 }],
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisClusterConnectionContract
 
 		factory.on('end', () => {
@@ -147,7 +148,7 @@ test.group('Redis cluster factory', () => {
 			{
 				clusters: nodes,
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisClusterConnectionContract
 
 		factory.on('end', () => {
@@ -170,7 +171,7 @@ test.group('Redis cluster factory', () => {
 			{
 				clusters: nodes,
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisClusterConnectionContract
 
 		factory.on('end', () => {
@@ -198,7 +199,7 @@ test.group('Redis cluster factory', () => {
 			{
 				clusters: [{ host: process.env.REDIS_HOST!, port: 5000 }],
 			},
-			new Ioc()
+			new Application(__dirname, 'web', {})
 		) as unknown) as RedisClusterConnectionContract
 
 		factory.on('end', () => {

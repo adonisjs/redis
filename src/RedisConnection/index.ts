@@ -10,8 +10,8 @@
 /// <reference path="../../adonis-typings/redis.ts" />
 
 import Redis, { RedisOptions } from 'ioredis'
-import { IocContract } from '@adonisjs/fold'
 import { RedisConnectionConfig } from '@ioc:Adonis/Addons/Redis'
+import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
 import { ioMethods } from '../ioMethods'
 import { AbstractConnection } from '../AbstractConnection'
@@ -25,8 +25,12 @@ import { AbstractConnection } from '../AbstractConnection'
 export class RedisConnection extends AbstractConnection<Redis.Redis> {
 	private config: RedisOptions
 
-	constructor(connectionName: string, config: RedisConnectionConfig, container: IocContract) {
-		super(connectionName, container)
+	constructor(
+		connectionName: string,
+		config: RedisConnectionConfig,
+		application: ApplicationContract
+	) {
+		super(connectionName, application)
 		this.config = this.normalizeConfig(config)
 
 		this.ioConnection = new Redis(this.config)

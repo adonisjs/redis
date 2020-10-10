@@ -12,7 +12,8 @@
 import { EventEmitter } from 'events'
 import { Redis, Cluster } from 'ioredis'
 import { Exception } from '@poppinss/utils'
-import { IocContract, IocResolverContract } from '@adonisjs/fold'
+import { ApplicationContract } from '@ioc:Adonis/Core/Application'
+import { ContainerBindings, IocResolverContract } from '@ioc:Adonis/Core/Application'
 
 import {
 	HealthReportNode,
@@ -54,7 +55,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
 	/**
 	 * IoCResolver to resolve bindings
 	 */
-	private resolver: IocResolverContract
+	private resolver: IocResolverContract<ContainerBindings>
 
 	/**
 	 * A list of active subscription and pattern subscription
@@ -108,9 +109,9 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
 	 */
 	protected abstract makeSubscriberConnection(): void
 
-	constructor(public connectionName: string, container: IocContract) {
+	constructor(public connectionName: string, application: ApplicationContract) {
 		super()
-		this.resolver = container.getResolver(undefined, 'redisListeners', 'App/Listeners')
+		this.resolver = application.container.getResolver(undefined, 'redisListeners', 'App/Listeners')
 	}
 
 	/**
