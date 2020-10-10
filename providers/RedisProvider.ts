@@ -15,6 +15,8 @@ import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 export default class RedisProvider {
 	constructor(protected app: ApplicationContract) {}
 
+	public static needsApplication = true
+
 	/**
 	 * Register the redis binding
 	 */
