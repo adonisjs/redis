@@ -45,7 +45,7 @@
 		"tag": "next"
 	},
 	"devDependencies": {
-		"@adonisjs/core": "^5.0.1-beta-rc-2",
+		"@adonisjs/core": "^5.0.2-beta-rc-5",
 		"@adonisjs/mrm-preset": "^2.4.0",
 		"@adonisjs/require-ts": "^1.0.4",
 		"@poppinss/dev-utils": "^1.0.11",
@@ -68,11 +68,11 @@
 		"typescript": "^4.0.3"
 	},
 	"peerDependencies": {
-		"@adonisjs/core": "^5.0.1-beta-rc"
+		"@adonisjs/core": "^5.0.2-beta-rc"
 	},
 	"dependencies": {
 		"@poppinss/utils": "^2.5.7",
-		"@types/ioredis": "^4.17.4",
+		"@types/ioredis": "^4.17.5",
 		"ioredis": "^4.17.3"
 	},
 	"nyc": {
