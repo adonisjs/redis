@@ -14,8 +14,44 @@ import { ApplicationContract } from '@ioc:Adonis/Core/Application'
  */
 export default class RedisProvider {
 	constructor(protected app: ApplicationContract) {}
-
 	public static needsApplication = true
+
+	/**
+	 * Register redis health check
+	 */
+	protected registerHealthCheck() {
+		/**
+		 * Do not register healthcheck when not running in web
+		 * or test mode
+		 */
+		if (!['web', 'test'].includes(this.app.environment)) {
+			return
+		}
+
+		this.app.container.with(
+			['Adonis/Core/HealthCheck', 'Adonis/Addons/Redis'],
+			(HealthCheck, Redis) => {
+				if (Redis.healthChecksEnabled) {
+					HealthCheck.addChecker('redis', 'Adonis/Addons/Redis')
+				}
+			}
+		)
+	}
+
+	/**
+	 * Define repl bindings
+	 */
+	protected defineReplBindings() {
+		/**
+		 * Do not register repl bindings when not running in "repl"
+		 * environment
+		 */
+		if (this.app.environment !== 'repl') {
+			return
+		}
+
+		require('../src/Bindings/Repl')(this.app)
+	}
 
 	/**
 	 * Register the redis binding
@@ -34,22 +70,8 @@ export default class RedisProvider {
 	 * Registering the health check checker with HealthCheck service
 	 */
 	public boot() {
-		/**
-		 * Do not register healthcheck when not running in web
-		 * or test mode
-		 */
-		if (!['web', 'test'].includes(this.app.environment)) {
-			return
-		}
-
-		this.app.container.with(
-			['Adonis/Core/HealthCheck', 'Adonis/Addons/Redis'],
-			(HealthCheck, Redis) => {
-				if (Redis.healthChecksEnabled) {
-					HealthCheck.addChecker('redis', 'Adonis/Addons/Redis')
-				}
-			}
-		)
+		this.registerHealthCheck()
+		this.defineReplBindings()
 	}
 
 	/**
