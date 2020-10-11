@@ -34,6 +34,14 @@ export default class RedisProvider {
 	 * Registering the health check checker with HealthCheck service
 	 */
 	public boot() {
+		/**
+		 * Do not register healthcheck when not running in web
+		 * or test mode
+		 */
+		if (!['web', 'test'].includes(this.app.environment)) {
+			return
+		}
+
 		this.app.container.with(
 			['Adonis/Core/HealthCheck', 'Adonis/Addons/Redis'],
 			(HealthCheck, Redis) => {
