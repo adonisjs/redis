@@ -3,6 +3,7 @@
 	"compilerOptions": {
 		"esModuleInterop": true,
 		"skipLibCheck": true,
+		"importHelpers": true,
 		"types": ["@adonisjs/core", "@adonisjs/repl", "@types/node"]
 	}
 }

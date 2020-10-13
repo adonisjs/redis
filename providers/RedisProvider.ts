@@ -65,7 +65,7 @@ export default class RedisProvider {
 			const emitter = this.app.container.use('Adonis/Core/Event')
 			const { RedisManager } = require('../src/RedisManager')
 
-			return new RedisManager(this.app.container, config, emitter)
+			return new RedisManager(this.app, config, emitter)
 		})
 	}
 

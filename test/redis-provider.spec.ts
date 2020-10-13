@@ -62,6 +62,7 @@ test.group('Redis Provider', (group) => {
 		})
 
 		assert.instanceOf(app.container.use('Adonis/Addons/Redis'), RedisManager)
+		assert.deepEqual(app.container.use('Adonis/Addons/Redis')['application'], app)
 		assert.deepEqual(
 			app.container.use('Adonis/Addons/Redis'),
 			app.container.use('Adonis/Addons/Redis')
