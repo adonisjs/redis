@@ -50,7 +50,10 @@ export default class RedisProvider {
 			return
 		}
 
-		require('../src/Bindings/Repl')(this.app)
+		this.app.container.with(['Adonis/Addons/Repl'], (Repl) => {
+			const { defineReplBindings } = require('../src/Bindings/Repl')
+			defineReplBindings(this.app, Repl)
+		})
 	}
 
 	/**

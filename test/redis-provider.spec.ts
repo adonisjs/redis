@@ -16,7 +16,7 @@ import { RedisManager } from '../src/RedisManager'
 
 const fs = new Filesystem(join(__dirname, 'app'))
 
-async function setup(redisConfig: any) {
+async function setup(environment: 'web' | 'repl', redisConfig: any) {
 	await fs.add('.env', '')
 	await fs.add(
 		'config/app.ts',
@@ -37,8 +37,8 @@ async function setup(redisConfig: any) {
 	`
 	)
 
-	const app = new Application(fs.basePath, 'web', {
-		providers: ['@adonisjs/core', '../../providers/RedisProvider'],
+	const app = new Application(fs.basePath, environment, {
+		providers: ['@adonisjs/core', '@adonisjs/repl', '../../providers/RedisProvider'],
 	})
 
 	app.setup()
@@ -54,7 +54,7 @@ test.group('Redis Provider', (group) => {
 	})
 
 	test('register redis provider', async (assert) => {
-		const app = await setup({
+		const app = await setup('web', {
 			connection: 'local',
 			connections: {
 				local: {},
@@ -72,7 +72,7 @@ test.group('Redis Provider', (group) => {
 		assert.plan(1)
 
 		try {
-			await setup({})
+			await setup('web', {})
 		} catch (error) {
 			assert.equal(
 				error.message,
@@ -85,7 +85,7 @@ test.group('Redis Provider', (group) => {
 		assert.plan(1)
 
 		try {
-			await setup({})
+			await setup('web', {})
 		} catch (error) {
 			assert.equal(
 				error.message,
@@ -98,7 +98,7 @@ test.group('Redis Provider', (group) => {
 		assert.plan(1)
 
 		try {
-			await setup({
+			await setup('web', {
 				connection: 'local',
 			})
 		} catch (error) {
@@ -113,7 +113,7 @@ test.group('Redis Provider', (group) => {
 		assert.plan(1)
 
 		try {
-			await setup({
+			await setup('web', {
 				connection: 'local',
 				connections: {},
 			})
@@ -123,5 +123,34 @@ test.group('Redis Provider', (group) => {
 				'Invalid "redis" config. "local" is not defined inside "connections". Make sure to set it inside the "config/redis" file'
 			)
 		}
+	})
+
+	test('define repl bindings', async (assert) => {
+		const app = await setup('repl', {
+			connection: 'local',
+			connections: {
+				local: {},
+			},
+		})
+
+		assert.property(app.container.use('Adonis/Addons/Repl')['customMethods'], 'loadRedis')
+		assert.isFunction(app.container.use('Adonis/Addons/Repl')['customMethods']['loadRedis'].handler)
+	})
+
+	test('define health checks', async (assert) => {
+		const app = await setup('web', {
+			connection: 'local',
+			connections: {
+				local: {
+					healthCheck: true,
+				},
+			},
+		})
+
+		assert.property(app.container.use('Adonis/Core/HealthCheck')['healthCheckers'], 'redis')
+		assert.equal(
+			app.container.use('Adonis/Core/HealthCheck')['healthCheckers'].redis,
+			'Adonis/Addons/Redis'
+		)
 	})
 })
