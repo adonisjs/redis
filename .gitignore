@@ -13,5 +13,6 @@ test/tmp
 *.log
 build
 dist
+package-lock.json
 yarn.lock
 shrinkwrap.yaml
