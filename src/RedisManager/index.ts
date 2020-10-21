@@ -144,26 +144,34 @@ export class RedisManager implements RedisBaseManagerContract {
 			  ) as unknown) as RedisConnectionContract))
 
 		/**
+		 * Forward events to the application event emitter
+		 */
+		connection.on('ready', ($connection) =>
+			this.emitter.emit('redis:ready', { connection: $connection })
+		)
+		connection.on('connect', ($connection) =>
+			this.emitter.emit('redis:connect', { connection: $connection })
+		)
+		connection.on('error', (error, $connection) =>
+			this.emitter.emit('redis:error', { error, connection: $connection })
+		)
+		connection.on('node:added', ($connection, node) =>
+			this.emitter.emit('redis:node:added', { node, connection: $connection })
+		)
+		connection.on('node:removed', (node, $connection) =>
+			this.emitter.emit('redis:node:removed', { node, connection: $connection })
+		)
+		connection.on('node:error', (error, address, $connection) =>
+			this.emitter.emit('redis:node:error', { error, address, connection: $connection })
+		)
+
+		/**
 		 * Stop tracking the connection after it's removed
 		 */
 		connection.on('end', ($connection) => {
 			delete this.activeConnections[$connection.connectionName]
 			this.emitter.emit('redis:end', { connection: $connection })
 		})
-
-		/**
-		 * Forward ready event
-		 */
-		connection.on('ready', ($connection) =>
-			this.emitter.emit('redis:ready', { connection: $connection })
-		)
-
-		/**
-		 * Forward error event
-		 */
-		connection.on('error', (error, $connection) =>
-			this.emitter.emit('redis:error', { error, connection: $connection })
-		)
 
 		/**
 		 * Return connection

@@ -69,7 +69,7 @@
 		"typescript": "^4.0.3"
 	},
 	"peerDependencies": {
-		"@adonisjs/core": "^5.0.2-beta-rc"
+		"@adonisjs/core": "^5.0.3-beta-rc"
 	},
 	"dependencies": {
 		"@poppinss/utils": "^2.5.7",
