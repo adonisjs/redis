@@ -7,7 +7,8 @@
 		"build/adonis-typings",
 		"build/providers",
 		"build/src",
-		"build/templates"
+		"build/templates",
+		"build/instructions.md"
 	],
 	"types": "build/adonis-typings/index.d.ts",
 	"scripts": {
@@ -15,7 +16,7 @@
 		"pretest": "npm run lint",
 		"test": "docker-compose build && docker-compose run --rm tests",
 		"clean": "del build",
-		"copyfiles": "copyfiles \"templates/**/*.txt\" build",
+		"copyfiles": "copyfiles \"templates/**/*.txt\" \"instructions.md\" build",
 		"compile": "npm run lint && npm run clean && tsc",
 		"build": "npm run compile && npm run copyfiles",
 		"commit": "git-cz",
@@ -100,6 +101,7 @@
 		"anyBranch": false
 	},
 	"adonisjs": {
+		"instructionsMd": "./build/instructions.md",
 		"templates": {
 			"config": [
 				{
