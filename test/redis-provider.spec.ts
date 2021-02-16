@@ -41,8 +41,8 @@ async function setup(environment: 'web' | 'repl', redisConfig: any) {
 		providers: ['@adonisjs/core', '@adonisjs/repl', '../../providers/RedisProvider'],
 	})
 
-	app.setup()
-	app.registerProviders()
+	await app.setup()
+	await app.registerProviders()
 	await app.bootProviders()
 
 	return app

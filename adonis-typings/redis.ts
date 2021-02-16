@@ -151,9 +151,9 @@ declare module '@ioc:Adonis/Addons/Redis' {
 		/**
 		 * Fetch a named connection from the defined config inside config/redis file
 		 */
-		connection<Connection extends keyof RedisConnectionsList>(
-			name: Connection
-		): GetConnectionFactoryType<Connection>
+		connection<ConnectionName extends keyof RedisConnectionsList>(
+			name: ConnectionName
+		): GetConnectionFactoryType<ConnectionName>
 
 		/**
 		 * Untyped connection
@@ -173,13 +173,15 @@ declare module '@ioc:Adonis/Addons/Redis' {
 		/**
 		 * Quit a named connection.
 		 */
-		quit<Connection extends keyof RedisConnectionsList>(name?: Connection): Promise<void>
+		quit<ConnectionName extends keyof RedisConnectionsList>(name?: ConnectionName): Promise<void>
 		quit(name?: string): Promise<void>
 
 		/**
 		 * Forcefully disconnect a named connection.
 		 */
-		disconnect<Connection extends keyof RedisConnectionsList>(name?: Connection): Promise<void>
+		disconnect<ConnectionName extends keyof RedisConnectionsList>(
+			name?: ConnectionName
+		): Promise<void>
 		disconnect(name?: string): Promise<void>
 
 		/**

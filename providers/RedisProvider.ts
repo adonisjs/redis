@@ -28,7 +28,7 @@ export default class RedisProvider {
 			return
 		}
 
-		this.app.container.with(
+		this.app.container.withBindings(
 			['Adonis/Core/HealthCheck', 'Adonis/Addons/Redis'],
 			(HealthCheck, Redis) => {
 				if (Redis.healthChecksEnabled) {
@@ -50,7 +50,7 @@ export default class RedisProvider {
 			return
 		}
 
-		this.app.container.with(['Adonis/Addons/Repl'], (Repl) => {
+		this.app.container.withBindings(['Adonis/Addons/Repl'], (Repl) => {
 			const { defineReplBindings } = require('../src/Bindings/Repl')
 			defineReplBindings(this.app, Repl)
 		})
@@ -61,8 +61,8 @@ export default class RedisProvider {
 	 */
 	public register() {
 		this.app.container.singleton('Adonis/Addons/Redis', () => {
-			const config = this.app.container.use('Adonis/Core/Config').get('redis', {})
-			const emitter = this.app.container.use('Adonis/Core/Event')
+			const config = this.app.container.resolveBinding('Adonis/Core/Config').get('redis', {})
+			const emitter = this.app.container.resolveBinding('Adonis/Core/Event')
 			const { RedisManager } = require('../src/RedisManager')
 
 			return new RedisManager(this.app, config, emitter)
@@ -81,7 +81,7 @@ export default class RedisProvider {
 	 * Gracefully shutdown connections when app goes down
 	 */
 	public async shutdown() {
-		const Redis = this.app.container.use('Adonis/Addons/Redis')
+		const Redis = this.app.container.resolveBinding('Adonis/Addons/Redis')
 		await Redis.quitAll()
 	}
 }
