@@ -14,11 +14,11 @@
 	"scripts": {
 		"mrm": "mrm --preset=@adonisjs/mrm-preset",
 		"pretest": "npm run lint",
-		"test": "node japaFile.js",
+		"test": "docker-compose build && docker-compose run --rm tests",
 		"clean": "del build",
 		"copyfiles": "copyfiles \"templates/**/*.txt\" \"instructions.md\" build",
 		"compile": "npm run lint && npm run clean && tsc",
-		"build": "npm run compile",
+		"build": "npm run compile && npm run copyfiles",
 		"commit": "git-cz",
 		"release": "np",
 		"version": "npm run build",
