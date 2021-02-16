@@ -65,7 +65,6 @@
 		"japa": "^3.1.1",
 		"mrm": "^2.5.18",
 		"np": "^7.4.0",
-		"npm-audit-html": "^1.5.0",
 		"prettier": "^2.2.1",
 		"typescript": "^4.1.5"
 	},
@@ -87,8 +86,7 @@
 	},
 	"husky": {
 		"hooks": {
-			"commit-msg": "node ./node_modules/@adonisjs/mrm-preset/validateCommit/conventional/validate.js",
-			"pre-commit": "npm audit --production --json | ./node_modules/.bin/npm-audit-html && git add npm-audit.html"
+			"commit-msg": "node ./node_modules/@adonisjs/mrm-preset/validateCommit/conventional/validate.js"
 		}
 	},
 	"config": {
