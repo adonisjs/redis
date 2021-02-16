@@ -8,9 +8,9 @@
  */
 
 declare module '@ioc:Adonis/Core/Application' {
-	import { RedisManagerContract } from '@ioc:Adonis/Addons/Redis'
+  import { RedisManagerContract } from '@ioc:Adonis/Addons/Redis'
 
-	export interface ContainerBindings {
-		'Adonis/Addons/Redis': RedisManagerContract
-	}
+  export interface ContainerBindings {
+    'Adonis/Addons/Redis': RedisManagerContract
+  }
 }

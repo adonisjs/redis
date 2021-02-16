@@ -15,18 +15,18 @@ import { ApplicationContract } from '@ioc:Adonis/Core/Application'
  * is set to repl.
  */
 export function defineReplBindings(application: ApplicationContract, Repl: ReplContract) {
-	Repl.addMethod(
-		'loadRedis',
-		(repl) => {
-			repl.server.context.Redis = application.container.use('Adonis/Addons/Redis')
-			repl.notify(
-				`Loaded Redis module. You can access it using the "${repl.colors.underline(
-					'Redis'
-				)}" variable`
-			)
-		},
-		{
-			description: 'Load redis provider and save reference to the "Redis" variable',
-		}
-	)
+  Repl.addMethod(
+    'loadRedis',
+    (repl) => {
+      repl.server.context.Redis = application.container.use('Adonis/Addons/Redis')
+      repl.notify(
+        `Loaded Redis module. You can access it using the "${repl.colors.underline(
+          'Redis'
+        )}" variable`
+      )
+    },
+    {
+      description: 'Load redis provider and save reference to the "Redis" variable',
+    }
+  )
 }

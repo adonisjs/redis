@@ -8,20 +8,20 @@
  */
 
 declare module '@ioc:Adonis/Core/Event' {
-	import { Redis } from 'ioredis'
-	import { RedisClusterConnectionContract, RedisConnectionContract } from '@ioc:Adonis/Addons/Redis'
+  import { Redis } from 'ioredis'
+  import { RedisClusterConnectionContract, RedisConnectionContract } from '@ioc:Adonis/Addons/Redis'
 
-	interface EventsList {
-		'redis:ready': { connection: RedisClusterConnectionContract | RedisConnectionContract }
-		'redis:connect': { connection: RedisClusterConnectionContract | RedisConnectionContract }
-		'redis:error': {
-			error: any
-			connection: RedisClusterConnectionContract | RedisConnectionContract
-		}
-		'redis:end': { connection: RedisClusterConnectionContract | RedisConnectionContract }
+  interface EventsList {
+    'redis:ready': { connection: RedisClusterConnectionContract | RedisConnectionContract }
+    'redis:connect': { connection: RedisClusterConnectionContract | RedisConnectionContract }
+    'redis:error': {
+      error: any
+      connection: RedisClusterConnectionContract | RedisConnectionContract
+    }
+    'redis:end': { connection: RedisClusterConnectionContract | RedisConnectionContract }
 
-		'node:added': { connection: RedisClusterConnectionContract; node: Redis }
-		'node:removed': { connection: RedisClusterConnectionContract; node: Redis }
-		'node:error': { error: any; connection: RedisClusterConnectionContract; address: string }
-	}
+    'node:added': { connection: RedisClusterConnectionContract; node: Redis }
+    'node:removed': { connection: RedisClusterConnectionContract; node: Redis }
+    'node:error': { error: any; connection: RedisClusterConnectionContract; address: string }
+  }
 }
