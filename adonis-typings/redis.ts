@@ -44,6 +44,12 @@ declare module '@ioc:Adonis/Addons/Redis' {
    * Redis pub/sub methods
    */
   export interface RedisPubSubContract {
+    publish(
+      channel: string,
+      message: any,
+      callback: (error: Error | null, count: number) => void
+    ): void
+    publish(channel: string, message: any): Promise<number>
     subscribe(channel: string, handler: PubSubChannelHandler | string): void
     psubscribe(pattern: string, handler: PubSubPatternHandler | string): void
     unsubscribe(channel: string): void
@@ -76,6 +82,7 @@ declare module '@ioc:Adonis/Addons/Redis' {
     | 'psubscribe'
     | 'punsubscribe'
     | 'quit'
+    | 'publish'
     | keyof EventEmitter
   >
 

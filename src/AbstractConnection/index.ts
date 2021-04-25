@@ -12,6 +12,7 @@
 import { EventEmitter } from 'events'
 import { Redis, Cluster } from 'ioredis'
 import { Exception } from '@poppinss/utils'
+import { MessageBuilder } from '@poppinss/utils/build/helpers'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 import { ContainerBindings, IocResolverContract } from '@ioc:Adonis/Core/Application'
 
@@ -178,7 +179,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
     this.ioSubscriberConnection!.on('message', (channel, message) => {
       const handler = this.subscriptions.get(channel)
       if (handler) {
-        handler(message)
+        handler(new MessageBuilder().verify(message))
       }
     })
 
@@ -188,7 +189,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
     this.ioSubscriberConnection!.on('pmessage', (pattern, channel, message) => {
       const handler = this.psubscriptions.get(pattern)
       if (handler) {
-        handler(channel, message)
+        handler(channel, new MessageBuilder().verify(message))
       }
     })
 
@@ -399,5 +400,12 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
         error,
       }
     }
+  }
+
+  public publish(channel: string, message: any, callback?: any) {
+    const messageString = new MessageBuilder().build(message)
+    return callback
+      ? this.ioConnection.publish(channel, messageString, callback)
+      : this.ioConnection.publish(channel, messageString)
   }
 }

@@ -54,7 +54,6 @@ export const ioMethods = [
   'sismember',
   'scard',
   'spop',
-  'publish',
   'srandmember',
   'sinter',
   'sinterstore',

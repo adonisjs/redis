@@ -442,12 +442,12 @@ test.group('Redis factory - PSubscribe', () => {
     ) as unknown) as RedisConnectionContract
 
     factory.on('psubscription:ready', () => {
-      factory.publish('news:prime', 'breaking news at 9')
+      factory.publish('news:prime', { title: 'breaking news at 9' })
     })
 
     factory.psubscribe('news:*', (channel, message) => {
       assert.equal(channel, 'news:prime')
-      assert.equal(message, 'breaking news at 9')
+      assert.deepEqual(message, { title: 'breaking news at 9' })
       factory.punsubscribe('news:*')
 
       factory.publish('news:prime', 'breaking news at 9', (_error, count) => {
@@ -469,9 +469,9 @@ test.group('Redis factory - PSubscribe', () => {
     ) as unknown) as RedisConnectionContract
 
     class RedisListeners {
-      public async onNews(channel: string, message: string) {
+      public async onNews(channel: string, message: { title: string }) {
         assert.equal(channel, 'news:prime')
-        assert.equal(message, 'breaking news at 9')
+        assert.deepEqual(message, { title: 'breaking news at 9' })
         await factory.quit()
         done()
       }
@@ -484,7 +484,7 @@ test.group('Redis factory - PSubscribe', () => {
     factory.psubscribe('news:*', 'RedisListeners.onNews')
 
     factory.on('psubscription:ready', () => {
-      factory.publish('news:prime', 'breaking news at 9')
+      factory.publish('news:prime', { title: 'breaking news at 9' })
     })
   })
 })
