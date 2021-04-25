@@ -56,7 +56,7 @@ declare module '@ioc:Adonis/Addons/Redis' {
   export type HealthReportNode = {
     connection: string
     status: string
-    used_memory: string
+    used_memory: string | null
     error: any
   }
 

@@ -369,7 +369,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
       return {
         connection: this.connectionName,
         status: connection.status,
-        used_memory: 'unknown',
+        used_memory: null,
         error: this.lastError,
       }
     }
@@ -395,7 +395,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
       return {
         connection: this.connectionName,
         status: connection.status,
-        used_memory: 'unknown',
+        used_memory: null,
         error,
       }
     }
