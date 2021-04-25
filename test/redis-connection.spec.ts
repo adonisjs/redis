@@ -170,7 +170,7 @@ test.group('Redis factory', () => {
 
       assert.notEqual(report.status, 'ready')
       assert.equal(report.error.code, 'ECONNREFUSED')
-      assert.equal(report.used_memory, 'unknown')
+      assert.equal(report.used_memory, null)
 
       await factory.quit()
     })

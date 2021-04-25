@@ -212,7 +212,7 @@ test.group('Redis cluster factory', () => {
       const report = await factory.getReport(true)
       assert.notEqual(report.status, 'ready')
       assert.match(report.error.message, /Failed to refresh/)
-      assert.equal(report.used_memory, 'unknown')
+      assert.equal(report.used_memory, null)
 
       await factory.quit()
     })
