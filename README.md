@@ -19,11 +19,11 @@
 
 <div align="center">
   <h3>
-    <a href="https://preview.adonisjs.com">
+    <a href="https://adonisjs.com">
       Website
     </a>
     <span> | </span>
-    <a href="https://preview.adonisjs.com/guides/database/redis">
+    <a href="https://docs.adonisjs.com/guides/redis">
       Guides
     </a>
     <span> | </span>
