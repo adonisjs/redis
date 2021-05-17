@@ -10,7 +10,7 @@ services:
       REDIS_CLUSTER_PORTS: '7000,7001,7002'
     depends_on:
       - redis
-    command: ['/wait-for-it.sh', '-t 60', 'tests:7007', '--', 'node', 'japaFile.js']
+    command: ['npm', 'run', 'test:docker']
   redis:
     image: grokzen/redis-cluster
     environment:
