@@ -22,7 +22,7 @@ const clusterNodes = process.env.REDIS_CLUSTER_PORTS!.split(',').map((port) => {
 test.group('Redis Manager', () => {
   test('run redis commands using default connection', async (assert) => {
     const app = new Application(__dirname, 'web', {})
-    const redis = (new RedisManager(
+    const redis = new RedisManager(
       app,
       {
         connection: 'primary',
@@ -37,7 +37,7 @@ test.group('Redis Manager', () => {
         },
       },
       new Emitter(app)
-    ) as unknown) as RedisManagerContract
+    ) as unknown as RedisManagerContract
 
     await redis.set('greeting', 'hello-world')
     const greeting = await redis.get('greeting')
@@ -50,7 +50,7 @@ test.group('Redis Manager', () => {
 
   test('run redis commands using the connection method', async (assert) => {
     const app = new Application(__dirname, 'web', {})
-    const redis = (new RedisManager(
+    const redis = new RedisManager(
       app,
       {
         connection: 'primary',
@@ -65,7 +65,7 @@ test.group('Redis Manager', () => {
         },
       },
       new Emitter(app)
-    ) as unknown) as RedisManagerContract
+    ) as unknown as RedisManagerContract
 
     await redis.connection().set('greeting', 'hello-world')
     const greeting = await redis.connection().get('greeting')
@@ -77,7 +77,7 @@ test.group('Redis Manager', () => {
 
   test('re-use connection when connection method is called', async (assert) => {
     const app = new Application(__dirname, 'web', {})
-    const redis = (new RedisManager(
+    const redis = new RedisManager(
       app,
       {
         connection: 'primary',
@@ -92,7 +92,7 @@ test.group('Redis Manager', () => {
         },
       },
       new Emitter(app)
-    ) as unknown) as RedisManagerContract
+    ) as unknown as RedisManagerContract
 
     assert.deepEqual(redis.connection(), redis.connection('primary'))
     await redis.quit()
@@ -100,7 +100,7 @@ test.group('Redis Manager', () => {
 
   test('connect to redis cluster when cluster array is defined', async (assert, done) => {
     const app = new Application(__dirname, 'web', {})
-    const redis = (new RedisManager(
+    const redis = new RedisManager(
       app,
       {
         connection: 'cluster',
@@ -115,7 +115,7 @@ test.group('Redis Manager', () => {
         },
       },
       new Emitter(app)
-    ) as unknown) as RedisManagerContract
+    ) as unknown as RedisManagerContract
 
     redis.connection('cluster').on('ready', async () => {
       assert.isAbove(redis.connection('cluster').nodes().length, 2)
@@ -126,7 +126,7 @@ test.group('Redis Manager', () => {
 
   test('on disconnect clear connection from tracked list', async (assert, done) => {
     const app = new Application(__dirname, 'web', {})
-    const redis = (new RedisManager(
+    const redis = new RedisManager(
       app,
       {
         connection: 'primary',
@@ -141,7 +141,7 @@ test.group('Redis Manager', () => {
         },
       },
       new Emitter(app)
-    ) as unknown) as RedisManagerContract
+    ) as unknown as RedisManagerContract
 
     const connection = redis.connection()
     connection.on('end', () => {
@@ -217,7 +217,7 @@ test.group('Redis Manager', () => {
 
   test('use pub/sub using the manager instance', async (assert, done) => {
     const app = new Application(__dirname, 'web', {})
-    const redis = (new RedisManager(
+    const redis = new RedisManager(
       app,
       {
         connection: 'primary',
@@ -232,7 +232,7 @@ test.group('Redis Manager', () => {
         },
       },
       new Emitter(app)
-    ) as unknown) as RedisManagerContract
+    ) as unknown as RedisManagerContract
 
     redis.connection().on('subscription:ready', () => {
       redis.publish('news', 'breaking news at 9')

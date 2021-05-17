@@ -20,11 +20,10 @@ declare module '@ioc:Adonis/Addons/Redis' {
   /**
    * Returns factory for a given connection by inspecting it's config.
    */
-  type GetConnectionFactoryType<
-    T extends keyof RedisConnectionsList
-  > = RedisConnectionsList[T] extends RedisClusterConfig
-    ? RedisClusterConnectionContract
-    : RedisConnectionContract
+  type GetConnectionFactoryType<T extends keyof RedisConnectionsList> =
+    RedisConnectionsList[T] extends RedisClusterConfig
+      ? RedisClusterConnectionContract
+      : RedisConnectionContract
 
   /*
   |--------------------------------------------------------------------------

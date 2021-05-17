@@ -17,14 +17,14 @@ import { RedisConnection } from '../src/RedisConnection'
 
 test.group('Redis factory', () => {
   test('emit ready when connected to redis server', (assert, done) => {
-    const factory = (new RedisConnection(
+    const factory = new RedisConnection(
       'main',
       {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
       new Application(__dirname, 'web', {})
-    ) as unknown) as RedisConnectionContract
+    ) as unknown as RedisConnectionContract
 
     factory.on('error', async (error) => {
       console.log(error)
@@ -38,14 +38,14 @@ test.group('Redis factory', () => {
   })
 
   test('execute redis commands', async (assert) => {
-    const factory = (new RedisConnection(
+    const factory = new RedisConnection(
       'main',
       {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
       new Application(__dirname, 'web', {})
-    ) as unknown) as RedisConnectionContract
+    ) as unknown as RedisConnectionContract
 
     await factory.set('greeting', 'hello world')
 
@@ -57,14 +57,14 @@ test.group('Redis factory', () => {
   })
 
   test('clean event listeners on quit', async (assert, done) => {
-    const factory = (new RedisConnection(
+    const factory = new RedisConnection(
       'main',
       {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
       new Application(__dirname, 'web', {})
-    ) as unknown) as RedisConnectionContract
+    ) as unknown as RedisConnectionContract
 
     factory.on('end', () => {
       assert.equal(factory.ioConnection.listenerCount('ready'), 0)
@@ -78,14 +78,14 @@ test.group('Redis factory', () => {
   })
 
   test('clean event listeners on disconnect', async (assert, done) => {
-    const factory = (new RedisConnection(
+    const factory = new RedisConnection(
       'main',
       {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
       new Application(__dirname, 'web', {})
-    ) as unknown) as RedisConnectionContract
+    ) as unknown as RedisConnectionContract
 
     factory.on('end', () => {
       assert.equal(factory.ioConnection.listenerCount('ready'), 0)
@@ -99,11 +99,11 @@ test.group('Redis factory', () => {
   })
 
   test('get event for connection errors', async (assert, done) => {
-    const factory = (new RedisConnection(
+    const factory = new RedisConnection(
       'main',
       { port: 4444 },
       new Application(__dirname, 'web', {})
-    ) as unknown) as RedisConnectionContract
+    ) as unknown as RedisConnectionContract
 
     factory.on('end', () => {
       assert.equal(factory.ioConnection.listenerCount('ready'), 0)
@@ -121,14 +121,14 @@ test.group('Redis factory', () => {
   test('get report for connected connection', async (assert, done) => {
     assert.plan(5)
 
-    const factory = (new RedisConnection(
+    const factory = new RedisConnection(
       'main',
       {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
       new Application(__dirname, 'web', {})
-    ) as unknown) as RedisConnectionContract
+    ) as unknown as RedisConnectionContract
 
     factory.on('end', () => {
       assert.equal(factory.ioConnection.listenerCount('ready'), 0)
@@ -150,14 +150,14 @@ test.group('Redis factory', () => {
   test('get report for errored connection', async (assert, done) => {
     assert.plan(5)
 
-    const factory = (new RedisConnection(
+    const factory = new RedisConnection(
       'main',
       {
         host: process.env.REDIS_HOST,
         port: 4444,
       },
       new Application(__dirname, 'web', {})
-    ) as unknown) as RedisConnectionContract
+    ) as unknown as RedisConnectionContract
 
     factory.on('end', () => {
       assert.equal(factory.ioConnection.listenerCount('ready'), 0)
@@ -179,14 +179,14 @@ test.group('Redis factory', () => {
 
 test.group('Redis factory - Subscribe', () => {
   test('emit subscriber events when subscriber connection is created', async (_assert, done) => {
-    const factory = (new RedisConnection(
+    const factory = new RedisConnection(
       'main',
       {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
       new Application(__dirname, 'web', {})
-    ) as unknown) as RedisConnectionContract
+    ) as unknown as RedisConnectionContract
 
     factory.on('subscriber:ready', async () => {
       await factory.quit()
@@ -197,14 +197,14 @@ test.group('Redis factory - Subscribe', () => {
   })
 
   test('emit subscription event when subscription is created', async (assert, done) => {
-    const factory = (new RedisConnection(
+    const factory = new RedisConnection(
       'main',
       {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
       new Application(__dirname, 'web', {})
-    ) as unknown) as RedisConnectionContract
+    ) as unknown as RedisConnectionContract
 
     factory.on('subscription:ready', async (count) => {
       assert.equal(count, 1)
@@ -216,14 +216,14 @@ test.group('Redis factory - Subscribe', () => {
   })
 
   test('make multiple subscriptions to different channels', async (assert, done) => {
-    const factory = (new RedisConnection(
+    const factory = new RedisConnection(
       'main',
       {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
       new Application(__dirname, 'web', {})
-    ) as unknown) as RedisConnectionContract
+    ) as unknown as RedisConnectionContract
     let invokedCounts = 0
 
     factory.on('subscription:ready', async (count) => {
@@ -243,14 +243,14 @@ test.group('Redis factory - Subscribe', () => {
   })
 
   test('publish messages', async (assert, done) => {
-    const factory = (new RedisConnection(
+    const factory = new RedisConnection(
       'main',
       {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
       new Application(__dirname, 'web', {})
-    ) as unknown) as RedisConnectionContract
+    ) as unknown as RedisConnectionContract
     factory.subscribe('news', async (message) => {
       assert.equal(message, 'breaking news at 9')
       await factory.quit()
@@ -263,14 +263,14 @@ test.group('Redis factory - Subscribe', () => {
   })
 
   test('publish messages to multiple channels', async (assert, done) => {
-    const factory = (new RedisConnection(
+    const factory = new RedisConnection(
       'main',
       {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
       new Application(__dirname, 'web', {})
-    ) as unknown) as RedisConnectionContract
+    ) as unknown as RedisConnectionContract
 
     factory.on('subscription:ready', (count) => {
       if (count === 1) {
@@ -291,14 +291,14 @@ test.group('Redis factory - Subscribe', () => {
   })
 
   test('unsubscribe from a channel', async (assert, done) => {
-    const factory = (new RedisConnection(
+    const factory = new RedisConnection(
       'main',
       {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
       new Application(__dirname, 'web', {})
-    ) as unknown) as RedisConnectionContract
+    ) as unknown as RedisConnectionContract
 
     factory.on('subscription:ready', () => {
       factory.publish('news', 'breaking news at 9')
@@ -318,14 +318,14 @@ test.group('Redis factory - Subscribe', () => {
 
 test.group('Redis factory - PSubscribe', () => {
   test('emit subscriber events when subscriber connection is created', async (_assert, done) => {
-    const factory = (new RedisConnection(
+    const factory = new RedisConnection(
       'main',
       {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
       new Application(__dirname, 'web', {})
-    ) as unknown) as RedisConnectionContract
+    ) as unknown as RedisConnectionContract
     factory.on('subscriber:ready', async () => {
       await factory.quit()
       done()
@@ -335,14 +335,14 @@ test.group('Redis factory - PSubscribe', () => {
   })
 
   test('emit subscription event when subscription is created', async (assert, done) => {
-    const factory = (new RedisConnection(
+    const factory = new RedisConnection(
       'main',
       {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
       new Application(__dirname, 'web', {})
-    ) as unknown) as RedisConnectionContract
+    ) as unknown as RedisConnectionContract
     factory.on('psubscription:ready', async (count) => {
       assert.equal(count, 1)
       await factory.quit()
@@ -353,14 +353,14 @@ test.group('Redis factory - PSubscribe', () => {
   })
 
   test('make multiple subscriptions to different patterns', async (assert, done) => {
-    const factory = (new RedisConnection(
+    const factory = new RedisConnection(
       'main',
       {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
       new Application(__dirname, 'web', {})
-    ) as unknown) as RedisConnectionContract
+    ) as unknown as RedisConnectionContract
     let invokedCounts = 0
 
     factory.on('psubscription:ready', async (count) => {
@@ -380,14 +380,14 @@ test.group('Redis factory - PSubscribe', () => {
   })
 
   test('publish messages', async (assert, done) => {
-    const factory = (new RedisConnection(
+    const factory = new RedisConnection(
       'main',
       {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
       new Application(__dirname, 'web', {})
-    ) as unknown) as RedisConnectionContract
+    ) as unknown as RedisConnectionContract
     factory.psubscribe('news:*', async (channel, message) => {
       assert.equal(channel, 'news:prime')
       assert.equal(message, 'breaking news at 9')
@@ -402,14 +402,14 @@ test.group('Redis factory - PSubscribe', () => {
 
   test('publish messages to multiple channels', async (assert, done) => {
     assert.plan(2)
-    const factory = (new RedisConnection(
+    const factory = new RedisConnection(
       'main',
       {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
       new Application(__dirname, 'web', {})
-    ) as unknown) as RedisConnectionContract
+    ) as unknown as RedisConnectionContract
 
     factory.on('psubscription:ready', (count) => {
       if (count === 1) {
@@ -432,14 +432,14 @@ test.group('Redis factory - PSubscribe', () => {
   })
 
   test('unsubscribe from a pattern', async (assert, done) => {
-    const factory = (new RedisConnection(
+    const factory = new RedisConnection(
       'main',
       {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
       new Application(__dirname, 'web', {})
-    ) as unknown) as RedisConnectionContract
+    ) as unknown as RedisConnectionContract
 
     factory.on('psubscription:ready', () => {
       factory.publish('news:prime', { title: 'breaking news at 9' })
@@ -459,14 +459,14 @@ test.group('Redis factory - PSubscribe', () => {
 
   test('bind IoC container binding as subscriber', async (assert, done) => {
     const app = new Application(__dirname, 'web', {})
-    const factory = (new RedisConnection(
+    const factory = new RedisConnection(
       'main',
       {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
       app
-    ) as unknown) as RedisConnectionContract
+    ) as unknown as RedisConnectionContract
 
     class RedisListeners {
       public async onNews(channel: string, message: { title: string }) {

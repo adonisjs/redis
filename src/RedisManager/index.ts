@@ -132,16 +132,12 @@ export class RedisManager implements RedisBaseManagerContract {
      * object, so that we can re-use it later
      */
     const connection = (this.activeConnections[name] = config.clusters
-      ? ((new RedisClusterConnection(
+      ? (new RedisClusterConnection(
           name,
           config,
           this.application
-        ) as unknown) as RedisClusterConnectionContract)
-      : ((new RedisConnection(
-          name,
-          config,
-          this.application
-        ) as unknown) as RedisConnectionContract))
+        ) as unknown as RedisClusterConnectionContract)
+      : (new RedisConnection(name, config, this.application) as unknown as RedisConnectionContract))
 
     /**
      * Forward events to the application event emitter
