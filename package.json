@@ -1,6 +1,6 @@
 {
 	"name": "@adonisjs/redis",
-	"version": "7.0.2",
+	"version": "7.0.3",
 	"description": "AdonisJS addon for Redis",
 	"main": "build/providers/RedisProvider.js",
 	"files": [
@@ -16,7 +16,7 @@
 		"pretest": "npm run lint",
 		"test": "docker-compose build && docker-compose run --rm tests",
 		"clean": "del build",
-    "test:docker": "FORCE_COLOR=true node japaFile.js",
+		"test:docker": "FORCE_COLOR=true node japaFile.js",
 		"copyfiles": "copyfiles \"templates/**/*.txt\" \"instructions.md\" build",
 		"compile": "npm run lint && npm run clean && tsc",
 		"build": "npm run compile && npm run copyfiles",
