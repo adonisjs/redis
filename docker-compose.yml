@@ -5,12 +5,13 @@ services:
     build:
       context: .
     environment:
-      REDIS_HOST: 0.0.0.0
+      REDIS_HOST: redis
       REDIS_PORT: 7007
       REDIS_CLUSTER_PORTS: '7000,7001,7002'
+      WAIT_HOSTS: redis:7000, redis:7001, redis:7002, redis:7003, redis:7004, redis:7005, redis:7006, redis:7007
     depends_on:
       - redis
-    command: ['npm', 'run', 'test:docker']
+    command: sh -c "/wait && npm run test:docker"
   redis:
     image: grokzen/redis-cluster
     environment:
