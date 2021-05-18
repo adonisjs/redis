@@ -20,5 +20,3 @@ services:
       REDIS_CLUSTER_IP: 0.0.0.0
       IP: 0.0.0.0
       STANDALONE: 'true'
-    ports:
-      - '7000-7007:7000-7007'
