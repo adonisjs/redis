@@ -21,7 +21,6 @@ import {
   PubSubChannelHandler,
   PubSubPatternHandler,
 } from '@ioc:Adonis/Addons/Redis'
-import { verify } from 'crypto'
 
 const PUBSUB_PURPOSE = 'adonis-pubsub'
 
