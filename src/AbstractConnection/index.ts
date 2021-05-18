@@ -21,6 +21,9 @@ import {
   PubSubChannelHandler,
   PubSubPatternHandler,
 } from '@ioc:Adonis/Addons/Redis'
+import { verify } from 'crypto'
+
+const PUBSUB_PURPOSE = 'adonis-pubsub'
 
 /**
  * Helper to sleep
@@ -179,7 +182,12 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
     this.ioSubscriberConnection!.on('message', (channel, message) => {
       const handler = this.subscriptions.get(channel)
       if (handler) {
-        handler(new MessageBuilder().verify(message))
+        /**
+         * If the message is not originated from the same process and not built using
+         * the message builder, then should pass it as it is
+         */
+        const verifiedMessage = new MessageBuilder().verify(message, PUBSUB_PURPOSE)
+        handler(verifiedMessage || message)
       }
     })
 
@@ -189,7 +197,12 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
     this.ioSubscriberConnection!.on('pmessage', (pattern, channel, message) => {
       const handler = this.psubscriptions.get(pattern)
       if (handler) {
-        handler(channel, new MessageBuilder().verify(message))
+        /**
+         * If the message is not originated from the same process and not built using
+         * the message builder, then should pass it as it is
+         */
+        const verifiedMessage = new MessageBuilder().verify(message, PUBSUB_PURPOSE)
+        handler(channel, verifiedMessage || message)
       }
     })
 
@@ -403,7 +416,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
   }
 
   public publish(channel: string, message: any, callback?: any) {
-    const messageString = new MessageBuilder().build(message)
+    const messageString = new MessageBuilder().build(message, undefined, PUBSUB_PURPOSE)
     return callback
       ? this.ioConnection.publish(channel, messageString, callback)
       : this.ioConnection.publish(channel, messageString)

@@ -314,6 +314,46 @@ test.group('Redis factory - Subscribe', () => {
       })
     })
   })
+
+  test('consume messages not stringified using message builder', async (assert, done) => {
+    const factory = new RedisConnection(
+      'main',
+      {
+        host: process.env.REDIS_HOST,
+        port: Number(process.env.REDIS_PORT),
+      },
+      new Application(__dirname, 'web', {})
+    ) as unknown as RedisConnectionContract
+    factory.subscribe('news', async (message) => {
+      assert.equal(message, 'breaking news at 9')
+      await factory.quit()
+      done()
+    })
+
+    factory.on('subscription:ready', () => {
+      factory.ioConnection.publish('news', 'breaking news at 9')
+    })
+  })
+
+  test('consume messages self stringified with message sub property', async (assert, done) => {
+    const factory = new RedisConnection(
+      'main',
+      {
+        host: process.env.REDIS_HOST,
+        port: Number(process.env.REDIS_PORT),
+      },
+      new Application(__dirname, 'web', {})
+    ) as unknown as RedisConnectionContract
+    factory.subscribe('news', async (message) => {
+      assert.equal(message, JSON.stringify({ message: 'breaking news at 9' }))
+      await factory.quit()
+      done()
+    })
+
+    factory.on('subscription:ready', () => {
+      factory.ioConnection.publish('news', JSON.stringify({ message: 'breaking news at 9' }))
+    })
+  })
 })
 
 test.group('Redis factory - PSubscribe', () => {
@@ -485,6 +525,48 @@ test.group('Redis factory - PSubscribe', () => {
 
     factory.on('psubscription:ready', () => {
       factory.publish('news:prime', { title: 'breaking news at 9' })
+    })
+  })
+
+  test('consume messages not stringified using message builder', async (assert, done) => {
+    const factory = new RedisConnection(
+      'main',
+      {
+        host: process.env.REDIS_HOST,
+        port: Number(process.env.REDIS_PORT),
+      },
+      new Application(__dirname, 'web', {})
+    ) as unknown as RedisConnectionContract
+    factory.psubscribe('news:*', async (channel, message) => {
+      assert.equal(channel, 'news:prime')
+      assert.equal(message, 'breaking news at 9')
+      await factory.quit()
+      done()
+    })
+
+    factory.on('psubscription:ready', () => {
+      factory.ioConnection.publish('news:prime', 'breaking news at 9')
+    })
+  })
+
+  test('consume messages self stringified', async (assert, done) => {
+    const factory = new RedisConnection(
+      'main',
+      {
+        host: process.env.REDIS_HOST,
+        port: Number(process.env.REDIS_PORT),
+      },
+      new Application(__dirname, 'web', {})
+    ) as unknown as RedisConnectionContract
+    factory.psubscribe('news:*', async (channel, message) => {
+      assert.equal(channel, 'news:prime')
+      assert.equal(message, JSON.stringify({ message: 'breaking news at 9' }))
+      await factory.quit()
+      done()
+    })
+
+    factory.on('psubscription:ready', () => {
+      factory.ioConnection.publish('news:prime', JSON.stringify({ message: 'breaking news at 9' }))
     })
   })
 })
