@@ -33,8 +33,8 @@ declare module '@ioc:Adonis/Addons/Redis' {
   /**
    * Pubsub subscriber
    */
-  export type PubSubChannelHandler<T extends any = any> = (data: T) => Promise<void> | void
-  export type PubSubPatternHandler<T extends any = any> = (
+  export type PubSubChannelHandler<T extends any = string> = (data: T) => Promise<void> | void
+  export type PubSubPatternHandler<T extends any = string> = (
     channel: string,
     data: T
   ) => Promise<void> | void
@@ -45,10 +45,10 @@ declare module '@ioc:Adonis/Addons/Redis' {
   export interface RedisPubSubContract {
     publish(
       channel: string,
-      message: any,
+      message: string,
       callback: (error: Error | null, count: number) => void
     ): void
-    publish(channel: string, message: any): Promise<number>
+    publish(channel: string, message: string): Promise<number>
     subscribe(channel: string, handler: PubSubChannelHandler | string): void
     psubscribe(pattern: string, handler: PubSubPatternHandler | string): void
     unsubscribe(channel: string): void

@@ -12,7 +12,6 @@
 import { EventEmitter } from 'events'
 import { Redis, Cluster } from 'ioredis'
 import { Exception } from '@poppinss/utils'
-import { MessageBuilder } from '@poppinss/utils/build/helpers'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 import { ContainerBindings, IocResolverContract } from '@ioc:Adonis/Core/Application'
 
@@ -21,8 +20,6 @@ import {
   PubSubChannelHandler,
   PubSubPatternHandler,
 } from '@ioc:Adonis/Addons/Redis'
-
-const PUBSUB_PURPOSE = 'adonis-pubsub'
 
 /**
  * Helper to sleep
@@ -181,12 +178,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
     this.ioSubscriberConnection!.on('message', (channel, message) => {
       const handler = this.subscriptions.get(channel)
       if (handler) {
-        /**
-         * If the message is not originated from the same process and not built using
-         * the message builder, then should pass it as it is
-         */
-        const verifiedMessage = new MessageBuilder().verify(message, PUBSUB_PURPOSE)
-        handler(verifiedMessage || message)
+        handler(message)
       }
     })
 
@@ -196,12 +188,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
     this.ioSubscriberConnection!.on('pmessage', (pattern, channel, message) => {
       const handler = this.psubscriptions.get(pattern)
       if (handler) {
-        /**
-         * If the message is not originated from the same process and not built using
-         * the message builder, then should pass it as it is
-         */
-        const verifiedMessage = new MessageBuilder().verify(message, PUBSUB_PURPOSE)
-        handler(channel, verifiedMessage || message)
+        handler(channel, message)
       }
     })
 
@@ -414,10 +401,9 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
     }
   }
 
-  public publish(channel: string, message: any, callback?: any) {
-    const messageString = new MessageBuilder().build(message, undefined, PUBSUB_PURPOSE)
+  public publish(channel: string, message: string, callback?: any) {
     return callback
-      ? this.ioConnection.publish(channel, messageString, callback)
-      : this.ioConnection.publish(channel, messageString)
+      ? this.ioConnection.publish(channel, message, callback)
+      : this.ioConnection.publish(channel, message)
   }
 }
