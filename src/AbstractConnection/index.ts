@@ -24,7 +24,7 @@ import {
 /**
  * Helper to sleep
  */
-const sleep = () => new Promise((resolve) => setTimeout(resolve, 1000))
+const sleep = () => new Promise<void>((resolve) => setTimeout(resolve, 1000))
 
 /**
  * Abstract factory implements the shared functionality required by Redis cluster
