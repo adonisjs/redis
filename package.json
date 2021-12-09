@@ -1,6 +1,6 @@
 {
 	"name": "@adonisjs/redis",
-	"version": "7.0.9",
+	"version": "7.0.10",
 	"description": "AdonisJS addon for Redis",
 	"main": "build/providers/RedisProvider.js",
 	"files": [
