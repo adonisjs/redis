@@ -217,4 +217,31 @@ test.group('Redis cluster factory', () => {
       await factory.quit()
     })
   })
+
+  test('execute redis commands using lua scripts', async (assert) => {
+    const factory = new RedisClusterConnection(
+      'main',
+      {
+        clusters: nodes,
+      },
+      new Application(__dirname, 'web', {})
+    ) as unknown as RedisClusterConnectionContract
+
+    factory.defineCommand('defineValue', {
+      numberOfKeys: 1,
+      lua: `redis.call('set', KEYS[1], ARGV[1])`,
+    })
+
+    factory.defineCommand('readValue', {
+      numberOfKeys: 1,
+      lua: `return redis.call('get', KEYS[1])`,
+    })
+
+    await factory.runCommand('defineValue', 'greeting', 'hello world')
+    const greeting = await factory.runCommand('readValue', 'greeting')
+    assert.equal(greeting, 'hello world')
+
+    await factory.del('greeting')
+    await factory.quit()
+  })
 })

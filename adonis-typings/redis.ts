@@ -107,6 +107,7 @@ declare module '@ioc:Adonis/Addons/Redis' {
     disconnect(): Promise<void>
     getReport(checkForMemory?: boolean): Promise<HealthReportNode>
     quit(): Promise<void>
+    runCommand(command: string, ...args: any[]): Promise<any> | any
   }
 
   /**
@@ -127,6 +128,7 @@ declare module '@ioc:Adonis/Addons/Redis' {
     nodes(role?: NodeRole): Redis[]
     disconnect(): Promise<void>
     quit(): Promise<void>
+    runCommand(command: string, ...args: any[]): Promise<any> | any
   }
 
   type Connection = RedisClusterConnectionContract | RedisConnectionContract
@@ -199,6 +201,11 @@ declare module '@ioc:Adonis/Addons/Redis' {
      * Disconnect all redis connections
      */
     disconnectAll(): Promise<void>
+
+    /**
+     * Run a given custom command
+     */
+    runCommand(command: string, ...args: any[]): Promise<any> | any
   }
 
   /*

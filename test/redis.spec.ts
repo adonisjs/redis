@@ -244,4 +244,41 @@ test.group('Redis Manager', () => {
       done()
     })
   })
+
+  test('execute redis commands using lua scripts', async (assert) => {
+    const app = new Application(__dirname, 'web', {})
+    const redis = new RedisManager(
+      app,
+      {
+        connection: 'primary',
+        connections: {
+          primary: {
+            host: process.env.REDIS_HOST,
+            port: Number(process.env.REDIS_PORT),
+          },
+          cluster: {
+            clusters: clusterNodes,
+          },
+        },
+      },
+      new Emitter(app)
+    ) as unknown as RedisManagerContract
+
+    redis.defineCommand('defineValue', {
+      numberOfKeys: 1,
+      lua: `redis.call('set', KEYS[1], ARGV[1])`,
+    })
+
+    redis.defineCommand('readValue', {
+      numberOfKeys: 1,
+      lua: `return redis.call('get', KEYS[1])`,
+    })
+
+    await redis.runCommand('defineValue', 'greeting', 'hello world')
+    const greeting = await redis.runCommand('readValue', 'greeting')
+    assert.equal(greeting, 'hello world')
+
+    await redis.del('greeting')
+    await redis.quit()
+  })
 })

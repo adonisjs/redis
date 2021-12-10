@@ -401,9 +401,28 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
     }
   }
 
+  /**
+   * Publish the pub/sub message
+   */
   public publish(channel: string, message: string, callback?: any) {
     return callback
       ? this.ioConnection.publish(channel, message, callback)
       : this.ioConnection.publish(channel, message)
+  }
+
+  /**
+   * Define a custom command using LUA script. You can run the
+   * registered command using the "runCommand" method.
+   */
+  public defineCommand(...args: Parameters<Redis['defineCommand']>): this {
+    this.ioConnection.defineCommand(...args)
+    return this
+  }
+
+  /**
+   * Run a pre registered command
+   */
+  public runCommand(command: string, ...args: any[]): any {
+    return this.ioConnection[command](...args)
   }
 }

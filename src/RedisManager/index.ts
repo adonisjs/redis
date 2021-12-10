@@ -237,6 +237,22 @@ export class RedisManager implements RedisBaseManagerContract {
       meta: reports,
     }
   }
+
+  /**
+   * Define a custom command using LUA script. You can run the
+   * registered command using the "runCommand" method.
+   */
+  public defineCommand(...args: Parameters<RedisConnectionContract['defineCommand']>): this {
+    this.connection().defineCommand(...args)
+    return this
+  }
+
+  /**
+   * Run a pre registered command
+   */
+  public runCommand(command: string, ...args: any[]): any {
+    return this.connection().runCommand(command, ...args)
+  }
 }
 
 /**
