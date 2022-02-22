@@ -11,6 +11,7 @@ export const ioMethods = [
   'connect',
   'send_command',
   'bitcount',
+  'bitfield',
   'get',
   'getBuffer',
   'set',
