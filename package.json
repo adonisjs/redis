@@ -16,12 +16,12 @@
 		"pretest": "npm run lint",
 		"test": "docker-compose build && docker-compose run --rm tests",
 		"clean": "del build",
-		"test:docker": "FORCE_COLOR=true node japaFile.js",
+		"test:docker": "FORCE_COLOR=true node ./bin/test.js",
 		"copyfiles": "copyfiles \"templates/**/*.txt\" \"instructions.md\" build",
 		"compile": "npm run lint && npm run clean && tsc",
 		"build": "npm run compile && npm run copyfiles",
 		"commit": "git-cz",
-		"release": "np",
+		"release": "np --message=\"chore(release): %s\"",
 		"version": "npm run build",
 		"prepublishOnly": "npm run build",
 		"lint": "eslint . --ext=.ts",
@@ -53,7 +53,9 @@
 		"@adonisjs/require-ts": "^2.0.10",
 		"@poppinss/dev-utils": "^2.0.2",
 		"@types/node": "^17.0.21",
+		"commitizen": "^4.2.4",
 		"copyfiles": "^2.4.1",
+		"cz-conventional-changelog": "^3.3.0",
 		"del-cli": "^4.0.1",
 		"eslint": "^8.10.0",
 		"eslint-config-prettier": "^8.4.0",
@@ -95,8 +97,7 @@
 	},
 	"np": {
 		"contents": ".",
-		"anyBranch": false,
-		"yolo": true
+		"anyBranch": false
 	},
 	"adonisjs": {
 		"instructionsMd": "./build/instructions.md",
@@ -124,5 +125,48 @@
 			"REDIS_PORT": "6379",
 			"REDIS_PASSWORD": ""
 		}
+	},
+	"mrmConfig": {
+		"core": true,
+		"license": "MIT",
+		"services": [
+			"github-actions"
+		],
+		"minNodeVersion": "14.15.4",
+		"probotApps": [
+			"stale",
+			"lock"
+		],
+		"runGhActionsOnWindows": false
+	},
+	"eslintConfig": {
+		"extends": [
+			"plugin:adonis/typescriptPackage",
+			"prettier"
+		],
+		"plugins": [
+			"prettier"
+		],
+		"rules": {
+			"prettier/prettier": [
+				"error",
+				{
+					"endOfLine": "auto"
+				}
+			]
+		}
+	},
+	"eslintIgnore": [
+		"build"
+	],
+	"prettier": {
+		"trailingComma": "es5",
+		"semi": false,
+		"singleQuote": true,
+		"useTabs": false,
+		"quoteProps": "consistent",
+		"bracketSpacing": true,
+		"arrowParens": "always",
+		"printWidth": 100
 	}
 }
