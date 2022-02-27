@@ -97,7 +97,8 @@
 	},
 	"np": {
 		"contents": ".",
-		"anyBranch": false
+		"anyBranch": false,
+    "yolo": true
 	},
 	"adonisjs": {
 		"instructionsMd": "./build/instructions.md",
