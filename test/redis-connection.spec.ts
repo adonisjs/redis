@@ -9,14 +9,14 @@
 
 /// <reference path="../adonis-typings/redis.ts" />
 
-import test from 'japa'
+import { test } from '@japa/runner'
 import { Application } from '@adonisjs/core/build/standalone'
 import { RedisConnectionContract } from '@ioc:Adonis/Addons/Redis'
 
 import { RedisConnection } from '../src/RedisConnection'
 
 test.group('Redis factory', () => {
-  test('emit ready when connected to redis server', (assert, done) => {
+  test('emit ready when connected to redis server', ({ assert }, done) => {
     const factory = new RedisConnection(
       'main',
       {
@@ -35,9 +35,9 @@ test.group('Redis factory', () => {
       await factory.quit()
       done()
     })
-  })
+  }).waitForDone()
 
-  test('execute redis commands', async (assert) => {
+  test('execute redis commands', async ({ assert }) => {
     const factory = new RedisConnection(
       'main',
       {
@@ -56,7 +56,7 @@ test.group('Redis factory', () => {
     await factory.quit()
   })
 
-  test('clean event listeners on quit', async (assert, done) => {
+  test('clean event listeners on quit', async ({ assert }, done) => {
     const factory = new RedisConnection(
       'main',
       {
@@ -75,9 +75,9 @@ test.group('Redis factory', () => {
     factory.on('ready', async () => {
       await factory.quit()
     })
-  })
+  }).waitForDone()
 
-  test('clean event listeners on disconnect', async (assert, done) => {
+  test('clean event listeners on disconnect', async ({ assert }, done) => {
     const factory = new RedisConnection(
       'main',
       {
@@ -96,9 +96,9 @@ test.group('Redis factory', () => {
     factory.on('ready', async () => {
       await factory.quit()
     })
-  })
+  }).waitForDone()
 
-  test('get event for connection errors', async (assert, done) => {
+  test('get event for connection errors', async ({ assert }, done) => {
     const factory = new RedisConnection(
       'main',
       { port: 4444 },
@@ -116,9 +116,9 @@ test.group('Redis factory', () => {
       assert.equal(error.port, 4444)
       await factory.quit()
     })
-  })
+  }).waitForDone()
 
-  test('get report for connected connection', async (assert, done) => {
+  test('get report for connected connection', async ({ assert }, done) => {
     assert.plan(5)
 
     const factory = new RedisConnection(
@@ -145,9 +145,9 @@ test.group('Redis factory', () => {
 
       await factory.quit()
     })
-  })
+  }).waitForDone()
 
-  test('get report for errored connection', async (assert, done) => {
+  test('get report for errored connection', async ({ assert }, done) => {
     assert.plan(5)
 
     const factory = new RedisConnection(
@@ -174,9 +174,9 @@ test.group('Redis factory', () => {
 
       await factory.quit()
     })
-  })
+  }).waitForDone()
 
-  test('execute redis commands using lua scripts', async (assert) => {
+  test('execute redis commands using lua scripts', async ({ assert }) => {
     const factory = new RedisConnection(
       'main',
       {
@@ -206,7 +206,7 @@ test.group('Redis factory', () => {
 })
 
 test.group('Redis factory - Subscribe', () => {
-  test('emit subscriber events when subscriber connection is created', async (_assert, done) => {
+  test('emit subscriber events when subscriber connection is created', async ({}, done) => {
     const factory = new RedisConnection(
       'main',
       {
@@ -222,9 +222,9 @@ test.group('Redis factory - Subscribe', () => {
     })
 
     factory.subscribe('news', () => {})
-  })
+  }).waitForDone()
 
-  test('emit subscription event when subscription is created', async (assert, done) => {
+  test('emit subscription event when subscription is created', async ({ assert }, done) => {
     const factory = new RedisConnection(
       'main',
       {
@@ -241,9 +241,9 @@ test.group('Redis factory - Subscribe', () => {
     })
 
     factory.subscribe('news', () => {})
-  })
+  }).waitForDone()
 
-  test('make multiple subscriptions to different channels', async (assert, done) => {
+  test('make multiple subscriptions to different channels', async ({ assert }, done) => {
     const factory = new RedisConnection(
       'main',
       {
@@ -268,9 +268,9 @@ test.group('Redis factory - Subscribe', () => {
 
     factory.subscribe('news', () => {})
     factory.subscribe('sports', () => {})
-  })
+  }).waitForDone()
 
-  test('publish messages', async (assert, done) => {
+  test('publish messages', async ({ assert }, done) => {
     const factory = new RedisConnection(
       'main',
       {
@@ -288,9 +288,9 @@ test.group('Redis factory - Subscribe', () => {
     factory.on('subscription:ready', () => {
       factory.publish('news', 'breaking news at 9')
     })
-  })
+  }).waitForDone()
 
-  test('publish messages to multiple channels', async (assert, done) => {
+  test('publish messages to multiple channels', async ({ assert }, done) => {
     const factory = new RedisConnection(
       'main',
       {
@@ -316,9 +316,9 @@ test.group('Redis factory - Subscribe', () => {
       await factory.quit()
       done()
     })
-  })
+  }).waitForDone()
 
-  test('unsubscribe from a channel', async (assert, done) => {
+  test('unsubscribe from a channel', async ({ assert }, done) => {
     const factory = new RedisConnection(
       'main',
       {
@@ -341,9 +341,9 @@ test.group('Redis factory - Subscribe', () => {
         done()
       })
     })
-  })
+  }).waitForDone()
 
-  test('consume messages not stringified using message builder', async (assert, done) => {
+  test('consume messages not stringified using message builder', async ({ assert }, done) => {
     const factory = new RedisConnection(
       'main',
       {
@@ -361,9 +361,9 @@ test.group('Redis factory - Subscribe', () => {
     factory.on('subscription:ready', () => {
       factory.ioConnection.publish('news', 'breaking news at 9')
     })
-  })
+  }).waitForDone()
 
-  test('consume messages self stringified with message sub property', async (assert, done) => {
+  test('consume messages self stringified with message sub property', async ({ assert }, done) => {
     const factory = new RedisConnection(
       'main',
       {
@@ -381,11 +381,11 @@ test.group('Redis factory - Subscribe', () => {
     factory.on('subscription:ready', () => {
       factory.ioConnection.publish('news', JSON.stringify({ message: 'breaking news at 9' }))
     })
-  })
+  }).waitForDone()
 })
 
 test.group('Redis factory - PSubscribe', () => {
-  test('emit subscriber events when subscriber connection is created', async (_assert, done) => {
+  test('emit subscriber events when subscriber connection is created', async ({}, done) => {
     const factory = new RedisConnection(
       'main',
       {
@@ -400,9 +400,9 @@ test.group('Redis factory - PSubscribe', () => {
     })
 
     factory.psubscribe('news:*', () => {})
-  })
+  }).waitForDone()
 
-  test('emit subscription event when subscription is created', async (assert, done) => {
+  test('emit subscription event when subscription is created', async ({ assert }, done) => {
     const factory = new RedisConnection(
       'main',
       {
@@ -418,9 +418,9 @@ test.group('Redis factory - PSubscribe', () => {
     })
 
     factory.psubscribe('news:*', () => {})
-  })
+  }).waitForDone()
 
-  test('make multiple subscriptions to different patterns', async (assert, done) => {
+  test('make multiple subscriptions to different patterns', async ({ assert }, done) => {
     const factory = new RedisConnection(
       'main',
       {
@@ -445,9 +445,9 @@ test.group('Redis factory - PSubscribe', () => {
 
     factory.psubscribe('news:*', () => {})
     factory.psubscribe('sports:*', () => {})
-  })
+  }).waitForDone()
 
-  test('publish messages', async (assert, done) => {
+  test('publish messages', async ({ assert }, done) => {
     const factory = new RedisConnection(
       'main',
       {
@@ -466,9 +466,9 @@ test.group('Redis factory - PSubscribe', () => {
     factory.on('psubscription:ready', () => {
       factory.publish('news:prime', 'breaking news at 9')
     })
-  })
+  }).waitForDone()
 
-  test('publish messages to multiple channels', async (assert, done) => {
+  test('publish messages to multiple channels', async ({ assert }, done) => {
     assert.plan(2)
     const factory = new RedisConnection(
       'main',
@@ -497,9 +497,9 @@ test.group('Redis factory - PSubscribe', () => {
         done()
       }
     })
-  })
+  }).waitForDone()
 
-  test('unsubscribe from a pattern', async (assert, done) => {
+  test('unsubscribe from a pattern', async ({ assert }, done) => {
     const factory = new RedisConnection(
       'main',
       {
@@ -523,9 +523,9 @@ test.group('Redis factory - PSubscribe', () => {
         done()
       })
     })
-  })
+  }).waitForDone()
 
-  test('bind IoC container binding as subscriber', async (assert, done) => {
+  test('bind IoC container binding as subscriber', async ({ assert }, done) => {
     const app = new Application(__dirname, 'web', {})
     const factory = new RedisConnection(
       'main',
@@ -554,9 +554,9 @@ test.group('Redis factory - PSubscribe', () => {
     factory.on('psubscription:ready', () => {
       factory.publish('news:prime', JSON.stringify({ title: 'breaking news at 9' }))
     })
-  })
+  }).waitForDone()
 
-  test('consume messages not stringified using message builder', async (assert, done) => {
+  test('consume messages not stringified using message builder', async ({ assert }, done) => {
     const factory = new RedisConnection(
       'main',
       {
@@ -575,9 +575,9 @@ test.group('Redis factory - PSubscribe', () => {
     factory.on('psubscription:ready', () => {
       factory.ioConnection.publish('news:prime', 'breaking news at 9')
     })
-  })
+  }).waitForDone()
 
-  test('consume messages self stringified', async (assert, done) => {
+  test('consume messages self stringified', async ({ assert }, done) => {
     const factory = new RedisConnection(
       'main',
       {
@@ -596,5 +596,5 @@ test.group('Redis factory - PSubscribe', () => {
     factory.on('psubscription:ready', () => {
       factory.ioConnection.publish('news:prime', JSON.stringify({ message: 'breaking news at 9' }))
     })
-  })
+  }).waitForDone()
 })

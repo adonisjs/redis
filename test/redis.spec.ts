@@ -9,7 +9,7 @@
 
 /// <reference path="../adonis-typings/redis.ts" />
 
-import test from 'japa'
+import { test } from '@japa/runner'
 import { RedisManagerContract } from '@ioc:Adonis/Addons/Redis'
 import { Application, Emitter } from '@adonisjs/core/build/standalone'
 
@@ -20,7 +20,7 @@ const clusterNodes = process.env.REDIS_CLUSTER_PORTS!.split(',').map((port) => {
 })
 
 test.group('Redis Manager', () => {
-  test('run redis commands using default connection', async (assert) => {
+  test('run redis commands using default connection', async ({ assert }) => {
     const app = new Application(__dirname, 'web', {})
     const redis = new RedisManager(
       app,
@@ -48,7 +48,7 @@ test.group('Redis Manager', () => {
     await redis.quit('primary')
   })
 
-  test('run redis commands using the connection method', async (assert) => {
+  test('run redis commands using the connection method', async ({ assert }) => {
     const app = new Application(__dirname, 'web', {})
     const redis = new RedisManager(
       app,
@@ -75,7 +75,7 @@ test.group('Redis Manager', () => {
     await redis.quit('primary')
   })
 
-  test('re-use connection when connection method is called', async (assert) => {
+  test('re-use connection when connection method is called', async ({ assert }) => {
     const app = new Application(__dirname, 'web', {})
     const redis = new RedisManager(
       app,
@@ -98,7 +98,7 @@ test.group('Redis Manager', () => {
     await redis.quit()
   })
 
-  test('connect to redis cluster when cluster array is defined', async (assert, done) => {
+  test('connect to redis cluster when cluster array is defined', async ({ assert }, done) => {
     const app = new Application(__dirname, 'web', {})
     const redis = new RedisManager(
       app,
@@ -122,9 +122,9 @@ test.group('Redis Manager', () => {
       await redis.quit()
       done()
     })
-  })
+  }).waitForDone()
 
-  test('on disconnect clear connection from tracked list', async (assert, done) => {
+  test('on disconnect clear connection from tracked list', async ({ assert }, done) => {
     const app = new Application(__dirname, 'web', {})
     const redis = new RedisManager(
       app,
@@ -152,9 +152,9 @@ test.group('Redis Manager', () => {
     connection.on('ready', async () => {
       await redis.quit()
     })
-  })
+  }).waitForDone()
 
-  test('get report for connections marked for healthChecks', async (assert) => {
+  test('get report for connections marked for healthChecks', async ({ assert }) => {
     const app = new Application(__dirname, 'web', {})
     const redis = new RedisManager(
       app,
@@ -183,7 +183,7 @@ test.group('Redis Manager', () => {
     await redis.quit()
   })
 
-  test('generate correct report when one of the connections are broken', async (assert) => {
+  test('generate correct report when one of the connections are broken', async ({ assert }) => {
     const app = new Application(__dirname, 'web', {})
     const redis = new RedisManager(
       app,
@@ -215,7 +215,7 @@ test.group('Redis Manager', () => {
     await redis.quit()
   })
 
-  test('use pub/sub using the manager instance', async (assert, done) => {
+  test('use pub/sub using the manager instance', async ({ assert }, done) => {
     const app = new Application(__dirname, 'web', {})
     const redis = new RedisManager(
       app,
@@ -243,9 +243,9 @@ test.group('Redis Manager', () => {
       await redis.quit()
       done()
     })
-  })
+  }).waitForDone()
 
-  test('execute redis commands using lua scripts', async (assert) => {
+  test('execute redis commands using lua scripts', async ({ assert }) => {
     const app = new Application(__dirname, 'web', {})
     const redis = new RedisManager(
       app,
