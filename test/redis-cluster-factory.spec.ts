@@ -9,7 +9,7 @@
 
 /// <reference path="../adonis-typings/redis.ts" />
 
-import test from 'japa'
+import { test } from '@japa/runner'
 import { Application } from '@adonisjs/core/build/standalone'
 import { RedisClusterConnectionContract } from '@ioc:Adonis/Addons/Redis'
 
@@ -20,7 +20,7 @@ const nodes = process.env.REDIS_CLUSTER_PORTS!.split(',').map((port) => {
 })
 
 test.group('Redis cluster factory', () => {
-  test('emit ready when connected to redis server', (assert, done) => {
+  test('emit ready when connected to redis server', ({ assert }, done) => {
     const factory = new RedisClusterConnection(
       'main',
       {
@@ -34,9 +34,9 @@ test.group('Redis cluster factory', () => {
       await factory.quit()
       done()
     })
-  })
+  }).waitForDone()
 
-  test('emit node connection event', (assert, done) => {
+  test('emit node connection event', ({ assert }, done) => {
     const factory = new RedisClusterConnection(
       'main',
       {
@@ -50,9 +50,9 @@ test.group('Redis cluster factory', () => {
       await factory.quit()
       done()
     })
-  })
+  }).waitForDone()
 
-  test('execute redis commands', async (assert) => {
+  test('execute redis commands', async ({ assert }) => {
     const factory = new RedisClusterConnection(
       'main',
       {
@@ -69,7 +69,7 @@ test.group('Redis cluster factory', () => {
     await factory.quit()
   })
 
-  test('clean event listeners on quit', async (assert, done) => {
+  test('clean event listeners on quit', async ({ assert }, done) => {
     assert.plan(2)
 
     const factory = new RedisClusterConnection(
@@ -89,9 +89,9 @@ test.group('Redis cluster factory', () => {
     factory.on('ready', async () => {
       await factory.quit()
     })
-  })
+  }).waitForDone()
 
-  test('clean event listeners on disconnect', async (assert, done) => {
+  test('clean event listeners on disconnect', async ({ assert }, done) => {
     assert.plan(2)
 
     const factory = new RedisClusterConnection(
@@ -111,9 +111,9 @@ test.group('Redis cluster factory', () => {
     factory.on('ready', async () => {
       await factory.disconnect()
     })
-  })
+  }).waitForDone()
 
-  test('get event for connection errors', async (assert, done) => {
+  test('get event for connection errors', async ({ assert }, done) => {
     assert.plan(2)
 
     const factory = new RedisClusterConnection(
@@ -138,9 +138,9 @@ test.group('Redis cluster factory', () => {
     factory.on('node:error', async () => {
       await factory.quit()
     })
-  })
+  }).waitForDone()
 
-  test('access cluster nodes', async (assert, done) => {
+  test('access cluster nodes', async ({ assert }, done) => {
     assert.plan(3)
 
     const factory = new RedisClusterConnection(
@@ -161,9 +161,9 @@ test.group('Redis cluster factory', () => {
       assert.isAbove(factory.nodes().length, 2) // defined in compose file
       await factory.quit()
     })
-  })
+  }).waitForDone()
 
-  test('get report for connected connection', async (assert, done) => {
+  test('get report for connected connection', async ({ assert }, done) => {
     assert.plan(5)
 
     const factory = new RedisClusterConnection(
@@ -189,9 +189,9 @@ test.group('Redis cluster factory', () => {
 
       await factory.quit()
     })
-  })
+  }).waitForDone()
 
-  test('get report for errored connection', async (assert, done) => {
+  test('get report for errored connection', async ({ assert }, done) => {
     assert.plan(5)
 
     const factory = new RedisClusterConnection(
@@ -216,9 +216,9 @@ test.group('Redis cluster factory', () => {
 
       await factory.quit()
     })
-  })
+  }).waitForDone()
 
-  test('execute redis commands using lua scripts', async (assert) => {
+  test('execute redis commands using lua scripts', async ({ assert }) => {
     const factory = new RedisClusterConnection(
       'main',
       {
