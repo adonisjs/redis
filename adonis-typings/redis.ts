@@ -10,7 +10,7 @@
 declare module '@ioc:Adonis/Addons/Redis' {
   import { EventEmitter } from 'events'
   import { HealthReportEntry } from '@ioc:Adonis/Core/HealthCheck'
-  import { Redis, RedisOptions, ClusterOptions, Cluster, NodeRole } from 'ioredis'
+  import { Redis as IoRedis, RedisOptions, ClusterOptions, Cluster, NodeRole } from 'ioredis'
 
   /*
   |--------------------------------------------------------------------------
@@ -70,7 +70,7 @@ declare module '@ioc:Adonis/Addons/Redis' {
    * handlers, since we our own.
    */
   export type IORedisCommands = Omit<
-    Redis,
+    IoRedis,
     | 'Promise'
     | 'status'
     | 'connect'
@@ -100,8 +100,8 @@ declare module '@ioc:Adonis/Addons/Redis' {
     status: string
     connectionName: string
     subscriberStatus?: string
-    ioConnection: Redis
-    ioSubscriberConnection?: Redis
+    ioConnection: IoRedis
+    ioSubscriberConnection?: IoRedis
 
     connect(callback?: () => void): Promise<any>
     disconnect(): Promise<void>
@@ -125,7 +125,7 @@ declare module '@ioc:Adonis/Addons/Redis' {
 
     getReport(checkForMemory?: boolean): Promise<HealthReportNode>
     connect(callback?: () => void): Promise<any>
-    nodes(role?: NodeRole): Redis[]
+    nodes(role?: NodeRole): IoRedis[]
     disconnect(): Promise<void>
     quit(): Promise<void>
     runCommand(command: string, ...args: any[]): Promise<any> | any

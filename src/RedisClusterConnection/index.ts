@@ -9,7 +9,7 @@
 
 /// <reference path="../../adonis-typings/redis.ts" />
 
-import Redis from 'ioredis'
+import Redis, { Cluster, NodeRole } from 'ioredis'
 import { RedisClusterConfig } from '@ioc:Adonis/Addons/Redis'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
@@ -21,7 +21,7 @@ import { AbstractConnection } from '../AbstractConnection'
  * underlying client. The class abstracts the need of creating and managing multiple
  * pub/sub connections by hand, since it handles that internally by itself.
  */
-export class RedisClusterConnection extends AbstractConnection<Redis.Cluster> {
+export class RedisClusterConnection extends AbstractConnection<Cluster> {
   constructor(
     connectionName: string,
     private config: RedisClusterConfig,
@@ -46,7 +46,7 @@ export class RedisClusterConnection extends AbstractConnection<Redis.Cluster> {
   /**
    * Returns cluster nodes
    */
-  public nodes(role?: Redis.NodeRole) {
+  public nodes(role?: NodeRole) {
     return this.ioConnection.nodes(role)
   }
 }

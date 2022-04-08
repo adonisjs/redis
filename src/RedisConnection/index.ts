@@ -22,7 +22,7 @@ import { AbstractConnection } from '../AbstractConnection'
  * multiple pub/sub connections by hand, since it handles that internally
  * by itself.
  */
-export class RedisConnection extends AbstractConnection<Redis.Redis> {
+export class RedisConnection extends AbstractConnection<Redis> {
   private config: RedisOptions
 
   constructor(
