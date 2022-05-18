@@ -1,23 +1,23 @@
 {
 	"name": "@adonisjs/redis",
-	"version": "7.2.0",
+	"version": "7.3.0",
 	"description": "AdonisJS addon for Redis",
 	"main": "build/providers/RedisProvider.js",
-  "exports": {
-    ".": {
-      "types": "./build/adonis-typings/index.d.ts",
-      "require": "./build/providers/RedisProvider.js"
-    },
-    "./config": "./build/config.js",
-    "./build/config": "./build/config.js",
-    "./*": "./*"
-  },
+	"exports": {
+		".": {
+			"types": "./build/adonis-typings/index.d.ts",
+			"require": "./build/providers/RedisProvider.js"
+		},
+		"./config": "./build/config.js",
+		"./build/config": "./build/config.js",
+		"./*": "./*"
+	},
 	"files": [
 		"build/adonis-typings",
 		"build/providers",
 		"build/src",
-    "build/config.js",
-    "build/config.d.js",
+		"build/config.js",
+		"build/config.d.js",
 		"build/templates",
 		"build/instructions.md"
 	],
