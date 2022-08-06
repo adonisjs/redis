@@ -17,7 +17,7 @@
 		"build/providers",
 		"build/src",
 		"build/config.js",
-		"build/config.d.js",
+		"build/config.d.ts",
 		"build/templates",
 		"build/instructions.md"
 	],
