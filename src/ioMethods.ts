@@ -13,6 +13,7 @@ export const ioMethods = [
   'bitcount',
   'bitfield',
   'get',
+  'getdel',
   'getBuffer',
   'set',
   'setBuffer',
