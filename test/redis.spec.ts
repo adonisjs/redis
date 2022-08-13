@@ -304,7 +304,7 @@ test.group('Redis Manager', () => {
     await redis.set('greeting', 'hello-world')
 
     assert.equal(await redis.getdel('greeting'), 'hello-world')
-    assert.isUndefined(await redis.get('greeting'))
+    assert.isNull(await redis.get('greeting'))
 
     await redis.quit('primary')
   })
