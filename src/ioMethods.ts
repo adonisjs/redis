@@ -8,6 +8,7 @@
  */
 
 export const ioMethods = [
+  'call',
   'connect',
   'send_command',
   'bitcount',
