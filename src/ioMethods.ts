@@ -8,6 +8,7 @@
  */
 
 export const ioMethods = [
+  'unlink',
   'call',
   'connect',
   'send_command',
