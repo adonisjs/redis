@@ -35,7 +35,7 @@ import { RawRedisManager } from '../redis_manager.js'
 export type PubSubChannelHandler<T extends any = string> = (data: T) => Promise<void> | void
 export type PubSubPatternHandler<T extends any = string> = (
   channel: string,
-  data: T,
+  data: T
 ) => Promise<void> | void
 
 /**
@@ -45,7 +45,7 @@ export interface RedisPubSubContract {
   publish(
     channel: string,
     message: string,
-    callback: (error: Error | null, count: number) => void,
+    callback: (error: Error | null, count: number) => void
   ): void
   publish(channel: string, message: string): Promise<number>
   subscribe(channel: string, handler: PubSubChannelHandler | string): void
@@ -121,7 +121,7 @@ export type RedisClusterConnectionFactory = {
   new (
     connectionName: string,
     config: RedisClusterConfig,
-    application: ApplicationService,
+    application: ApplicationService
   ): RawRedisClusterConnection & AbstractConnection<Cluster> & IORedisCommands & RedisPubSubContract
 }
 
@@ -129,7 +129,7 @@ export type RedisConnectionFactory = {
   new (
     connectionName: string,
     config: RedisConnectionConfig,
-    application: ApplicationService,
+    application: ApplicationService
   ): RawRedisConnection & AbstractConnection<IoRedis> & IORedisCommands & RedisPubSubContract
 }
 
@@ -140,7 +140,7 @@ export type RedisManagerFactory = {
       connection: keyof ConnectionList
       connections: ConnectionList
     },
-    emitter: Emitter<any>,
+    emitter: Emitter<any>
   ): RawRedisManager<ConnectionList> & IORedisCommands & RedisPubSubContract
 }
 

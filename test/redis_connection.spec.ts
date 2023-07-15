@@ -11,7 +11,7 @@ test.group('Redis factory', () => {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
-      new AppFactory().create(BASE_URL, () => {}),
+      new AppFactory().create(BASE_URL, () => {})
     )
 
     factory.on('ready', async () => {
@@ -28,7 +28,7 @@ test.group('Redis factory', () => {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
-      new AppFactory().create(BASE_URL, () => {}),
+      new AppFactory().create(BASE_URL, () => {})
     )
 
     await factory.set('greeting', 'hello world')
@@ -47,7 +47,7 @@ test.group('Redis factory', () => {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
-      new AppFactory().create(BASE_URL, () => {}),
+      new AppFactory().create(BASE_URL, () => {})
     )
 
     factory.on('end', () => {
@@ -68,7 +68,7 @@ test.group('Redis factory', () => {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
-      new AppFactory().create(BASE_URL, () => {}),
+      new AppFactory().create(BASE_URL, () => {})
     )
 
     factory.on('end', () => {
@@ -86,7 +86,7 @@ test.group('Redis factory', () => {
     const factory = new RedisConnection(
       'main',
       { port: 4444 },
-      new AppFactory().create(BASE_URL, () => {}),
+      new AppFactory().create(BASE_URL, () => {})
     )
 
     factory.on('end', () => {
@@ -111,7 +111,7 @@ test.group('Redis factory', () => {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
-      new AppFactory().create(BASE_URL, () => {}),
+      new AppFactory().create(BASE_URL, () => {})
     )
 
     factory.on('end', () => {
@@ -140,7 +140,7 @@ test.group('Redis factory', () => {
         host: process.env.REDIS_HOST,
         port: 4444,
       },
-      new AppFactory().create(BASE_URL, () => {}),
+      new AppFactory().create(BASE_URL, () => {})
     )
 
     factory.on('end', () => {
@@ -167,7 +167,7 @@ test.group('Redis factory', () => {
         host: process.env.REDIS_HOST,
         port: Number(process.env.REDIS_PORT),
       },
-      new AppFactory().create(BASE_URL, () => {}),
+      new AppFactory().create(BASE_URL, () => {})
     )
 
     factory.defineCommand('defineValue', {

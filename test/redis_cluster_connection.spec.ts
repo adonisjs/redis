@@ -21,7 +21,7 @@ test.group('Redis cluster factory', () => {
     const factory = new RedisClusterConnection(
       'main',
       { clusters: nodes },
-      new AppFactory().create(BASE_URL, () => {}),
+      new AppFactory().create(BASE_URL, () => {})
     )
 
     factory.on('ready', async () => {
@@ -35,7 +35,7 @@ test.group('Redis cluster factory', () => {
     const factory = new RedisClusterConnection(
       'main',
       { clusters: [{ host: process.env.REDIS_HOST!!, port: 7000 }] },
-      new AppFactory().create(BASE_URL, () => {}),
+      new AppFactory().create(BASE_URL, () => {})
     )
 
     factory.on('node:added', async () => {
@@ -49,7 +49,7 @@ test.group('Redis cluster factory', () => {
     const factory = new RedisClusterConnection(
       'main',
       { clusters: nodes },
-      new AppFactory().create(BASE_URL, () => {}),
+      new AppFactory().create(BASE_URL, () => {})
     )
 
     await factory.set('greeting', 'hello world')
@@ -66,7 +66,7 @@ test.group('Redis cluster factory', () => {
     const factory = new RedisClusterConnection(
       'main',
       { clusters: nodes },
-      new AppFactory().create(BASE_URL, () => {}),
+      new AppFactory().create(BASE_URL, () => {})
     )
 
     factory.on('end', () => {
@@ -88,7 +88,7 @@ test.group('Redis cluster factory', () => {
       {
         clusters: nodes,
       },
-      new AppFactory().create(BASE_URL, () => {}),
+      new AppFactory().create(BASE_URL, () => {})
     )
 
     factory.on('end', () => {
@@ -108,7 +108,7 @@ test.group('Redis cluster factory', () => {
     const factory = new RedisClusterConnection(
       'main',
       { clusters: [{ host: process.env.REDIS_HOST!, port: 5000 }] },
-      new AppFactory().create(BASE_URL, () => {}),
+      new AppFactory().create(BASE_URL, () => {})
     )
 
     factory.on('end', () => {
@@ -133,7 +133,7 @@ test.group('Redis cluster factory', () => {
     const factory = new RedisClusterConnection(
       'main',
       { clusters: nodes },
-      new AppFactory().create(BASE_URL, () => {}),
+      new AppFactory().create(BASE_URL, () => {})
     )
 
     factory.on('end', () => {
@@ -154,7 +154,7 @@ test.group('Redis cluster factory', () => {
     const factory = new RedisClusterConnection(
       'main',
       { clusters: nodes },
-      new AppFactory().create(BASE_URL, () => {}),
+      new AppFactory().create(BASE_URL, () => {})
     )
 
     factory.on('end', () => {
@@ -180,7 +180,7 @@ test.group('Redis cluster factory', () => {
     const factory = new RedisClusterConnection(
       'main',
       { clusters: [{ host: process.env.REDIS_HOST!, port: 5000 }] },
-      new AppFactory().create(BASE_URL, () => {}),
+      new AppFactory().create(BASE_URL, () => {})
     )
 
     factory.on('end', () => {
@@ -203,7 +203,7 @@ test.group('Redis cluster factory', () => {
     const factory = new RedisClusterConnection(
       'main',
       { clusters: nodes },
-      new AppFactory().create(BASE_URL, () => {}),
+      new AppFactory().create(BASE_URL, () => {})
     )
 
     factory.defineCommand('defineValue', {

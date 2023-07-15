@@ -87,7 +87,10 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
    */
   protected abstract makeSubscriberConnection(): void
 
-  constructor(public connectionName: string, application: ApplicationService) {
+  constructor(
+    public connectionName: string,
+    application: ApplicationService
+  ) {
     super()
   }
 
@@ -177,11 +180,11 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
     this.ioSubscriberConnection!.on('connect', () => this.emit('subscriber:connect', this))
     this.ioSubscriberConnection!.on('ready', () => this.emit('subscriber:ready', this))
     this.ioSubscriberConnection!.on('error', (error: any) =>
-      this.emit('subscriber:error', error, this),
+      this.emit('subscriber:error', error, this)
     )
     this.ioSubscriberConnection!.on('close', () => this.emit('subscriber:close', this))
     this.ioSubscriberConnection!.on('reconnecting', () =>
-      this.emit('subscriber:reconnecting', this),
+      this.emit('subscriber:reconnecting', this)
     )
 
     /**

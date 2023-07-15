@@ -24,7 +24,7 @@ type RedisConfig = {
  * Define config for redis
  */
 export function defineConfig<T extends RedisConfig & { connection: keyof T['connections'] }>(
-  config: T,
+  config: T
 ): T {
   if (!config) {
     throw new InvalidArgumentsException('Invalid config. It must be a valid object')
@@ -36,7 +36,7 @@ export function defineConfig<T extends RedisConfig & { connection: keyof T['conn
 
   if (!config.connection || !config.connections[config.connection as any]) {
     throw new InvalidArgumentsException(
-      'Invalid config. Missing property "connection" or the connection name is not defined inside "connections" object',
+      'Invalid config. Missing property "connection" or the connection name is not defined inside "connections" object'
     )
   }
 

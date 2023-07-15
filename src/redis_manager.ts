@@ -65,13 +65,13 @@ export class RawRedisManager<ConnectionList extends RedisConnectionsList> {
       connection: keyof ConnectionList
       connections: ConnectionList
     },
-    emitter: EmitterService,
+    emitter: EmitterService
   ) {
     this.#app = app
     this.#config = config
     this.#emitter = emitter
     this.#healthCheckConnections = Object.keys(this.#config.connections).filter(
-      (connection) => this.#config.connections[connection].healthCheck,
+      (connection) => this.#config.connections[connection].healthCheck
     )
   }
 
@@ -107,22 +107,22 @@ export class RawRedisManager<ConnectionList extends RedisConnectionsList> {
       this.#emitter.emit('redis:ready', { connection })
     })
     connection.on('ready', ($connection) =>
-      this.#emitter.emit('redis:ready', { connection: $connection }),
+      this.#emitter.emit('redis:ready', { connection: $connection })
     )
     connection.on('connect', ($connection) =>
-      this.#emitter.emit('redis:connect', { connection: $connection }),
+      this.#emitter.emit('redis:connect', { connection: $connection })
     )
     connection.on('error', (error, $connection) =>
-      this.#emitter.emit('redis:error', { error, connection: $connection }),
+      this.#emitter.emit('redis:error', { error, connection: $connection })
     )
     connection.on('node:added', ($connection, node) =>
-      this.#emitter.emit('redis:node:added', { node, connection: $connection }),
+      this.#emitter.emit('redis:node:added', { node, connection: $connection })
     )
     connection.on('node:removed', (node, $connection) =>
-      this.#emitter.emit('redis:node:removed', { node, connection: $connection }),
+      this.#emitter.emit('redis:node:removed', { node, connection: $connection })
     )
     connection.on('node:error', (error, address, $connection) =>
-      this.#emitter.emit('redis:node:error', { error, address, connection: $connection }),
+      this.#emitter.emit('redis:node:error', { error, address, connection: $connection })
     )
 
     /**
@@ -138,7 +138,7 @@ export class RawRedisManager<ConnectionList extends RedisConnectionsList> {
    * Returns redis factory for a given named connection
    */
   connection<ConnectionName extends keyof ConnectionList>(
-    connectionName?: ConnectionName,
+    connectionName?: ConnectionName
   ): GetConnectionType<ConnectionList, ConnectionName> {
     const name = connectionName || this.#getDefaultConnection()
 
@@ -223,7 +223,7 @@ export class RawRedisManager<ConnectionList extends RedisConnectionsList> {
    */
   async report() {
     const reports = await Promise.all(
-      this.#healthCheckConnections.map((connection) => this.connection(connection).getReport(true)),
+      this.#healthCheckConnections.map((connection) => this.connection(connection).getReport(true))
     )
 
     const healthy = !reports.find((report) => !!report.error)

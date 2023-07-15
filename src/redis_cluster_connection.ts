@@ -37,7 +37,7 @@ export class RawRedisClusterConnection extends AbstractConnection<Cluster> {
   protected makeSubscriberConnection() {
     this.ioSubscriberConnection = new Redis.Cluster(
       this.#config.clusters as [],
-      this.#config.clusterOptions,
+      this.#config.clusterOptions
     )
   }
 

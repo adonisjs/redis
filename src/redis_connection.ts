@@ -26,7 +26,7 @@ export class RawRedisConnection extends AbstractConnection<Redis> {
   constructor(
     connectionName: string,
     config: RedisConnectionConfig,
-    application: ApplicationService,
+    application: ApplicationService
   ) {
     super(connectionName, application)
     this.#config = this.#normalizeConfig(config)

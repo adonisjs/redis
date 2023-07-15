@@ -20,7 +20,7 @@ test.group('Define Config', () => {
     assert.throws(
       // @ts-ignore
       () => defineConfig({ connection: 'hey' }),
-      'Invalid config. Missing property "connections" inside it',
+      'Invalid config. Missing property "connections" inside it'
     )
   })
 
@@ -32,7 +32,7 @@ test.group('Define Config', () => {
           connection: 'hey',
           connections: {},
         }),
-      'Invalid config. Missing property "connection" or the connection name is not defined inside "connections" object',
+      'Invalid config. Missing property "connection" or the connection name is not defined inside "connections" object'
     )
   })
 })

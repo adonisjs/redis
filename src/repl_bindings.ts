@@ -21,10 +21,10 @@ export function defineReplBindings(app: ApplicationService, repl: Repl) {
       repl.server!.context.redis = await app.container.make('redis')
       repl.notify(
         `Loaded "redis" service. You can access it using the "${repl.colors.underline(
-          'redis',
-        )}" variable`,
+          'redis'
+        )}" variable`
       )
     },
-    { description: 'Load "redis" service in the REPL context' },
+    { description: 'Load "redis" service in the REPL context' }
   )
 }
