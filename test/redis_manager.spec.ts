@@ -1,3 +1,12 @@
+/*
+ * @adonisjs/redis
+ *
+ * (c) AdonisJS
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 import { test } from '@japa/runner'
 import { AppFactory } from '@adonisjs/core/factories/app'
 import { RedisManagerFactory } from '../factories/redis_manager.js'

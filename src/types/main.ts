@@ -16,19 +16,6 @@ import { RawRedisConnection } from '../redis_connection.js'
 import { Emitter } from '@adonisjs/core/events'
 import { RawRedisManager } from '../redis_manager.js'
 
-/*
-  |--------------------------------------------------------------------------
-  | Helpers
-  |--------------------------------------------------------------------------
-  */
-/**
- * Returns factory for a given connection by inspecting it's config.
- */
-// type GetConnectionFactoryType<T extends keyof RedisConnectionsList> =
-//   RedisConnectionsList[T] extends RedisClusterConfig
-//     ? RedisClusterConnectionContract
-//     : RedisConnectionContract
-
 /**
  * Pubsub subscriber
  */

@@ -1,3 +1,12 @@
+/*
+ * @adonisjs/redis
+ *
+ * (c) AdonisJS
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 import { EmitterFactory } from '@adonisjs/core/factories/events'
 import { Application } from '@adonisjs/core/app'
 import RedisManager from '../src/redis_manager.js'

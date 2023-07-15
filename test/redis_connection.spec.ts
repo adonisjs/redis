@@ -1,3 +1,12 @@
+/*
+ * @adonisjs/redis
+ *
+ * (c) AdonisJS
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 import RedisConnection from '../src/redis_connection.js'
 import { test } from '@japa/runner'
 import { BASE_URL } from './redis_manager.spec.js'

@@ -1,3 +1,12 @@
+/*
+ * @adonisjs/redis
+ *
+ * (c) AdonisJS
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 import { ApplicationService, EmitterService } from '@adonisjs/core/types'
 import RedisConnection from './redis_connection.js'
 import { pubsubMethods } from './pubsub_methods.js'
