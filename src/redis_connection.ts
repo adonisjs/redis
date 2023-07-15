@@ -1,20 +1,18 @@
 /*
  * @adonisjs/redis
  *
- * (c) Harminder Virk <virk@adonisjs.com>
+ * (c) AdonisJS
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-/// <reference path="../../adonis-typings/redis.ts" />
+import { Redis, RedisOptions } from 'ioredis'
 
-import Redis, { RedisOptions } from 'ioredis'
-import { RedisConnectionConfig } from '@ioc:Adonis/Addons/Redis'
-import { ApplicationContract } from '@ioc:Adonis/Core/Application'
-
-import { ioMethods } from '../ioMethods'
-import { AbstractConnection } from '../AbstractConnection'
+import { ioMethods } from './io_methods.js'
+import { AbstractConnection } from './abstract_connection.js'
+import { RedisConnectionConfig, RedisConnectionFactory } from './types/main.js'
+import { ApplicationService } from '@adonisjs/core/types'
 
 /**
  * Redis connection exposes the API to run Redis commands using `ioredis` as the
@@ -22,25 +20,25 @@ import { AbstractConnection } from '../AbstractConnection'
  * multiple pub/sub connections by hand, since it handles that internally
  * by itself.
  */
-export class RedisConnection extends AbstractConnection<Redis> {
-  private config: RedisOptions
+export class RawRedisConnection extends AbstractConnection<Redis> {
+  #config: RedisOptions
 
   constructor(
     connectionName: string,
     config: RedisConnectionConfig,
-    application: ApplicationContract
+    application: ApplicationService,
   ) {
     super(connectionName, application)
-    this.config = this.normalizeConfig(config)
+    this.#config = this.#normalizeConfig(config)
 
-    this.ioConnection = new Redis(this.config)
+    this.ioConnection = new Redis(this.#config)
     this.proxyConnectionEvents()
   }
 
   /**
    * Normalizes config option to be compatible with IORedis
    */
-  private normalizeConfig(config: RedisConnectionConfig): RedisOptions {
+  #normalizeConfig(config: RedisConnectionConfig): RedisOptions {
     if (typeof config.port === 'string') {
       config.port = Number(config.port)
     }
@@ -52,16 +50,23 @@ export class RedisConnection extends AbstractConnection<Redis> {
    * invoke this method when first subscription is created.
    */
   protected makeSubscriberConnection() {
-    this.ioSubscriberConnection = new Redis(this.config)
+    this.ioSubscriberConnection = new Redis(this.#config)
   }
 }
 
 /**
- * Since types in AdonisJS are derived from interfaces, we take the leverage
- * of dynamically adding redis methods to the class prototype.
+ * Here we attach pubsub and ioRedis methods to the class.
+ *
+ * But we also need to inform typescript about the existence of
+ * these methods. So we are exporting the class with a
+ * casted type that has these methods.
  */
+const RedisConnection = RawRedisConnection as unknown as RedisConnectionFactory
+
 ioMethods.forEach((method) => {
   RedisConnection.prototype[method] = function redisConnectionProxyFn(...args: any[]) {
     return this.ioConnection[method](...args)
   }
 })
+
+export default RedisConnection

@@ -1,19 +1,16 @@
 /*
  * @adonisjs/redis
  *
- * (c) Harminder Virk <virk@adonisjs.com>
+ * (c) AdonisJS
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-/// <reference path="../adonis-typings/redis.ts" />
-
+import { AppFactory } from '@adonisjs/core/factories/app'
 import { test } from '@japa/runner'
-import { Application } from '@adonisjs/core/build/standalone'
-import { RedisClusterConnectionContract } from '@ioc:Adonis/Addons/Redis'
-
-import { RedisClusterConnection } from '../src/RedisClusterConnection'
+import { BASE_URL } from './redis_manager.spec.js'
+import RedisClusterConnection from '../src/redis_cluster_connection.js'
 
 const nodes = process.env.REDIS_CLUSTER_PORTS!.split(',').map((port) => {
   return { host: process.env.REDIS_HOST!, port: Number(port) }
@@ -23,11 +20,9 @@ test.group('Redis cluster factory', () => {
   test('emit ready when connected to redis server', ({ assert }, done) => {
     const factory = new RedisClusterConnection(
       'main',
-      {
-        clusters: nodes,
-      },
-      new Application(__dirname, 'web', {})
-    ) as unknown as RedisClusterConnectionContract
+      { clusters: nodes },
+      new AppFactory().create(BASE_URL, () => {}),
+    )
 
     factory.on('ready', async () => {
       assert.isTrue(true)
@@ -39,11 +34,9 @@ test.group('Redis cluster factory', () => {
   test('emit node connection event', ({ assert }, done) => {
     const factory = new RedisClusterConnection(
       'main',
-      {
-        clusters: [{ host: process.env.REDIS_HOST!!, port: 7000 }],
-      },
-      new Application(__dirname, 'web', {})
-    ) as unknown as RedisClusterConnectionContract
+      { clusters: [{ host: process.env.REDIS_HOST!!, port: 7000 }] },
+      new AppFactory().create(BASE_URL, () => {}),
+    )
 
     factory.on('node:added', async () => {
       assert.isTrue(true)
@@ -55,11 +48,9 @@ test.group('Redis cluster factory', () => {
   test('execute redis commands', async ({ assert }) => {
     const factory = new RedisClusterConnection(
       'main',
-      {
-        clusters: nodes,
-      },
-      new Application(__dirname, 'web', {})
-    ) as unknown as RedisClusterConnectionContract
+      { clusters: nodes },
+      new AppFactory().create(BASE_URL, () => {}),
+    )
 
     await factory.set('greeting', 'hello world')
     const greeting = await factory.get('greeting')
@@ -74,11 +65,9 @@ test.group('Redis cluster factory', () => {
 
     const factory = new RedisClusterConnection(
       'main',
-      {
-        clusters: nodes,
-      },
-      new Application(__dirname, 'web', {})
-    ) as unknown as RedisClusterConnectionContract
+      { clusters: nodes },
+      new AppFactory().create(BASE_URL, () => {}),
+    )
 
     factory.on('end', () => {
       assert.equal(factory.ioConnection.listenerCount('ready'), 0)
@@ -99,8 +88,8 @@ test.group('Redis cluster factory', () => {
       {
         clusters: nodes,
       },
-      new Application(__dirname, 'web', {})
-    ) as unknown as RedisClusterConnectionContract
+      new AppFactory().create(BASE_URL, () => {}),
+    )
 
     factory.on('end', () => {
       assert.equal(factory.ioConnection.listenerCount('ready'), 0)
@@ -118,11 +107,9 @@ test.group('Redis cluster factory', () => {
 
     const factory = new RedisClusterConnection(
       'main',
-      {
-        clusters: [{ host: process.env.REDIS_HOST!, port: 5000 }],
-      },
-      new Application(__dirname, 'web', {})
-    ) as unknown as RedisClusterConnectionContract
+      { clusters: [{ host: process.env.REDIS_HOST!, port: 5000 }] },
+      new AppFactory().create(BASE_URL, () => {}),
+    )
 
     factory.on('end', () => {
       assert.equal(factory.ioConnection.listenerCount('ready'), 0)
@@ -145,11 +132,9 @@ test.group('Redis cluster factory', () => {
 
     const factory = new RedisClusterConnection(
       'main',
-      {
-        clusters: nodes,
-      },
-      new Application(__dirname, 'web', {})
-    ) as unknown as RedisClusterConnectionContract
+      { clusters: nodes },
+      new AppFactory().create(BASE_URL, () => {}),
+    )
 
     factory.on('end', () => {
       assert.equal(factory.ioConnection.listenerCount('ready'), 0)
@@ -168,11 +153,9 @@ test.group('Redis cluster factory', () => {
 
     const factory = new RedisClusterConnection(
       'main',
-      {
-        clusters: nodes,
-      },
-      new Application(__dirname, 'web', {})
-    ) as unknown as RedisClusterConnectionContract
+      { clusters: nodes },
+      new AppFactory().create(BASE_URL, () => {}),
+    )
 
     factory.on('end', () => {
       assert.equal(factory.ioConnection.listenerCount('ready'), 0)
@@ -196,11 +179,9 @@ test.group('Redis cluster factory', () => {
 
     const factory = new RedisClusterConnection(
       'main',
-      {
-        clusters: [{ host: process.env.REDIS_HOST!, port: 5000 }],
-      },
-      new Application(__dirname, 'web', {})
-    ) as unknown as RedisClusterConnectionContract
+      { clusters: [{ host: process.env.REDIS_HOST!, port: 5000 }] },
+      new AppFactory().create(BASE_URL, () => {}),
+    )
 
     factory.on('end', () => {
       assert.equal(factory.ioConnection.listenerCount('ready'), 0)
@@ -221,11 +202,9 @@ test.group('Redis cluster factory', () => {
   test('execute redis commands using lua scripts', async ({ assert }) => {
     const factory = new RedisClusterConnection(
       'main',
-      {
-        clusters: nodes,
-      },
-      new Application(__dirname, 'web', {})
-    ) as unknown as RedisClusterConnectionContract
+      { clusters: nodes },
+      new AppFactory().create(BASE_URL, () => {}),
+    )
 
     factory.defineCommand('defineValue', {
       numberOfKeys: 1,

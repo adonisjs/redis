@@ -1,25 +1,18 @@
 /*
  * @adonisjs/redis
  *
- * (c) Harminder Virk <virk@adonisjs.com>
+ * (c) AdonisJS
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-/// <reference path="../../adonis-typings/redis.ts" />
-
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'node:events'
 import { Redis, Cluster } from 'ioredis'
 import { Exception } from '@poppinss/utils'
-import { ApplicationContract } from '@ioc:Adonis/Core/Application'
-import { ContainerBindings, IocResolverContract } from '@ioc:Adonis/Core/Application'
 
-import {
-  HealthReportNode,
-  PubSubChannelHandler,
-  PubSubPatternHandler,
-} from '@ioc:Adonis/Addons/Redis'
+import { ApplicationService } from '@adonisjs/core/types'
+import { PubSubChannelHandler, PubSubPatternHandler, HealthReportNode } from './types/main.js'
 
 /**
  * Helper to sleep
@@ -34,28 +27,23 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
   /**
    * Reference to the main ioRedis connection
    */
-  public ioConnection: T
+  ioConnection!: T
 
   /**
    * Reference to the main ioRedis subscriber connection
    */
-  public ioSubscriberConnection?: T
+  ioSubscriberConnection?: T
 
   /**
    * Number of times `getReport` was deferred, at max we defer it for 3 times
    */
-  private deferredReportAttempts = 0
+  #deferredReportAttempts = 0
 
   /**
    * The last error emitted by the `error` event. We set it to `null` after
    * the `ready` event
    */
-  private lastError?: any
-
-  /**
-   * IoCResolver to resolve bindings
-   */
-  private resolver: IocResolverContract<ContainerBindings>
+  #lastError?: any
 
   /**
    * A list of active subscription and pattern subscription
@@ -64,19 +52,9 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
   protected psubscriptions: Map<string, PubSubPatternHandler> = new Map()
 
   /**
-   * Returns an anonymous function by parsing the IoC container
-   * binding.
-   */
-  private resolveIoCBinding(handler: string): PubSubChannelHandler | PubSubPatternHandler {
-    return (...args: any[]) => {
-      return this.resolver.call<any>(handler, undefined, args)
-    }
-  }
-
-  /**
    * Returns the memory usage for a given connection
    */
-  private async getUsedMemory() {
+  async #getUsedMemory() {
     const memory = await (this.ioConnection as Redis).info('memory')
     const memorySegment = memory
       .split(/\r|\r\n/)
@@ -87,7 +65,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
   /**
    * Returns status of the main connection
    */
-  public get status(): string {
+  get status(): string {
     return (this.ioConnection as Redis).status
   }
 
@@ -96,7 +74,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
    * undefined when there is no subscriber
    * connection
    */
-  public get subscriberStatus(): string | undefined {
+  get subscriberStatus(): string | undefined {
     if (!this.ioSubscriberConnection) {
       return
     }
@@ -109,9 +87,8 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
    */
   protected abstract makeSubscriberConnection(): void
 
-  constructor(public connectionName: string, application: ApplicationContract) {
+  constructor(public connectionName: string, application: ApplicationService) {
     super()
-    this.resolver = application.container.getResolver(undefined, 'redisListeners', 'App/Listeners')
   }
 
   /**
@@ -127,12 +104,12 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
        * We must set the error to null when server is ready for accept
        * command
        */
-      this.lastError = null
+      this.#lastError = null
       this.emit('ready', this)
     })
 
     this.ioConnection.on('error', (error: any) => {
-      this.lastError = error
+      this.#lastError = error
       this.emit('error', error, this)
     })
 
@@ -200,11 +177,11 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
     this.ioSubscriberConnection!.on('connect', () => this.emit('subscriber:connect', this))
     this.ioSubscriberConnection!.on('ready', () => this.emit('subscriber:ready', this))
     this.ioSubscriberConnection!.on('error', (error: any) =>
-      this.emit('subscriber:error', error, this)
+      this.emit('subscriber:error', error, this),
     )
     this.ioSubscriberConnection!.on('close', () => this.emit('subscriber:close', this))
     this.ioSubscriberConnection!.on('reconnecting', () =>
-      this.emit('subscriber:reconnecting', this)
+      this.emit('subscriber:reconnecting', this),
     )
 
     /**
@@ -226,7 +203,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
   /**
    * Gracefully end the redis connection
    */
-  public async quit() {
+  async quit() {
     await this.ioConnection.quit()
     if (this.ioSubscriberConnection) {
       await this.ioSubscriberConnection.quit()
@@ -236,7 +213,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
   /**
    * Forcefully end the redis connection
    */
-  public async disconnect() {
+  async disconnect() {
     await this.ioConnection.disconnect()
     if (this.ioSubscriberConnection) {
       await this.ioSubscriberConnection.disconnect()
@@ -247,7 +224,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
    * Subscribe to a given channel to receive Redis pub/sub events. A
    * new subscriber connection will be created/managed automatically.
    */
-  public subscribe(channel: string, handler: PubSubChannelHandler | string): void {
+  subscribe(channel: string, handler: PubSubChannelHandler): void {
     /**
      * Make the subscriber connection. The method results in a noop when
      * subscriber connection already exists.
@@ -258,11 +235,10 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
      * Disallow multiple subscriptions to a single channel
      */
     if (this.subscriptions.has(channel)) {
-      throw new Exception(
-        `"${channel}" channel already has an active subscription`,
-        500,
-        'E_MULTIPLE_REDIS_SUBSCRIPTIONS'
-      )
+      throw new Exception(`"${channel}" channel already has an active subscription`, {
+        code: 'E_MULTIPLE_REDIS_SUBSCRIPTIONS',
+        status: 500,
+      })
     }
 
     /**
@@ -274,9 +250,6 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
     connection
       .subscribe(channel)
       .then((count) => {
-        if (typeof handler === 'string') {
-          handler = this.resolveIoCBinding(handler) as PubSubChannelHandler
-        }
         this.emit('subscription:ready', count, this)
         this.subscriptions.set(channel, handler)
       })
@@ -288,7 +261,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
   /**
    * Unsubscribe from a channel
    */
-  public unsubscribe(channel: string) {
+  unsubscribe(channel: string) {
     this.subscriptions.delete(channel)
     return (this.ioSubscriberConnection as Redis).unsubscribe(channel)
   }
@@ -296,7 +269,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
   /**
    * Make redis subscription for a pattern
    */
-  public psubscribe(pattern: string, handler: PubSubPatternHandler | string): void {
+  psubscribe(pattern: string, handler: PubSubPatternHandler): void {
     /**
      * Make the subscriber connection. The method results in a noop when
      * subscriber connection already exists.
@@ -307,11 +280,10 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
      * Disallow multiple subscriptions to a single channel
      */
     if (this.psubscriptions.has(pattern)) {
-      throw new Exception(
-        `${pattern} pattern already has an active subscription`,
-        500,
-        'E_MULTIPLE_REDIS_PSUBSCRIPTIONS'
-      )
+      throw new Exception(`${pattern} pattern already has an active subscription`, {
+        status: 500,
+        code: 'E_MULTIPLE_REDIS_PSUBSCRIPTIONS',
+      })
     }
 
     /**
@@ -324,10 +296,6 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
     connection
       .psubscribe(pattern)
       .then((count) => {
-        if (typeof handler === 'string') {
-          handler = this.resolveIoCBinding(handler) as PubSubPatternHandler
-        }
-
         this.emit('psubscription:ready', count, this)
         this.psubscriptions.set(pattern, handler)
       })
@@ -339,7 +307,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
   /**
    * Unsubscribe from a given pattern
    */
-  public punsubscribe(pattern: string) {
+  punsubscribe(pattern: string) {
     this.psubscriptions.delete(pattern)
     return (this.ioSubscriberConnection as any).punsubscribe(pattern)
   }
@@ -347,7 +315,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
   /**
    * Returns report for the connection
    */
-  public async getReport(checkForMemory?: boolean): Promise<HealthReportNode> {
+  async getReport(checkForMemory?: boolean): Promise<HealthReportNode> {
     const connection = this.ioConnection as Redis
 
     /**
@@ -355,9 +323,13 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
      * the report. Which means, if we are unable to connect to redis within
      * 3 seconds, we consider the connection unstable.
      */
-    if (connection.status === 'connecting' && this.deferredReportAttempts < 3 && !this.lastError) {
+    if (
+      connection.status === 'connecting' &&
+      this.#deferredReportAttempts < 3 &&
+      !this.#lastError
+    ) {
       await sleep()
-      this.deferredReportAttempts++
+      this.#deferredReportAttempts++
       return this.getReport(checkForMemory)
     }
 
@@ -370,7 +342,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
         connection: this.connectionName,
         status: connection.status,
         used_memory: null,
-        error: this.lastError,
+        error: this.#lastError,
       }
     }
 
@@ -383,7 +355,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
       /**
        * Collect memory when checkForMemory = true
        */
-      const memory = checkForMemory ? await this.getUsedMemory() : 'unknown'
+      const memory = checkForMemory ? await this.#getUsedMemory() : 'unknown'
 
       return {
         connection: this.connectionName,
@@ -404,7 +376,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
   /**
    * Publish the pub/sub message
    */
-  public publish(channel: string, message: string, callback?: any) {
+  publish(channel: string, message: string, callback?: any) {
     return callback
       ? this.ioConnection.publish(channel, message, callback)
       : this.ioConnection.publish(channel, message)
@@ -414,7 +386,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
    * Define a custom command using LUA script. You can run the
    * registered command using the "runCommand" method.
    */
-  public defineCommand(...args: Parameters<Redis['defineCommand']>): this {
+  defineCommand(...args: Parameters<Redis['defineCommand']>): this {
     this.ioConnection.defineCommand(...args)
     return this
   }
@@ -422,7 +394,8 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
   /**
    * Run a pre registered command
    */
-  public runCommand(command: string, ...args: any[]): any {
+  runCommand(command: string, ...args: any[]): any {
+    // @ts-ignore
     return this.ioConnection[command](...args)
   }
 }
