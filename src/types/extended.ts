@@ -10,13 +10,13 @@
 import type {
   RedisClusterConnectionContract,
   RedisConnectionContract,
-  RedisManagerContract,
+  RedisService,
 } from './main.js'
 import { Redis } from 'ioredis'
 
 declare module '@adonisjs/core/types' {
   export interface ContainerBindings {
-    redis: RedisManagerContract
+    redis: RedisService
   }
 
   export interface EventsList {

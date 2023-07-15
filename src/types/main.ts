@@ -160,3 +160,18 @@ export type RedisManagerFactory = {
     emitter: Emitter<any>
   ): RedisManagerContract<ConnectionList>
 }
+
+/**
+ * List of connections inferred from user config
+ */
+export interface RedisConnections {}
+export type InferConnections<T extends { connections: RedisConnectionsList }> = T['connections']
+
+/**
+ * Redis service is a singleton redis instance registered
+ * to the container
+ */
+export interface RedisService
+  extends RedisManagerContract<
+    RedisConnections extends RedisConnectionsList ? RedisConnections : never
+  > {}
