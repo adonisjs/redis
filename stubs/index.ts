@@ -7,8 +7,6 @@
  * file that was distributed with this source code.
  */
 
-import './src/types/extended.js'
+import { getDirname } from '@poppinss/utils'
 
-export { defineConfig } from './src/define_config.js'
-export { stubsRoot } from './stubs/index.js'
-export { configure } from './configure.js'
+export const stubsRoot = getDirname(import.meta.url)
