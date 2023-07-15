@@ -28,7 +28,6 @@
     "test": "c8 npm run quick:test",
     "quick:test": "node --enable-source-maps --loader=ts-node/esm ./bin/test.ts",
     "clean": "del-cli build",
-    "test:docker": "FORCE_COLOR=true node --loader=ts-node/esm ./bin/test.ts",
     "copy:templates": "copyfiles \"stubs/**/**/*.stub\" build",
     "compile": "npm run lint && npm run clean && tsc && npm run copy:templates",
     "build": "npm run compile",
