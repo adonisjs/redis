@@ -36,6 +36,7 @@
     "version": "npm run build",
     "prepublishOnly": "npm run build",
     "lint": "eslint . --ext=.ts",
+    "typecheck": "tsc --noEmit",
     "sync-labels": "github-label-sync --labels .github/labels.json adonisjs/redis"
   },
   "devDependencies": {
