@@ -7,14 +7,14 @@
  * file that was distributed with this source code.
  */
 
-import { ApplicationService, EmitterService } from '@adonisjs/core/types'
+import { EmitterService } from '@adonisjs/core/types'
 import RedisConnection from './redis_connection.js'
 import { pubsubMethods } from './pubsub_methods.js'
 import { ioMethods } from './io_methods.js'
 import {
   Connection,
   GetConnectionType,
-  RedisConnectionAugmented,
+  RedisConnectionContract,
   RedisConnectionsList,
   RedisManagerFactory,
 } from './types/main.js'
@@ -28,11 +28,6 @@ export class RawRedisManager<ConnectionList extends RedisConnectionsList> {
     connection: keyof ConnectionList
     connections: ConnectionList
   }
-
-  /**
-   * Reference to the application
-   */
-  #app: ApplicationService
 
   /**
    * Reference to the emitter
@@ -69,14 +64,9 @@ export class RawRedisManager<ConnectionList extends RedisConnectionsList> {
   }
 
   constructor(
-    app: ApplicationService,
-    config: {
-      connection: keyof ConnectionList
-      connections: ConnectionList
-    },
+    config: { connection: keyof ConnectionList; connections: ConnectionList },
     emitter: EmitterService
   ) {
-    this.#app = app
     this.#config = config
     this.#emitter = emitter
     this.#healthCheckConnections = Object.keys(this.#config.connections).filter(
@@ -171,8 +161,8 @@ export class RawRedisManager<ConnectionList extends RedisConnectionsList> {
      */
     const connection =
       'clusters' in config
-        ? new RedisClusterConnection(name as string, config, this.#app)
-        : new RedisConnection(name as string, config, this.#app)
+        ? new RedisClusterConnection(name as string, config)
+        : new RedisConnection(name as string, config)
 
     /**
      * Cache the connection so that we can re-use it later
@@ -252,7 +242,7 @@ export class RawRedisManager<ConnectionList extends RedisConnectionsList> {
    * Define a custom command using LUA script. You can run the
    * registered command using the "runCommand" method.
    */
-  defineCommand(...args: Parameters<RedisConnectionAugmented['defineCommand']>): this {
+  defineCommand(...args: Parameters<RedisConnectionContract['defineCommand']>): this {
     this.connection().defineCommand(...args)
     return this
   }

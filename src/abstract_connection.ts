@@ -10,8 +10,6 @@
 import { EventEmitter } from 'node:events'
 import { Redis, Cluster } from 'ioredis'
 import { Exception } from '@poppinss/utils'
-
-import { ApplicationService } from '@adonisjs/core/types'
 import { PubSubChannelHandler, PubSubPatternHandler, HealthReportNode } from './types/main.js'
 
 /**
@@ -87,10 +85,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
    */
   protected abstract makeSubscriberConnection(): void
 
-  constructor(
-    public connectionName: string,
-    application: ApplicationService
-  ) {
+  constructor(public connectionName: string) {
     super()
   }
 

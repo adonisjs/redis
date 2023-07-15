@@ -10,7 +10,7 @@
 import { test } from '@japa/runner'
 import { AppFactory } from '@adonisjs/core/factories/app'
 import { RedisManagerFactory } from '../factories/redis_manager.js'
-import { RedisClusterConnectionAugmented, RedisConnectionAugmented } from '../src/types/main.js'
+import { RedisClusterConnectionContract, RedisConnectionContract } from '../src/types/main.js'
 
 const clusterNodes = process.env.REDIS_CLUSTER_PORTS!.split(',').map((port) => {
   return { host: process.env.REDIS_HOST!, port: Number(port) }
@@ -280,7 +280,7 @@ test.group('Redis Manager', () => {
       },
     }).create(new AppFactory().create(BASE_URL, () => {}))
 
-    expectTypeOf(redis.connection('cluster')).toEqualTypeOf<RedisClusterConnectionAugmented>()
-    expectTypeOf(redis.connection('primary')).toEqualTypeOf<RedisConnectionAugmented>()
+    expectTypeOf(redis.connection('cluster')).toEqualTypeOf<RedisClusterConnectionContract>()
+    expectTypeOf(redis.connection('primary')).toEqualTypeOf<RedisConnectionContract>()
   })
 })

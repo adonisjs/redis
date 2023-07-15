@@ -8,28 +8,28 @@
  */
 
 import type {
-  RedisClusterConnectionAugmented,
-  RedisConnectionAugmented,
-  RedisManagerAugmented,
+  RedisClusterConnectionContract,
+  RedisConnectionContract,
+  RedisManagerContract,
 } from './main.js'
 import { Redis } from 'ioredis'
 
 declare module '@adonisjs/core/types' {
   export interface ContainerBindings {
-    redis: RedisManagerAugmented
+    redis: RedisManagerContract
   }
 
   export interface EventsList {
-    'redis:ready': { connection: RedisClusterConnectionAugmented | RedisConnectionAugmented }
-    'redis:connect': { connection: RedisClusterConnectionAugmented | RedisConnectionAugmented }
+    'redis:ready': { connection: RedisClusterConnectionContract | RedisConnectionContract }
+    'redis:connect': { connection: RedisClusterConnectionContract | RedisConnectionContract }
     'redis:error': {
       error: any
-      connection: RedisClusterConnectionAugmented | RedisConnectionAugmented
+      connection: RedisClusterConnectionContract | RedisConnectionContract
     }
-    'redis:end': { connection: RedisClusterConnectionAugmented | RedisConnectionAugmented }
+    'redis:end': { connection: RedisClusterConnectionContract | RedisConnectionContract }
 
-    'redis:node:added': { connection: RedisClusterConnectionAugmented; node: Redis }
-    'redis:node:removed': { connection: RedisClusterConnectionAugmented; node: Redis }
-    'redis:node:error': { error: any; connection: RedisClusterConnectionAugmented; address: string }
+    'redis:node:added': { connection: RedisClusterConnectionContract; node: Redis }
+    'redis:node:removed': { connection: RedisClusterConnectionContract; node: Redis }
+    'redis:node:error': { error: any; connection: RedisClusterConnectionContract; address: string }
   }
 }

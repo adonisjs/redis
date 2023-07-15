@@ -12,7 +12,6 @@ import { Redis, RedisOptions } from 'ioredis'
 import { ioMethods } from './io_methods.js'
 import { AbstractConnection } from './abstract_connection.js'
 import { RedisConnectionConfig, RedisConnectionFactory } from './types/main.js'
-import { ApplicationService } from '@adonisjs/core/types'
 
 /**
  * Redis connection exposes the API to run Redis commands using `ioredis` as the
@@ -23,12 +22,8 @@ import { ApplicationService } from '@adonisjs/core/types'
 export class RawRedisConnection extends AbstractConnection<Redis> {
   #config: RedisOptions
 
-  constructor(
-    connectionName: string,
-    config: RedisConnectionConfig,
-    application: ApplicationService
-  ) {
-    super(connectionName, application)
+  constructor(connectionName: string, config: RedisConnectionConfig) {
+    super(connectionName)
     this.#config = this.#normalizeConfig(config)
 
     this.ioConnection = new Redis(this.#config)

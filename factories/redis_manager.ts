@@ -7,11 +7,15 @@
  * file that was distributed with this source code.
  */
 
+import type { Application } from '@adonisjs/core/app'
+import type { RedisClusterConfig, RedisConnectionConfig } from '../src/types/main.js'
 import { EmitterFactory } from '@adonisjs/core/factories/events'
-import { Application } from '@adonisjs/core/app'
 import RedisManager from '../src/redis_manager.js'
-import { RedisClusterConfig, RedisConnectionConfig } from '../src/types/main.js'
 
+/**
+ * Redis manager factory is used to create an instance of the redis
+ * manager for testing
+ */
 export class RedisManagerFactory<
   ConnectionsList extends Record<string, RedisClusterConfig | RedisConnectionConfig>,
 > {
@@ -24,7 +28,10 @@ export class RedisManagerFactory<
     this.#config = config
   }
 
+  /**
+   * Create an instance of the redis manager
+   */
   create(app: Application<any>) {
-    return new RedisManager(app, this.#config, new EmitterFactory().create(app))
+    return new RedisManager(this.#config, new EmitterFactory().create(app))
   }
 }

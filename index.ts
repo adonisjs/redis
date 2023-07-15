@@ -8,3 +8,5 @@
  */
 
 import './src/types/extended.js'
+
+export { defineConfig } from './src/define_config.js'

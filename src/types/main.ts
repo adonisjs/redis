@@ -10,7 +10,6 @@
 import { EventEmitter } from 'node:events'
 import { Redis as IoRedis, RedisOptions, ClusterOptions, Cluster } from 'ioredis'
 import { RawRedisClusterConnection } from '../redis_cluster_connection.js'
-import { ApplicationService } from '@adonisjs/core/types'
 import { AbstractConnection } from '../abstract_connection.js'
 import { RawRedisConnection } from '../redis_connection.js'
 import { Emitter } from '@adonisjs/core/events'
@@ -71,15 +70,26 @@ export type IORedisCommands = Omit<
   | keyof EventEmitter
 >
 
-export type Connection = RedisClusterConnectionAugmented | RedisConnectionAugmented
+/**
+ * A connection. Can be a cluster or a single connection
+ */
+export type Connection = RedisClusterConnectionContract | RedisConnectionContract
+
+/**
+ * Shape of the connections list
+ */
 export type RedisConnectionsList = Record<string, RedisConnectionConfig | RedisClusterConfig>
 
+/**
+ * Extract the connection type ( either Cluster or single ) from
+ * a given RedisConnectionsList
+ */
 export type GetConnectionType<
   ConnectionsList extends RedisConnectionsList,
   T extends keyof ConnectionsList,
 > = ConnectionsList[T] extends RedisClusterConfig
-  ? RedisClusterConnectionAugmented
-  : RedisConnectionAugmented
+  ? RedisClusterConnectionContract
+  : RedisConnectionContract
 
 /**
  * Shape of standard Redis connection config
@@ -104,35 +114,49 @@ export type RedisClusterConfig = {
  * typescript about it. So the below types represents theses classes with
  * all the methods added
  */
+
+/**
+ * Type of RedisClusterConnection with dynamically added methods
+ */
+export type RedisClusterConnectionContract = RawRedisClusterConnection &
+  AbstractConnection<Cluster> &
+  IORedisCommands &
+  RedisPubSubContract
+
+/**
+ * Type of RedisConnection with dynamically added methods
+ */
+export type RedisConnectionContract = RawRedisConnection &
+  AbstractConnection<IoRedis> &
+  IORedisCommands &
+  RedisPubSubContract
+
+/**
+ * Type of RedisManager with dynamically added methods
+ */
+export type RedisManagerContract<ConnectionList extends RedisConnectionsList> =
+  RawRedisManager<ConnectionList> & IORedisCommands & RedisPubSubContract
+
+/**
+ * Factory for creating RedisClusterConnection
+ */
 export type RedisClusterConnectionFactory = {
-  new (
-    connectionName: string,
-    config: RedisClusterConfig,
-    application: ApplicationService
-  ): RawRedisClusterConnection & AbstractConnection<Cluster> & IORedisCommands & RedisPubSubContract
+  new (connectionName: string, config: RedisClusterConfig): RedisClusterConnectionContract
 }
 
+/**
+ * Factory for creating RedisConnection
+ */
 export type RedisConnectionFactory = {
-  new (
-    connectionName: string,
-    config: RedisConnectionConfig,
-    application: ApplicationService
-  ): RawRedisConnection & AbstractConnection<IoRedis> & IORedisCommands & RedisPubSubContract
+  new (connectionName: string, config: RedisConnectionConfig): RedisConnectionContract
 }
 
+/**
+ * Factory for creating RedisManager
+ */
 export type RedisManagerFactory = {
-  new <ConnectionList extends Record<string, any>>(
-    application: ApplicationService,
-    config: {
-      connection: keyof ConnectionList
-      connections: ConnectionList
-    },
+  new <ConnectionList extends RedisConnectionsList>(
+    config: { connection: keyof ConnectionList; connections: ConnectionList },
     emitter: Emitter<any>
-  ): RawRedisManager<ConnectionList> & IORedisCommands & RedisPubSubContract
+  ): RedisManagerContract<ConnectionList>
 }
-
-type ConstructorReturnType<T> = T extends { new (...args: any[]): infer U } ? U : never
-
-export type RedisClusterConnectionAugmented = ConstructorReturnType<RedisClusterConnectionFactory>
-export type RedisConnectionAugmented = ConstructorReturnType<RedisConnectionFactory>
-export type RedisManagerAugmented = ConstructorReturnType<RedisManagerFactory>

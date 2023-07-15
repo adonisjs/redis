@@ -37,7 +37,7 @@ export default class RedisProvider {
       const emitter = await this.app.container.make('emitter')
       const config = this.app.config.get<any>('redis', {})
 
-      return new RedisManager(this.app, config, emitter)
+      return new RedisManager(config, emitter)
     })
   }
 

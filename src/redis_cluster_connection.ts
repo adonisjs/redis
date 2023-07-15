@@ -11,7 +11,6 @@ import Redis, { Cluster, NodeRole } from 'ioredis'
 
 import { ioMethods } from './io_methods.js'
 import { AbstractConnection } from './abstract_connection.js'
-import { ApplicationService } from '@adonisjs/core/types'
 import { RedisClusterConfig, RedisClusterConnectionFactory } from './types/main.js'
 
 /**
@@ -22,8 +21,8 @@ import { RedisClusterConfig, RedisClusterConnectionFactory } from './types/main.
 export class RawRedisClusterConnection extends AbstractConnection<Cluster> {
   #config: RedisClusterConfig
 
-  constructor(connectionName: string, config: RedisClusterConfig, application: ApplicationService) {
-    super(connectionName, application)
+  constructor(connectionName: string, config: RedisClusterConfig) {
+    super(connectionName)
 
     this.#config = config
     this.ioConnection = new Redis.Cluster(this.#config.clusters as any[])
