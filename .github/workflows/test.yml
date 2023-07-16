@@ -3,23 +3,56 @@ on:
   - push
   - pull_request
 jobs:
-  linux:
+  test_linux:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version:
-          - 17.x
-          - 20.x
+        node-version: [18.16.0, 20.x]
+
     steps:
-      - uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
 
-      - name: Install
-        run: npm install
+    - name: Start docker-compose
+      run: docker-compose up -d
 
-      - name: Run tests
-        run: npm test
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run tests
+      run: npm test
+
+  test_windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        node-version: [18.16.0, 20.x]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Start docker-compose
+      run: docker-compose up -d
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run tests
+      run: npm test
+
+  lint:
+    uses: adonisjs/.github/.github/workflows/lint.yml@main
+
+  typecheck:
+    uses: adonisjs/.github/.github/workflows/typecheck.yml@main
