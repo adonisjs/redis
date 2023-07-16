@@ -283,4 +283,31 @@ test.group('Redis Manager', () => {
     expectTypeOf(redis.connection('cluster')).toEqualTypeOf<RedisClusterConnectionContract>()
     expectTypeOf(redis.connection('primary')).toEqualTypeOf<RedisConnectionContract>()
   })
+
+  test('should have every ioredis methods available', async ({ assert }) => {
+    const redis = new RedisManagerFactory({
+      connection: 'primary',
+      connections: {
+        primary: {
+          host: process.env.REDIS_HOST,
+          port: Number(process.env.REDIS_PORT),
+        },
+        cluster: {
+          clusters: clusterNodes,
+        },
+      },
+    }).create(new AppFactory().create(BASE_URL, () => {}))
+
+    /**
+     * Assert on some obscure methods to make sure
+     * they are available
+     */
+    assert.isFunction(redis.geohash)
+    assert.isFunction(redis.spopBuffer)
+    assert.isFunction(redis.georadiusbymember)
+    assert.isFunction(redis.xack)
+    assert.isFunction(redis.xclaim)
+    assert.isFunction(redis.xgroup)
+    assert.isFunction(redis.decr)
+  })
 })
