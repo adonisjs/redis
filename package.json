@@ -23,7 +23,7 @@
   "exports": {
     ".": "./build/index.js",
     "./services/main": "./build/services/main.js",
-    "./providers/redis_provider": "./build/providers/redis_provider.js",
+    "./redis_provider": "./build/providers/redis_provider.js",
     "./factories": "./build/factories/main.js",
     "./types": "./build/src/types/main.js"
   },
