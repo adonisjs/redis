@@ -62,7 +62,7 @@ test.group('Configure', (group) => {
     await command.exec()
 
     await assert.fileExists('.adonisrc.json')
-    await assert.fileContains('.adonisrc.json', '"@adonisjs/redis/providers/redis_provider"')
+    await assert.fileContains('.adonisrc.json', '"@adonisjs/redis/redis_provider"')
   })
 
   test('add env variables for the selected drivers', async ({ assert, fs }) => {

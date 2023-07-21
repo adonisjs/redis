@@ -37,6 +37,6 @@ export async function configure(command: Configure) {
    * Add provider to rc file
    */
   await command.updateRcFile((rcFile) => {
-    rcFile.addProvider('@adonisjs/redis/providers/redis_provider')
+    rcFile.addProvider('@adonisjs/redis/redis_provider')
   })
 }
