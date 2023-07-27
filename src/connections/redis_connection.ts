@@ -11,7 +11,7 @@ import { Redis, RedisOptions } from 'ioredis'
 
 import { ioMethods } from './io_methods.js'
 import { AbstractConnection } from './abstract_connection.js'
-import { RedisConnectionConfig, RedisConnectionFactory } from './types/main.js'
+import { IORedisCommands, RedisConnectionConfig } from '../types/main.js'
 
 /**
  * Redis connection exposes the API to run Redis commands using `ioredis` as the
@@ -19,7 +19,7 @@ import { RedisConnectionConfig, RedisConnectionFactory } from './types/main.js'
  * multiple pub/sub connections by hand, since it handles that internally
  * by itself.
  */
-export class RawRedisConnection extends AbstractConnection<Redis> {
+export class RedisConnection extends AbstractConnection<Redis> {
   #config: RedisOptions
 
   constructor(connectionName: string, config: RedisConnectionConfig) {
@@ -27,7 +27,7 @@ export class RawRedisConnection extends AbstractConnection<Redis> {
     this.#config = this.#normalizeConfig(config)
 
     this.ioConnection = new Redis(this.#config)
-    this.proxyConnectionEvents()
+    this.monitorConnection()
   }
 
   /**
@@ -46,20 +46,17 @@ export class RawRedisConnection extends AbstractConnection<Redis> {
    */
   protected makeSubscriberConnection() {
     this.ioSubscriberConnection = new Redis(this.#config)
+    this.monitorSubscriberConnection()
   }
 }
 
 /**
- * Here we attach pubsub and ioRedis methods to the class.
- *
- * But we also need to inform typescript about the existence of
- * these methods. So we are exporting the class with a
- * casted type that has these methods.
+ * Adding IORedis methods dynamically on the RedisConnection
+ * class and also extending its TypeScript types
  */
-const RedisConnection = RawRedisConnection as unknown as RedisConnectionFactory
-
+export interface RedisConnection extends IORedisCommands {}
 ioMethods.forEach((method) => {
-  RedisConnection.prototype[method] = function redisConnectionProxyFn(...args: any[]) {
+  ;(RedisConnection.prototype as any)[method] = function redisConnectionProxyFn(...args: any[]) {
     return this.ioConnection[method](...args)
   }
 })

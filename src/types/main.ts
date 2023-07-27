@@ -7,38 +7,21 @@
  * file that was distributed with this source code.
  */
 
-import { EventEmitter } from 'node:events'
-import { Redis as IoRedis, RedisOptions, ClusterOptions, Cluster } from 'ioredis'
-import { RawRedisClusterConnection } from '../redis_cluster_connection.js'
-import { AbstractConnection } from '../abstract_connection.js'
-import { RawRedisConnection } from '../redis_connection.js'
-import { Emitter } from '@adonisjs/core/events'
-import { RawRedisManager } from '../redis_manager.js'
+import type { EventEmitter } from 'node:events'
+import type { Redis as IoRedis, RedisOptions, ClusterOptions } from 'ioredis'
+
+import type RedisManager from '../redis_manager.js'
+import type RedisConnection from '../connections/redis_connection.js'
+import type RedisClusterConnection from '../connections/redis_cluster_connection.js'
 
 /**
- * Pubsub subscriber
+ * PubSub subscriber
  */
 export type PubSubChannelHandler<T extends any = string> = (data: T) => Promise<void> | void
 export type PubSubPatternHandler<T extends any = string> = (
   channel: string,
   data: T
 ) => Promise<void> | void
-
-/**
- * Redis pub/sub methods
- */
-export interface RedisPubSubContract {
-  publish(
-    channel: string,
-    message: string,
-    callback: (error: Error | null, count: number) => void
-  ): void
-  publish(channel: string, message: string): Promise<number>
-  subscribe(channel: string, handler: PubSubChannelHandler | string): void
-  psubscribe(pattern: string, handler: PubSubPatternHandler | string): void
-  unsubscribe(channel: string): void
-  punsubscribe(pattern: string): void
-}
 
 /**
  * Shape of the report node for the redis connection report
@@ -52,7 +35,7 @@ export type HealthReportNode = {
 
 /**
  * List of commands on the IORedis. We omit their internal events and pub/sub
- * handlers, since we our own.
+ * handlers, since we have our own.
  */
 export type IORedisCommands = Omit<
   IoRedis,
@@ -67,99 +50,50 @@ export type IORedisCommands = Omit<
   | 'punsubscribe'
   | 'quit'
   | 'publish'
+  | 'defineCommand'
   | keyof EventEmitter
 >
 
 /**
- * A connection. Can be a cluster or a single connection
- */
-export type Connection = RedisClusterConnectionContract | RedisConnectionContract
-
-/**
- * Shape of the connections list
- */
-export type RedisConnectionsList = Record<string, RedisConnectionConfig | RedisClusterConfig>
-
-/**
- * Extract the connection type ( either Cluster or single ) from
- * a given RedisConnectionsList
- */
-export type GetConnectionType<
-  ConnectionsList extends RedisConnectionsList,
-  T extends keyof ConnectionsList,
-> = ConnectionsList[T] extends RedisClusterConfig
-  ? RedisClusterConnectionContract
-  : RedisConnectionContract
-
-/**
- * Shape of standard Redis connection config
+ * Configuration accepted by the redis connection. It is same
+ * as ioredis, except the number can be a string as well
  */
 export type RedisConnectionConfig = Omit<RedisOptions, 'port'> & {
-  healthCheck?: boolean
   port?: string | number
 }
 
 /**
- * Shape of cluster config
+ * Configuration accepted by the RedisClusterConnectionConfig.
  */
-export type RedisClusterConfig = {
+export type RedisClusterConnectionConfig = {
   clusters: { host: string; port: number | string }[]
   clusterOptions?: ClusterOptions
   healthCheck?: boolean
 }
 
 /**
- * Since we are dynamically addind methods to the RedisClusterConnection
- * RedisConnection and RedisManager classes prototypes, we need to tell
- * typescript about it. So the below types represents theses classes with
- * all the methods added
+ * A connection can be a cluster or a single connection
  */
+export type Connection = RedisClusterConnection | RedisConnection
 
 /**
- * Type of RedisClusterConnection with dynamically added methods
+ * A list of multiple connections defined inside the user
+ * config file
  */
-export type RedisClusterConnectionContract = RawRedisClusterConnection &
-  AbstractConnection<Cluster> &
-  IORedisCommands &
-  RedisPubSubContract
+export type RedisConnectionsList = Record<
+  string,
+  RedisConnectionConfig | RedisClusterConnectionConfig
+>
 
 /**
- * Type of RedisConnection with dynamically added methods
+ * Returns the connection class to be used based upon the config
  */
-export type RedisConnectionContract = RawRedisConnection &
-  AbstractConnection<IoRedis> &
-  IORedisCommands &
-  RedisPubSubContract
-
-/**
- * Type of RedisManager with dynamically added methods
- */
-export type RedisManagerContract<ConnectionList extends RedisConnectionsList> =
-  RawRedisManager<ConnectionList> & IORedisCommands & RedisPubSubContract
-
-/**
- * Factory for creating RedisClusterConnection
- */
-export type RedisClusterConnectionFactory = {
-  new (connectionName: string, config: RedisClusterConfig): RedisClusterConnectionContract
-}
-
-/**
- * Factory for creating RedisConnection
- */
-export type RedisConnectionFactory = {
-  new (connectionName: string, config: RedisConnectionConfig): RedisConnectionContract
-}
-
-/**
- * Factory for creating RedisManager
- */
-export type RedisManagerFactory = {
-  new <ConnectionList extends RedisConnectionsList>(
-    config: { connection: keyof ConnectionList; connections: ConnectionList },
-    emitter: Emitter<any>
-  ): RedisManagerContract<ConnectionList>
-}
+export type GetConnectionType<
+  ConnectionsList extends RedisConnectionsList,
+  T extends keyof ConnectionsList,
+> = ConnectionsList[T] extends RedisClusterConnectionConfig
+  ? RedisClusterConnection
+  : RedisConnection
 
 /**
  * List of connections inferred from user config
@@ -169,9 +103,7 @@ export type InferConnections<T extends { connections: RedisConnectionsList }> = 
 
 /**
  * Redis service is a singleton redis instance registered
- * to the container
+ * with the container based upon user defined config
  */
 export interface RedisService
-  extends RedisManagerContract<
-    RedisConnections extends RedisConnectionsList ? RedisConnections : never
-  > {}
+  extends RedisManager<RedisConnections extends RedisConnectionsList ? RedisConnections : never> {}

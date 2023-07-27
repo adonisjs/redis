@@ -1,14 +1,10 @@
 version: '3.4'
 services:
   redis:
-    image: grokzen/redis-cluster
+    platform: linux/x86_64
+    image: grokzen/redis-cluster:6.2.10
     ports:
-      - "7000:7000"
-      - "7001:7001"
-      - "7002:7002"
-      - "7003:7003"
-      - "7004:7004"
-      - "7005:7005"
+      - "7000-7005:7000-7005"
     environment:
       REDIS_CLUSTER_IP: 0.0.0.0
       IP: 0.0.0.0

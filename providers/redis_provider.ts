@@ -7,11 +7,11 @@
  * file that was distributed with this source code.
  */
 
-import { ApplicationService } from '@adonisjs/core/types'
-import { defineReplBindings } from '../src/repl_bindings.js'
+import type { ApplicationService } from '@adonisjs/core/types'
 
 /**
- * Provider to bind redis to the container
+ * Registering the Redis manager as a singleton to the container
+ * and defining REPL bindings
  */
 export default class RedisProvider {
   constructor(protected app: ApplicationService) {}
@@ -19,33 +19,33 @@ export default class RedisProvider {
   /**
    * Define repl bindings
    */
-  async #defineReplBindings() {
+  protected async defineReplBindings() {
     if (this.app.getEnvironment() !== 'repl') {
       return
     }
 
+    const { defineReplBindings } = await import('../src/repl_bindings.js')
     defineReplBindings(this.app, await this.app.container.make('repl'))
   }
 
   /**
-   * Register the redis binding
+   * Register the Redis manager as a singleton with the
+   * container
    */
   register() {
     this.app.container.singleton('redis', async () => {
       const { default: RedisManager } = await import('../src/redis_manager.js')
 
-      const emitter = await this.app.container.make('emitter')
       const config = this.app.config.get<any>('redis', {})
-
-      return new RedisManager(config, emitter)
+      return new RedisManager(config)
     })
   }
 
   /**
-   * Registering the health check checker with HealthCheck service
+   * Defining repl bindings on boot
    */
-  boot() {
-    this.#defineReplBindings()
+  async boot() {
+    await this.defineReplBindings()
   }
 
   /**

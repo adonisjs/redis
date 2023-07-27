@@ -7,26 +7,29 @@
  * file that was distributed with this source code.
  */
 
-import Redis, { Cluster, NodeRole } from 'ioredis'
+import Redis, { type Cluster, type NodeRole } from 'ioredis'
 
 import { ioMethods } from './io_methods.js'
 import { AbstractConnection } from './abstract_connection.js'
-import { RedisClusterConfig, RedisClusterConnectionFactory } from './types/main.js'
+import type { IORedisCommands, RedisClusterConnectionConfig } from '../types/main.js'
 
 /**
  * Redis cluster connection exposes the API to run Redis commands using `ioredis` as the
  * underlying client. The class abstracts the need of creating and managing multiple
  * pub/sub connections by hand, since it handles that internally by itself.
  */
-export class RawRedisClusterConnection extends AbstractConnection<Cluster> {
-  #config: RedisClusterConfig
+export class RedisClusterConnection extends AbstractConnection<Cluster> {
+  #config: RedisClusterConnectionConfig
 
-  constructor(connectionName: string, config: RedisClusterConfig) {
+  constructor(connectionName: string, config: RedisClusterConnectionConfig) {
     super(connectionName)
 
     this.#config = config
-    this.ioConnection = new Redis.Cluster(this.#config.clusters as any[])
-    this.proxyConnectionEvents()
+    this.ioConnection = new Redis.Cluster(
+      this.#config.clusters as any[],
+      this.#config.clusterOptions
+    )
+    this.monitorConnection()
   }
 
   /**
@@ -38,6 +41,7 @@ export class RawRedisClusterConnection extends AbstractConnection<Cluster> {
       this.#config.clusters as [],
       this.#config.clusterOptions
     )
+    this.monitorSubscriberConnection()
   }
 
   /**
@@ -49,16 +53,14 @@ export class RawRedisClusterConnection extends AbstractConnection<Cluster> {
 }
 
 /**
- * Here we attach pubsub and ioRedis methods to the class.
- *
- * But we also need to inform typescript about the existence of
- * these methods. So we are exporting the class with a
- * casted type that has these methods.
+ * Adding IORedis methods dynamically on the RedisClusterConnection
+ * class and also extending its TypeScript types
  */
-const RedisClusterConnection = RawRedisClusterConnection as unknown as RedisClusterConnectionFactory
-
+export interface RedisClusterConnection extends IORedisCommands {}
 ioMethods.forEach((method) => {
-  RedisClusterConnection.prototype[method] = function redisConnectionProxyFn(...args: any[]) {
+  ;(RedisClusterConnection.prototype as any)[method] = function redisConnectionProxyFn(
+    ...args: any[]
+  ) {
     return this.ioConnection[method](...args)
   }
 })

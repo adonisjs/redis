@@ -1,8 +1,8 @@
 import 'dotenv/config'
-import { processCLIArgs, configure, run } from '@japa/runner'
 import { assert } from '@japa/assert'
 import { fileSystem } from '@japa/file-system'
 import { expectTypeOf } from '@japa/expect-type'
+import { processCLIArgs, configure, run } from '@japa/runner'
 
 /*
 |--------------------------------------------------------------------------
@@ -19,7 +19,7 @@ import { expectTypeOf } from '@japa/expect-type'
 */
 processCLIArgs(process.argv.slice(2))
 configure({
-  files: ['test/**/*.spec.ts'],
+  files: ['tests/**/*.spec.ts'],
   plugins: [assert(), fileSystem(), expectTypeOf()],
   forceExit: true,
 })

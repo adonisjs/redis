@@ -7,17 +7,15 @@
  * file that was distributed with this source code.
  */
 
-import type { RedisConnectionConfig, RedisClusterConfig } from './types/main.js'
 import { InvalidArgumentsException } from '@poppinss/utils'
+import type { RedisConnectionsList } from './types/main.js'
 
 /**
  * Expected shape of the config accepted by the "defineConfig"
  * method
  */
 type RedisConfig = {
-  connections: {
-    [name: string]: RedisConnectionConfig | RedisClusterConfig
-  }
+  connections: RedisConnectionsList
 }
 
 /**
@@ -34,7 +32,7 @@ export function defineConfig<T extends RedisConfig & { connection: keyof T['conn
     throw new InvalidArgumentsException('Invalid config. Missing property "connections" inside it')
   }
 
-  if (!config.connection || !config.connections[config.connection as any]) {
+  if (!config.connection || !(config.connection in config.connections)) {
     throw new InvalidArgumentsException(
       'Invalid config. Missing property "connection" or the connection name is not defined inside "connections" object'
     )
