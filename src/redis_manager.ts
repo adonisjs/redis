@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 
+import { RuntimeException } from '@poppinss/utils'
 import RedisConnection from './connections/redis_connection.js'
 import RedisClusterConnection from './connections/redis_cluster_connection.js'
 import type { GetConnectionType, RedisConnectionsList } from './types/main.js'
@@ -65,7 +66,7 @@ export default class RedisManager<ConnectionsList extends RedisConnectionsList> 
      */
     const config = this.#config.connections[name]
     if (!config) {
-      throw new Error(`Redis connection "${name.toString()}" is not defined`)
+      throw new RuntimeException(`Redis connection "${name.toString()}" is not defined`)
     }
 
     /**

@@ -12,15 +12,15 @@ import { defineConfig } from '../src/define_config.js'
 
 test.group('Define Config', () => {
   test('should throw if no config passed', ({ assert }) => {
-    // @ts-ignore
-    assert.throws(defineConfig, 'Invalid config. It must be a valid object')
+    // @ts-expect-error
+    assert.throws(defineConfig, 'Invalid config. It must be an object')
   })
 
   test('should throw if no connections', ({ assert }) => {
     assert.throws(
-      // @ts-ignore
+      // @ts-expect-error
       () => defineConfig({ connection: 'hey' }),
-      'Invalid config. Missing property "connections" inside it'
+      'Missing "connections" property in the redis config file'
     )
   })
 
@@ -28,11 +28,22 @@ test.group('Define Config', () => {
     assert.throws(
       () =>
         defineConfig({
-          // @ts-ignore
+          // @ts-expect-error
           connection: 'hey',
           connections: {},
         }),
-      'Invalid config. Missing property "connection" or the connection name is not defined inside "connections" object'
+      'Missing "connections.hey". It is referenced by the "default" redis connection'
+    )
+  })
+
+  test('should throw if default connection is not defined', ({ assert }) => {
+    assert.throws(
+      () =>
+        // @ts-expect-error
+        defineConfig({
+          connections: {},
+        }),
+      'Missing "connection" property in redis config. Specify a default connection to use'
     )
   })
 })

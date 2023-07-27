@@ -7,34 +7,38 @@
  * file that was distributed with this source code.
  */
 
-import { InvalidArgumentsException } from '@poppinss/utils'
+import { RuntimeException } from '@poppinss/utils'
 import type { RedisConnectionsList } from './types/main.js'
-
-/**
- * Expected shape of the config accepted by the "defineConfig"
- * method
- */
-type RedisConfig = {
-  connections: RedisConnectionsList
-}
 
 /**
  * Define config for redis
  */
-export function defineConfig<T extends RedisConfig & { connection: keyof T['connections'] }>(
-  config: T
-): T {
+export function defineConfig<Connections extends RedisConnectionsList>(config: {
+  connection: keyof Connections
+  connections: Connections
+}): {
+  connection: keyof Connections
+  connections: Connections
+} {
   if (!config) {
-    throw new InvalidArgumentsException('Invalid config. It must be a valid object')
+    throw new RuntimeException('Invalid config. It must be an object')
   }
 
   if (!config.connections) {
-    throw new InvalidArgumentsException('Invalid config. Missing property "connections" inside it')
+    throw new RuntimeException('Missing "connections" property in the redis config file')
   }
 
-  if (!config.connection || !(config.connection in config.connections)) {
-    throw new InvalidArgumentsException(
-      'Invalid config. Missing property "connection" or the connection name is not defined inside "connections" object'
+  if (!config.connection) {
+    throw new RuntimeException(
+      'Missing "connection" property in redis config. Specify a default connection to use'
+    )
+  }
+
+  if (!config.connections[config.connection]) {
+    throw new RuntimeException(
+      `Missing "connections.${String(
+        config.connection
+      )}". It is referenced by the "default" redis connection`
     )
   }
 

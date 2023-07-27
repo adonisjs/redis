@@ -8,9 +8,10 @@
  */
 
 import { EventEmitter } from 'node:events'
-import { Exception } from '@poppinss/utils'
 import type { Redis, Cluster } from 'ioredis'
 import { setTimeout } from 'node:timers/promises'
+
+import * as errors from '../errors.js'
 import type { HealthReportNode, PubSubChannelHandler, PubSubPatternHandler } from '../types/main.js'
 
 /**
@@ -245,13 +246,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
      * Disallow multiple subscriptions to a single channel
      */
     if (this.subscriptions.has(channel)) {
-      throw new Exception(
-        `Cannot subscribe to "${channel}" channel. Channel already has an active subscription`,
-        {
-          code: 'E_MULTIPLE_REDIS_SUBSCRIPTIONS',
-          status: 500,
-        }
-      )
+      throw new errors.E_MULTIPLE_REDIS_SUBSCRIPTIONS([channel])
     }
 
     /**
@@ -291,13 +286,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
      * Disallow multiple subscriptions to a single channel
      */
     if (this.psubscriptions.has(pattern)) {
-      throw new Exception(
-        `Cannot subscribe to "${pattern}" pattern. Pattern already has an active subscription`,
-        {
-          status: 500,
-          code: 'E_MULTIPLE_REDIS_PSUBSCRIPTIONS',
-        }
-      )
+      throw new errors.E_MULTIPLE_REDIS_PSUBSCRIPTIONS([pattern])
     }
 
     /**
