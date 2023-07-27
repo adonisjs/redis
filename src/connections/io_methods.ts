@@ -8,7 +8,6 @@
  */
 
 import { Redis } from 'ioredis'
-import { pubSubMethods } from './pubsub_methods.js'
 
 /**
  * Returns all method names for a given class
@@ -41,7 +40,13 @@ const ignoredMethods = [
   '__proto__',
   'defineCommand',
   'toLocaleString',
-].concat(pubSubMethods)
+  // PubSub methods
+  'subscribe',
+  'unsubscribe',
+  'psubscribe',
+  'punsubscribe',
+  'publish',
+]
 
 /**
  * List of methods on Redis class
