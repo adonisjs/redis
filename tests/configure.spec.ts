@@ -46,14 +46,15 @@ test.group('Configure', (group) => {
     context.fs.basePath = fileURLToPath(BASE_URL)
   })
 
-  test('publish config and types files', async ({ assert }) => {
+  test('publish config file', async ({ assert }) => {
     const { command } = await setupConfigureCommand()
 
     await command.exec()
 
     await assert.fileExists('config/redis.ts')
-    await assert.fileContains('config/redis.ts', 'export default defineConfig({')
-    await assert.fileExists('types/redis.ts')
+    await assert.fileContains('config/redis.ts', 'const redisConfig = defineConfig({')
+    await assert.fileContains('config/redis.ts', 'export default redisConfig')
+    await assert.fileContains('config/redis.ts', `declare module '@adonisjs/redis/types'`)
   })
 
   test('add redis_provider to the rc file', async ({ assert }) => {
