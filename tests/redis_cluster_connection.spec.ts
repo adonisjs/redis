@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 
+import { Redis } from 'ioredis'
 import { test } from '@japa/runner'
 import { pEvent } from '../tests_helpers/main.js'
 import RedisClusterConnection from '../src/connections/redis_cluster_connection.js'
@@ -33,11 +34,12 @@ test.group('Redis cluster factory', () => {
     assert.equal(connection.status, 'ready')
   })
 
-  test('emit node:added event', async ({ cleanup }) => {
+  test('emit node:added event', async ({ assert, cleanup }) => {
     const connection = new RedisClusterConnection('main', nodes, {})
     cleanup(() => connection.quit())
 
-    await pEvent(connection, 'node:added')
+    const response = await pEvent(connection, 'node:added')
+    assert.instanceOf(response?.node, Redis)
   })
 
   test('execute redis commands', async ({ assert, cleanup }) => {
