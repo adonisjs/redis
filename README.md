@@ -2,13 +2,13 @@
 
 <br />
 
-[![gh-workflow-image]][gh-workflow-url] [![npm-image]][npm-url] ![][typescript-image] [![license-image]][license-url] [![snyk-image]][snyk-url]
+[![gh-workflow-image]][gh-workflow-url] [![npm-image]][npm-url] ![][typescript-image] [![license-image]][license-url]
 
 ## Introduction
 Redis provider for AdonisJS with support for multiple Redis connections, cluster, pub/sub and much more
 
 ## Official Documentation
-The documentation is available on the [AdonisJS website](https://docs.adonisjs.com/guides/repl)
+The documentation is available on the [AdonisJS website](https://docs.adonisjs.com/guides/redis)
 
 ## Contributing
 One of the primary goals of AdonisJS is to have a vibrant community of users and contributors who believes in the principles of the framework.
@@ -19,7 +19,7 @@ We encourage you to read the [contribution guide](https://github.com/adonisjs/.g
 Easiest way to run tests is to launch the redis cluster using docker-compose and `docker-compose.yml` file.
 
 ```sh
-docker-compose up -d
+docker-compose up
 npm run test
 ```
 
@@ -41,6 +41,3 @@ AdonisJS Redis is open-sourced software licensed under the [MIT license](LICENSE
 
 [license-url]: LICENSE.md
 [license-image]: https://img.shields.io/github/license/adonisjs/redis?style=for-the-badge
-
-[snyk-image]: https://img.shields.io/snyk/vulnerabilities/github/adonisjs/redis?label=Snyk%20Vulnerabilities&style=for-the-badge
-[snyk-url]: https://snyk.io/test/github/adonisjs/redis?targetFile=package.json "snyk"
