@@ -24,6 +24,40 @@ export type PubSubPatternHandler<T extends any = string> = (
 ) => Promise<void> | void
 
 /**
+ * Options accepted during subscribe
+ */
+export type PubSubOptions = {
+  onError(error: any): void
+  onSubscription(count: number): void
+}
+
+/**
+ * List of connection events
+ */
+export type ConnectionEvents<T extends any> = {
+  'connect': { connection: T }
+  'wait': { connection: T }
+  'ready': { connection: T }
+  'error': { error: any; connection: T }
+  'close': { connection: T }
+  'reconnecting': { connection: T; waitTime: number }
+  'end': { connection: T }
+  'subscriber:connect': { connection: T }
+  'subscriber:ready': { connection: T }
+  'subscriber:error': { error: any; connection: T }
+  'subscriber:close': { connection: T }
+  'subscriber:reconnecting': { connection: T; waitTime: number }
+  'subscriber:end': { connection: T }
+  'node:added': { connection: T; node: Redis }
+  'node:removed': { connection: T; node: Redis }
+  'node:error': { error: any; address: string; connection: T }
+  'subscription:ready': { connection: T; count: number }
+  'subscription:error': { connection: T; error: any }
+  'psubscription:ready': { connection: T; count: number }
+  'psubscription:error': { connection: T; error: any }
+}
+
+/**
  * Shape of the report node for the redis connection report
  */
 export type HealthReportNode = {

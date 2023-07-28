@@ -7,8 +7,9 @@
  * file that was distributed with this source code.
  */
 
-import { pEvent } from 'p-event'
 import { test } from '@japa/runner'
+
+import { pEvent } from '../tests_helpers/main.js'
 import RedisConnection from '../src/connections/redis_connection.js'
 
 test.group('Redis connection', () => {
@@ -39,8 +40,8 @@ test.group('Redis connection', () => {
     const connection = new RedisConnection('main', { port: 4444 })
     cleanup(() => connection.disconnect())
 
-    const [error] = await pEvent(connection, 'error', { multiArgs: true })
-    assert.equal(error.message, 'connect ECONNREFUSED 127.0.0.1:4444')
+    const response = await pEvent(connection, 'error')
+    assert.equal(response!.error.message, 'connect ECONNREFUSED 127.0.0.1:4444')
   })
 
   test('cleanup listeners on quit', async ({ assert }) => {
@@ -279,12 +280,12 @@ test.group('Redis connection', () => {
 
   test('emit error when unable to make subscriber connection', async ({ assert, cleanup }) => {
     const connection = new RedisConnection('main', { port: 4444 })
-    await pEvent(connection, 'error', { multiArgs: true })
+    await pEvent(connection, 'error')
     cleanup(() => connection.disconnect())
 
     connection.subscribe('foo', () => {})
-    const [error] = await pEvent(connection, 'subscriber:error', { multiArgs: true })
-    assert.equal(error.message, 'connect ECONNREFUSED 127.0.0.1:4444')
+    const response = await pEvent(connection, 'subscriber:error')
+    assert.equal(response!.error.message, 'connect ECONNREFUSED 127.0.0.1:4444')
   })
 
   test('cleanup subscribers listeners on quit', async ({ assert }) => {

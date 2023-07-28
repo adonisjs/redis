@@ -372,7 +372,6 @@ export const redisMethods = [
   'copy',
   'createBuiltinCommand',
   'dbsize',
-  'debug',
   'decr',
   'decrby',
   'del',

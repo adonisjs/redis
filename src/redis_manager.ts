@@ -55,8 +55,11 @@ class RedisManager<ConnectionsList extends RedisConnectionsList> extends Emitter
   /**
    * The default error reporter we use to log redis errors
    */
-  #errorReporter = function logRedisError(this: RedisManager<ConnectionsList>, error: any) {
-    this.#logger.fatal({ err: error }, 'Redis connection failure')
+  #errorReporter = function logRedisError(
+    this: RedisManager<ConnectionsList>,
+    data: { error: any }
+  ) {
+    this.#logger.fatal({ err: data.error }, 'Redis connection failure')
   }.bind(this)
 
   /**
@@ -112,7 +115,7 @@ class RedisManager<ConnectionsList extends RedisConnectionsList> extends Emitter
     this.#shouldLogRedisErrors = false
     Object.keys(this.activeConnections).forEach((name) => {
       debug('removing error reporter from %s connection', name)
-      this.activeConnections[name]?.removeListener('error', this.#errorReporter)
+      this.activeConnections[name]?.off('error', this.#errorReporter)
     })
     return this
   }
@@ -172,7 +175,7 @@ class RedisManager<ConnectionsList extends RedisConnectionsList> extends Emitter
     /**
      * Remove connection from the list of tracked connections
      */
-    connection.on('end', ($connection) => {
+    connection.on('end', ({ connection: $connection }) => {
       debug('%s connection closed. Removing from tracked connections list', name)
       delete this.activeConnections[$connection.connectionName]
     })

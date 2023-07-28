@@ -12,14 +12,21 @@ import Redis, { type Cluster, type NodeRole } from 'ioredis'
 import debug from '../debug.js'
 import { baseMethods } from './io_methods.js'
 import { AbstractConnection } from './abstract_connection.js'
-import type { IORedisBaseCommands, RedisClusterConnectionConfig } from '../types/main.js'
+import type {
+  ConnectionEvents,
+  IORedisBaseCommands,
+  RedisClusterConnectionConfig,
+} from '../types/main.js'
 
 /**
  * Redis cluster connection exposes the API to run Redis commands using `ioredis` as the
  * underlying client. The class abstracts the need of creating and managing multiple
  * pub/sub connections by hand, since it handles that internally by itself.
  */
-export class RedisClusterConnection extends AbstractConnection<Cluster> {
+export class RedisClusterConnection extends AbstractConnection<
+  Cluster,
+  ConnectionEvents<RedisClusterConnection>
+> {
   #hosts: RedisClusterConnectionConfig['clusters']
   #config: RedisClusterConnectionConfig['clusterOptions']
 

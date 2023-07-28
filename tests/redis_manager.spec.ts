@@ -7,10 +7,9 @@
  * file that was distributed with this source code.
  */
 
-import { pEvent } from 'p-event'
 import { test } from '@japa/runner'
 
-import type { Connection } from '../src/types/main.js'
+import { pEvent } from '../tests_helpers/main.js'
 import { RedisManagerFactory } from '../factories/redis_manager.js'
 import RedisConnection from '../src/connections/redis_connection.js'
 import RedisClusterConnection from '../src/connections/redis_cluster_connection.js'
@@ -254,11 +253,7 @@ test.group('Redis Manager', () => {
       },
     }).create()
 
-    const [connection] = await Promise.all([
-      pEvent<'connection', Connection>(redis, 'connection'),
-      redis.connection(),
-    ])
-
+    const [connection] = await Promise.all([pEvent(redis, 'connection'), redis.connection()])
     assert.strictEqual(connection, redis.connection())
   })
 
@@ -277,13 +272,7 @@ test.group('Redis Manager', () => {
     })
 
     const redis = manager.create()
-
-    /**
-     * pEvent throws an exception when the error event is emitted. We are
-     * supressing that, because our error reporter should handle
-     * it
-     */
-    await pEvent(redis.connection(), 'end', { rejectionEvents: [] })
+    await pEvent(redis.connection(), 'end')
 
     const errorLog = JSON.parse(manager.logs[0])
     assert.equal(errorLog.level, 60)
@@ -311,12 +300,7 @@ test.group('Redis Manager', () => {
       connection.on('error', () => {})
     })
 
-    /**
-     * pEvent throws an exception when the error event is emitted. We are
-     * supressing that, because our error reporter should handle
-     * it
-     */
-    await pEvent(redis.connection(), 'end', { rejectionEvents: [] })
+    await pEvent(redis.connection(), 'end')
     assert.lengthOf(manager.logs, 0)
   })
 
@@ -339,15 +323,7 @@ test.group('Redis Manager', () => {
       connection.on('error', () => {})
     })
 
-    /**
-     * pEvent throws an exception when the error event is emitted. We are
-     * supressing that, because our error reporter should handle
-     * it
-     */
-    await Promise.all([
-      pEvent(redis.connection(), 'end', { rejectionEvents: [] }),
-      redis.doNotLogErrors(),
-    ])
+    await Promise.all([pEvent(redis.connection(), 'end'), redis.doNotLogErrors()])
     assert.lengthOf(manager.logs, 0)
   })
 

@@ -7,18 +7,27 @@
  * file that was distributed with this source code.
  */
 
-import { EventEmitter } from 'node:events'
+import Emittery from 'emittery'
 import type { Redis, Cluster } from 'ioredis'
 import { setTimeout } from 'node:timers/promises'
 
 import * as errors from '../errors.js'
-import type { HealthReportNode, PubSubChannelHandler, PubSubPatternHandler } from '../types/main.js'
+import type {
+  PubSubOptions,
+  HealthReportNode,
+  ConnectionEvents,
+  PubSubChannelHandler,
+  PubSubPatternHandler,
+} from '../types/main.js'
 
 /**
  * Abstract factory implements the shared functionality required by Redis cluster
  * and the normal Redis connections.
  */
-export abstract class AbstractConnection<T extends Redis | Cluster> extends EventEmitter {
+export abstract class AbstractConnection<
+  T extends Redis | Cluster,
+  Events extends ConnectionEvents<any>,
+> extends Emittery<Events> {
   /**
    * Reference to the main ioRedis connection
    */
@@ -95,32 +104,38 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
    * things properly and also notify subscribers of this class
    */
   protected monitorConnection() {
-    this.ioConnection.on('connect', () => this.emit('connect', this))
-    this.ioConnection.on('wait', () => this.emit('wait', this))
+    this.ioConnection.on('connect', () => this.emit('connect', { connection: this }))
+    this.ioConnection.on('wait', () => this.emit('wait', { connection: this }))
     this.ioConnection.on('ready', () => {
       /**
        * We must set the error to null when server is ready for accept
        * commands
        */
       this.#lastError = null
-      this.emit('ready', this)
+      this.emit('ready', { connection: this })
     })
 
     this.ioConnection.on('error', (error: any) => {
       this.#lastError = error
-      this.emit('error', error, this)
+      this.emit('error', { error, connection: this })
     })
 
-    this.ioConnection.on('close', () => this.emit('close', this))
-    this.ioConnection.on('reconnecting', () => this.emit('reconnecting', this))
+    this.ioConnection.on('close', () => this.emit('close', { connection: this }))
+    this.ioConnection.on('reconnecting', (waitTime: number) =>
+      this.emit('reconnecting', { connection: this, waitTime })
+    )
 
     /**
      * Cluster only events
      */
-    this.ioConnection.on('+node', (node: Redis) => this.emit('node:added', this, node))
-    this.ioConnection.on('-node', (node: Redis) => this.emit('node:removed', this, node))
+    this.ioConnection.on('+node', (node: Redis) =>
+      this.emit('node:added', { connection: this, node })
+    )
+    this.ioConnection.on('-node', (node: Redis) =>
+      this.emit('node:removed', { connection: this, node })
+    )
     this.ioConnection.on('node error', (error: any, address: string) => {
-      this.emit('node:error', error, address, this)
+      this.emit('node:error', { error, address, connection: this })
     })
 
     /**
@@ -128,17 +143,20 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
      */
     this.ioConnection.on('end', async () => {
       this.ioConnection.removeAllListeners()
-      this.emit('end', this)
-      this.removeAllListeners('connect')
-      this.removeAllListeners('wait')
-      this.removeAllListeners('ready')
-      this.removeAllListeners('error')
-      this.removeAllListeners('close')
-      this.removeAllListeners('reconnecting')
-      this.removeAllListeners('node:added')
-      this.removeAllListeners('node:removed')
-      this.removeAllListeners('node:error')
-      this.removeAllListeners('end')
+      this.emit('end', { connection: this }).finally(() => {
+        this.clearListeners([
+          'connect',
+          'wait',
+          'ready',
+          'error',
+          'close',
+          'reconnecting',
+          'node:added',
+          'node:error',
+          'node:removed',
+          'end',
+        ])
+      })
     })
   }
 
@@ -148,15 +166,20 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
    * this class.
    */
   protected monitorSubscriberConnection() {
-    this.ioSubscriberConnection!.on('connect', () => this.emit('subscriber:connect', this))
-    this.ioSubscriberConnection!.on('wait', () => this.emit('subscriber:wait', this))
-    this.ioSubscriberConnection!.on('ready', () => this.emit('subscriber:ready', this))
+    this.ioSubscriberConnection!.on('connect', () =>
+      this.emit('subscriber:connect', { connection: this })
+    )
+    this.ioSubscriberConnection!.on('ready', () =>
+      this.emit('subscriber:ready', { connection: this })
+    )
     this.ioSubscriberConnection!.on('error', (error: any) => {
-      this.emit('subscriber:error', error, this)
+      this.emit('subscriber:error', { error, connection: this })
     })
-    this.ioSubscriberConnection!.on('close', () => this.emit('subscriber:close', this))
-    this.ioSubscriberConnection!.on('reconnecting', () =>
-      this.emit('subscriber:reconnecting', this)
+    this.ioSubscriberConnection!.on('close', () =>
+      this.emit('subscriber:close', { connection: this })
+    )
+    this.ioSubscriberConnection!.on('reconnecting', (waitTime: number) =>
+      this.emit('subscriber:reconnecting', { connection: this, waitTime })
     )
 
     /**
@@ -165,7 +188,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
      */
     this.ioSubscriberConnection!.on('end', async () => {
       this.ioSubscriberConnection!.removeAllListeners()
-      this.emit('subscriber:end', this)
+      this.emit('subscriber:end', { connection: this })
 
       /**
        * Cleanup subscriptions
@@ -174,13 +197,14 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
       this.psubscriptions.clear()
 
       this.ioSubscriberConnection = undefined
-      this.removeAllListeners('subscriber:connect')
-      this.removeAllListeners('subscriber:wait')
-      this.removeAllListeners('subscriber:ready')
-      this.removeAllListeners('subscriber:error')
-      this.removeAllListeners('subscriber:close')
-      this.removeAllListeners('subscriber:reconnecting')
-      this.removeAllListeners('subscriber:end')
+      this.clearListeners([
+        'subscriber:connect',
+        'subscriber:ready',
+        'subscriber:error',
+        'subscriber:close',
+        'subscriber:reconnecting',
+        'subscriber:end',
+      ])
     })
   }
 
@@ -243,7 +267,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
    * Subscribe to a given channel to receive Redis pub/sub events. A
    * new subscriber connection will be created/managed automatically.
    */
-  subscribe(channel: string, handler: PubSubChannelHandler): void {
+  subscribe(channel: string, handler: PubSubChannelHandler, options?: PubSubOptions): void {
     /**
      * Make the subscriber connection. The method results in a noop when
      * subscriber connection already exists.
@@ -264,11 +288,17 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
      */
     this.ioSubscriberConnection!.subscribe(channel)
       .then((count) => {
-        this.emit('subscription:ready', count, this)
+        if (options?.onSubscription) {
+          options?.onSubscription(count as number)
+        }
+        this.emit('subscription:ready', { count: count as number, connection: this })
         this.subscriptions.set(channel, handler)
       })
       .catch((error) => {
-        this.emit('subscription:error', error, this)
+        if (options?.onError) {
+          options?.onError(error)
+        }
+        this.emit('subscription:error', { error, connection: this })
       })
   }
 
@@ -283,7 +313,7 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
   /**
    * Make redis subscription for a pattern
    */
-  psubscribe(pattern: string, handler: PubSubPatternHandler): void {
+  psubscribe(pattern: string, handler: PubSubPatternHandler, options?: PubSubOptions): void {
     /**
      * Make the subscriber connection. The method results in a noop when
      * subscriber connection already exists.
@@ -304,11 +334,17 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
      */
     this.ioSubscriberConnection!.psubscribe(pattern)
       .then((count) => {
-        this.emit('psubscription:ready', count, this)
+        if (options?.onSubscription) {
+          options?.onSubscription(count as number)
+        }
+        this.emit('psubscription:ready', { count: count as number, connection: this })
         this.psubscriptions.set(pattern, handler)
       })
       .catch((error) => {
-        this.emit('psubscription:error', error, this)
+        if (options?.onError) {
+          options?.onError(error)
+        }
+        this.emit('psubscription:error', { error, connection: this })
       })
   }
 

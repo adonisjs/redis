@@ -7,8 +7,8 @@
  * file that was distributed with this source code.
  */
 
-import { pEvent } from 'p-event'
 import { test } from '@japa/runner'
+import { pEvent } from '../tests_helpers/main.js'
 import RedisClusterConnection from '../src/connections/redis_cluster_connection.js'
 
 const nodes = process.env.REDIS_CLUSTER_PORTS!.split(',').map((port) => {
@@ -89,8 +89,8 @@ test.group('Redis cluster factory', () => {
     cleanup(() => connection.quit())
 
     connection.on('error', () => {})
-    const [error] = await pEvent(connection, 'node:error', { multiArgs: true })
-    assert.equal(error.message, 'Connection is closed.')
+    const response = await pEvent(connection, 'node:error')
+    assert.equal(response!.error.message, 'Connection is closed.')
   })
 
   test('access cluster nodes', async ({ assert, cleanup }) => {

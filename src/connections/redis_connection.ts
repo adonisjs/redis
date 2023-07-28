@@ -12,7 +12,11 @@ import { Redis, RedisOptions } from 'ioredis'
 import debug from '../debug.js'
 import { redisMethods } from './io_methods.js'
 import { AbstractConnection } from './abstract_connection.js'
-import { IORedisConnectionCommands, RedisConnectionConfig } from '../types/main.js'
+import type {
+  ConnectionEvents,
+  RedisConnectionConfig,
+  IORedisConnectionCommands,
+} from '../types/main.js'
 
 /**
  * Redis connection exposes the API to run Redis commands using `ioredis` as the
@@ -20,7 +24,7 @@ import { IORedisConnectionCommands, RedisConnectionConfig } from '../types/main.
  * multiple pub/sub connections by hand, since it handles that internally
  * by itself.
  */
-export class RedisConnection extends AbstractConnection<Redis> {
+export class RedisConnection extends AbstractConnection<Redis, ConnectionEvents<RedisConnection>> {
   #config: RedisOptions
 
   /**
@@ -73,6 +77,7 @@ export class RedisConnection extends AbstractConnection<Redis> {
  * class and also extending its TypeScript types
  */
 export interface RedisConnection extends IORedisConnectionCommands {}
+
 redisMethods.forEach((method) => {
   ;(RedisConnection.prototype as any)[method] = function redisConnectionProxyFn(...args: any[]) {
     return this.ioConnection[method](...args)
