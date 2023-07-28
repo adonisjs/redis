@@ -9,6 +9,7 @@
 
 import Redis, { type Cluster, type NodeRole } from 'ioredis'
 
+import debug from '../debug.js'
 import { ioMethods } from './io_methods.js'
 import { AbstractConnection } from './abstract_connection.js'
 import type { IORedisCommands, RedisClusterConnectionConfig } from '../types/main.js'
@@ -22,6 +23,7 @@ export class RedisClusterConnection extends AbstractConnection<Cluster> {
   #config: RedisClusterConnectionConfig
 
   constructor(connectionName: string, config: RedisClusterConnectionConfig) {
+    debug('creating cluster connection %s: %O', connectionName, config)
     super(connectionName)
 
     this.#config = config
@@ -37,6 +39,7 @@ export class RedisClusterConnection extends AbstractConnection<Cluster> {
    * invoke this method when first subscription is created.
    */
   protected makeSubscriberConnection() {
+    debug('creating subscriber connection')
     this.ioSubscriberConnection = new Redis.Cluster(
       this.#config.clusters as [],
       this.#config.clusterOptions

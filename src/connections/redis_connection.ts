@@ -9,6 +9,7 @@
 
 import { Redis, RedisOptions } from 'ioredis'
 
+import debug from '../debug.js'
 import { ioMethods } from './io_methods.js'
 import { AbstractConnection } from './abstract_connection.js'
 import { IORedisCommands, RedisConnectionConfig } from '../types/main.js'
@@ -23,6 +24,7 @@ export class RedisConnection extends AbstractConnection<Redis> {
   #config: RedisOptions
 
   constructor(connectionName: string, config: RedisConnectionConfig) {
+    debug('creating connection %s: %O', connectionName, config)
     super(connectionName)
     this.#config = this.#normalizeConfig(config)
 
@@ -45,6 +47,7 @@ export class RedisConnection extends AbstractConnection<Redis> {
    * invoke this method when first subscription is created.
    */
   protected makeSubscriberConnection() {
+    debug('creating subscriber connection')
     this.ioSubscriberConnection = new Redis(this.#config)
     this.monitorSubscriberConnection()
   }

@@ -8,6 +8,8 @@
  */
 
 import { RuntimeException } from '@poppinss/utils'
+
+import debug from './debug.js'
 import RedisConnection from './connections/redis_connection.js'
 import RedisClusterConnection from './connections/redis_cluster_connection.js'
 import type { GetConnectionType, RedisConnectionsList } from './types/main.js'
@@ -53,11 +55,13 @@ export default class RedisManager<ConnectionsList extends RedisConnectionsList> 
     connectionName?: ConnectionName
   ): GetConnectionType<ConnectionsList, ConnectionName> {
     const name = connectionName || this.#config.connection
+    debug('resolving connection %s', name)
 
     /**
      * Return existing connection if already exists
      */
     if (this.activeConnections[name]) {
+      debug('reusing existing connection %s', name)
       return this.activeConnections[name] as GetConnectionType<ConnectionsList, ConnectionName>
     }
 
@@ -72,6 +76,7 @@ export default class RedisManager<ConnectionsList extends RedisConnectionsList> 
     /**
      * Instantiate the connection based upon the config
      */
+    debug('creating new connection %s', name)
     const connection =
       'clusters' in config
         ? new RedisClusterConnection(name as string, config)
@@ -81,6 +86,7 @@ export default class RedisManager<ConnectionsList extends RedisConnectionsList> 
      * Remove connection from the list of tracked connections
      */
     connection.on('end', ($connection) => {
+      debug('%s connection closed. Removing from tracked connections list', name)
       delete this.activeConnections[$connection.connectionName]
     })
 
