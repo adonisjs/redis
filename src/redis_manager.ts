@@ -10,6 +10,7 @@
 import Emittery from 'emittery'
 import { RuntimeException } from '@poppinss/utils'
 import type { Logger } from '@adonisjs/core/logger'
+import { type ClusterOptions, type RedisOptions, Redis } from 'ioredis'
 
 import debug from './debug.js'
 import { baseMethods } from './connections/io_methods.js'
@@ -22,7 +23,6 @@ import type {
   PubSubPatternHandler,
   RedisConnectionsList,
 } from './types/main.js'
-import { ClusterOptions, RedisOptions } from 'ioredis'
 
 /**
  * Redis Manager exposes the API to manage multiple redis connections
@@ -66,6 +66,11 @@ class RedisManager<ConnectionsList extends RedisConnectionsList> extends Emitter
     connection: keyof ConnectionsList
     connections: ConnectionsList
   }
+
+  /**
+   * Reference to "import('ioredis').Redis.Command"
+   */
+  Command = Redis.Command
 
   /**
    * A copy of live connections. We avoid re-creating a new connection
