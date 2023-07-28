@@ -17,7 +17,7 @@ const nodes = process.env.REDIS_CLUSTER_PORTS!.split(',').map((port) => {
 
 test.group('Redis cluster factory', () => {
   test('emit ready when connected to redis server', async ({ assert, cleanup }) => {
-    const connection = new RedisClusterConnection('main', { clusters: nodes })
+    const connection = new RedisClusterConnection('main', nodes, {})
     cleanup(() => connection.quit())
 
     await pEvent(connection, 'ready')
@@ -25,7 +25,7 @@ test.group('Redis cluster factory', () => {
   })
 
   test('emit connect event before the ready event', async ({ assert, cleanup }) => {
-    const connection = new RedisClusterConnection('main', { clusters: nodes })
+    const connection = new RedisClusterConnection('main', nodes, {})
     cleanup(() => connection.quit())
 
     await pEvent(connection, 'connect')
@@ -34,14 +34,14 @@ test.group('Redis cluster factory', () => {
   })
 
   test('emit node:added event', async ({ cleanup }) => {
-    const connection = new RedisClusterConnection('main', { clusters: nodes })
+    const connection = new RedisClusterConnection('main', nodes, {})
     cleanup(() => connection.quit())
 
     await pEvent(connection, 'node:added')
   })
 
   test('execute redis commands', async ({ assert, cleanup }) => {
-    const connection = new RedisClusterConnection('main', { clusters: nodes })
+    const connection = new RedisClusterConnection('main', nodes, {})
     cleanup(async () => {
       await connection.del('greeting')
       await connection.quit()
@@ -53,7 +53,7 @@ test.group('Redis cluster factory', () => {
   })
 
   test('clean event listeners on quit', async ({ assert }) => {
-    const connection = new RedisClusterConnection('main', { clusters: nodes })
+    const connection = new RedisClusterConnection('main', nodes, {})
     await pEvent(connection, 'ready')
 
     await Promise.all([pEvent(connection, 'end'), connection.quit()])
@@ -67,7 +67,7 @@ test.group('Redis cluster factory', () => {
   })
 
   test('clean event listeners on disconnect', async ({ assert }) => {
-    const connection = new RedisClusterConnection('main', { clusters: nodes })
+    const connection = new RedisClusterConnection('main', nodes, {})
     await pEvent(connection, 'ready')
 
     await Promise.all([pEvent(connection, 'end'), connection.disconnect()])
@@ -81,9 +81,11 @@ test.group('Redis cluster factory', () => {
   })
 
   test('emit node:error when unable to connect', async ({ assert, cleanup }) => {
-    const connection = new RedisClusterConnection('main', {
-      clusters: [{ host: process.env.REDIS_HOST!, port: 5000 }],
-    })
+    const connection = new RedisClusterConnection(
+      'main',
+      [{ host: process.env.REDIS_HOST!, port: 5000 }],
+      {}
+    )
     cleanup(() => connection.quit())
 
     connection.on('error', () => {})
@@ -92,7 +94,7 @@ test.group('Redis cluster factory', () => {
   })
 
   test('access cluster nodes', async ({ assert, cleanup }) => {
-    const connection = new RedisClusterConnection('main', { clusters: nodes })
+    const connection = new RedisClusterConnection('main', nodes, {})
     cleanup(() => connection.quit())
 
     await pEvent(connection, 'ready')
@@ -100,7 +102,7 @@ test.group('Redis cluster factory', () => {
   })
 
   test('get report for connection in ready state', async ({ assert, cleanup }) => {
-    const connection = new RedisClusterConnection('main', { clusters: nodes })
+    const connection = new RedisClusterConnection('main', nodes, {})
     cleanup(() => connection.quit())
 
     await pEvent(connection, 'ready')
@@ -112,9 +114,11 @@ test.group('Redis cluster factory', () => {
   })
 
   test('get report for errored connection', async ({ assert, cleanup }) => {
-    const connection = new RedisClusterConnection('main', {
-      clusters: [{ host: process.env.REDIS_HOST!, port: 5000 }],
-    })
+    const connection = new RedisClusterConnection(
+      'main',
+      [{ host: process.env.REDIS_HOST!, port: 5000 }],
+      {}
+    )
 
     cleanup(() => connection.quit())
 
@@ -127,7 +131,7 @@ test.group('Redis cluster factory', () => {
   })
 
   test('execute redis commands using lua scripts', async ({ assert, cleanup }) => {
-    const connection = new RedisClusterConnection('main', { clusters: nodes })
+    const connection = new RedisClusterConnection('main', nodes, {})
     cleanup(async () => {
       await connection.del('greeting')
       await connection.quit()
@@ -149,7 +153,7 @@ test.group('Redis cluster factory', () => {
   })
 
   test('subscribe to a channel and listen for messages', async ({ assert, cleanup }) => {
-    const connection = new RedisClusterConnection('main', { clusters: nodes })
+    const connection = new RedisClusterConnection('main', nodes, {})
     cleanup(() => connection.quit())
 
     await pEvent(connection, 'ready')

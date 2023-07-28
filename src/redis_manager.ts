@@ -22,6 +22,7 @@ import type {
   PubSubPatternHandler,
   RedisConnectionsList,
 } from './types/main.js'
+import { ClusterOptions, RedisOptions } from 'ioredis'
 
 /**
  * Redis Manager exposes the API to manage multiple redis connections
@@ -32,6 +33,18 @@ import type {
 class RedisManager<ConnectionsList extends RedisConnectionsList> extends Emittery<{
   connection: RedisConnection | RedisClusterConnection
 }> {
+  /**
+   * Lua scripts to apply to all the connections
+   */
+  #scripts: Record<
+    string,
+    {
+      lua: string
+      numberOfKeys?: number
+      readOnly?: boolean
+    }
+  > = {}
+
   #logger: Logger
 
   /**
@@ -79,6 +92,14 @@ class RedisManager<ConnectionsList extends RedisConnectionsList> extends Emitter
   }
 
   /**
+   * Merging manager scripts with the connection config
+   */
+  #mergeScripts<Config extends ClusterOptions | RedisOptions>(config: Config): Config {
+    config.scripts = Object.assign({}, config.scripts, this.#scripts)
+    return config
+  }
+
+  /**
    * Disable error logging of redis connection errors. You must
    * handle the errors manually, otheriwse the app will crash
    */
@@ -122,8 +143,12 @@ class RedisManager<ConnectionsList extends RedisConnectionsList> extends Emitter
     debug('creating new connection %s', name)
     const connection =
       'clusters' in config
-        ? new RedisClusterConnection(name as string, config)
-        : new RedisConnection(name as string, config)
+        ? new RedisClusterConnection(
+            name as string,
+            config.clusters,
+            this.#mergeScripts(config.clusterOptions || {})
+          )
+        : new RedisConnection(name as string, this.#mergeScripts(config))
 
     /**
      * Notify about a new connection
@@ -200,6 +225,39 @@ class RedisManager<ConnectionsList extends RedisConnectionsList> extends Emitter
     return callback
       ? this.connection().publish(channel, message, callback)
       : this.connection().publish(channel, message)
+  }
+
+  /**
+   * Define a custom command using LUA script. You can run the
+   * registered command using the "runCommand" method.
+   */
+  defineCommand(
+    name: string,
+    definition: {
+      lua: string
+      numberOfKeys?: number
+      readOnly?: boolean
+    }
+  ): this {
+    /**
+     * Apply command on existing connections
+     */
+    Object.keys(this.activeConnections).forEach((connectionName) => {
+      this.activeConnections[connectionName]?.defineCommand(name, definition)
+    })
+
+    /**
+     * Store reference to scripts for new commands
+     */
+    this.#scripts[name] = definition
+    return this
+  }
+
+  /**
+   * Run a pre registered command on the default command
+   */
+  runCommand(command: string, ...args: any[]): any {
+    return this.connection().runCommand(command, ...args)
   }
 
   /**

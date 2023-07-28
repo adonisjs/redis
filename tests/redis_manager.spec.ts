@@ -452,4 +452,54 @@ test.group('Redis Manager', () => {
       }),
     ])
   }).timeout(4000)
+
+  test('apply defined commands to connections', async ({ cleanup, assert }) => {
+    const redis = new RedisManagerFactory({
+      connection: 'primary',
+      connections: {
+        primary: { host: process.env.REDIS_HOST, port: process.env.REDIS_PORT },
+      },
+    }).create()
+    cleanup(() => redis.quitAll())
+
+    redis.defineCommand('defineValue', {
+      numberOfKeys: 1,
+      lua: `redis.call('set', KEYS[1], ARGV[1])`,
+    })
+
+    redis.defineCommand('readValue', {
+      numberOfKeys: 1,
+      lua: `return redis.call('get', KEYS[1])`,
+    })
+
+    await redis.runCommand('defineValue', 'greeting', 'hello world')
+    const greeting = await redis.runCommand('readValue', 'greeting')
+    assert.equal(greeting, 'hello world')
+  })
+
+  test('apply defined commands on existing connections', async ({ cleanup, assert }) => {
+    const redis = new RedisManagerFactory({
+      connection: 'primary',
+      connections: {
+        primary: { host: process.env.REDIS_HOST, port: process.env.REDIS_PORT },
+      },
+    }).create()
+    cleanup(() => redis.quitAll())
+
+    const connection = redis.connection()
+
+    redis.defineCommand('defineValue', {
+      numberOfKeys: 1,
+      lua: `redis.call('set', KEYS[1], ARGV[1])`,
+    })
+
+    redis.defineCommand('readValue', {
+      numberOfKeys: 1,
+      lua: `return redis.call('get', KEYS[1])`,
+    })
+
+    await connection.runCommand('defineValue', 'greeting', 'hello world')
+    const greeting = await connection.runCommand('readValue', 'greeting')
+    assert.equal(greeting, 'hello world')
+  })
 })

@@ -20,21 +20,25 @@ import type { IORedisBaseCommands, RedisClusterConnectionConfig } from '../types
  * pub/sub connections by hand, since it handles that internally by itself.
  */
 export class RedisClusterConnection extends AbstractConnection<Cluster> {
-  #config: RedisClusterConnectionConfig
+  #hosts: RedisClusterConnectionConfig['clusters']
+  #config: RedisClusterConnectionConfig['clusterOptions']
 
   get slots() {
     return this.ioConnection.slots
   }
 
-  constructor(connectionName: string, config: RedisClusterConnectionConfig) {
+  constructor(
+    connectionName: string,
+    hosts: RedisClusterConnectionConfig['clusters'],
+    config: RedisClusterConnectionConfig['clusterOptions']
+  ) {
     debug('creating cluster connection %s: %O', connectionName, config)
     super(connectionName)
 
+    this.#hosts = hosts
     this.#config = config
-    this.ioConnection = new Redis.Cluster(
-      this.#config.clusters as any[],
-      this.#config.clusterOptions
-    )
+
+    this.ioConnection = new Redis.Cluster(this.#hosts as any[], this.#config)
     this.monitorConnection()
   }
 
@@ -44,10 +48,7 @@ export class RedisClusterConnection extends AbstractConnection<Cluster> {
    */
   protected makeSubscriberConnection() {
     debug('creating subscriber connection')
-    this.ioSubscriberConnection = new Redis.Cluster(
-      this.#config.clusters as [],
-      this.#config.clusterOptions
-    )
+    this.ioSubscriberConnection = new Redis.Cluster(this.#hosts as any[], this.#config)
     this.monitorSubscriberConnection()
   }
 
