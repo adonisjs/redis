@@ -22,7 +22,6 @@ export async function configure(command: Configure) {
    * Add environment variables
    */
   await command.defineEnvVariables({
-    REDIS_CONNECTION: 'local',
     REDIS_HOST: '127.0.0.1',
     REDIS_PORT: '6379',
     REDIS_PASSWORD: '',
