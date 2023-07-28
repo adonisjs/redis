@@ -19,11 +19,6 @@ export async function configure(command: Configure) {
   await command.publishStub('config/redis.stub')
 
   /**
-   * Publish typings file
-   */
-  await command.publishStub('types/redis.stub')
-
-  /**
    * Add environment variables
    */
   await command.defineEnvVariables({

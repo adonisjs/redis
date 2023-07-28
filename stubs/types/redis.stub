@@ -1,8 +1,0 @@
----
-to: {{ app.makePath('types/redis.ts') }}
----
-import redis from '#config/redis'
-
-declare module '@adonisjs/redis/types' {
-  export interface RedisConnections extends InferConnections<typeof redis> {}
-}

@@ -1,11 +1,10 @@
 ---
 to: {{ app.configPath('redis.ts') }}
 ---
-
 import env from '#start/env'
 import { defineConfig } from '@adonisjs/redis'
 
-export default defineConfig({
+const redisConfig = defineConfig({
   connection: env.get('REDIS_CONNECTION'),
 
   connections: {
@@ -28,3 +27,9 @@ export default defineConfig({
     },
   },
 })
+
+export default redisConfig
+
+declare module '@adonisjs/redis/types' {
+  export interface RedisConnections extends InferConnections<typeof redisConfig> {}
+}
