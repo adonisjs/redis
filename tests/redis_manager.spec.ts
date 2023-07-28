@@ -276,7 +276,7 @@ test.group('Redis Manager', () => {
 
     const errorLog = JSON.parse(manager.logs[0])
     assert.equal(errorLog.level, 60)
-    assert.equal(errorLog.err.message, 'connect ECONNREFUSED 127.0.0.1:4444')
+    assert.equal(errorLog.err.message, 'connect ECONNREFUSED 0.0.0.0:4444')
   })
 
   test('disable error logging', async ({ assert }) => {
