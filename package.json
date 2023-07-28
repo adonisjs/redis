@@ -71,6 +71,7 @@
   },
   "dependencies": {
     "@poppinss/utils": "6.5.0-3",
+    "emittery": "^1.0.1",
     "ioredis": "^5.3.2"
   },
   "peerDependencies": {

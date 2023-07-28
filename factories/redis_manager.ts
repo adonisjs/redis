@@ -8,6 +8,7 @@
  */
 
 import RedisManager from '../src/redis_manager.js'
+import { LoggerFactory } from '@adonisjs/core/factories/logger'
 import type { RedisClusterConnectionConfig, RedisConnectionConfig } from '../src/types/main.js'
 
 /**
@@ -22,6 +23,8 @@ export class RedisManagerFactory<
     connections: ConnectionsList
   }
 
+  logs: string[] = []
+
   constructor(config: { connection: keyof ConnectionsList; connections: ConnectionsList }) {
     this.#config = config
   }
@@ -30,6 +33,14 @@ export class RedisManagerFactory<
    * Create an instance of the redis manager
    */
   create() {
-    return new RedisManager(this.#config)
+    return new RedisManager(
+      this.#config,
+      new LoggerFactory()
+        .merge({
+          enabled: true,
+        })
+        .pushLogsTo(this.logs)
+        .create()
+    )
   }
 }

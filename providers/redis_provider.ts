@@ -37,7 +37,8 @@ export default class RedisProvider {
       const { default: RedisManager } = await import('../src/redis_manager.js')
 
       const config = this.app.config.get<any>('redis', {})
-      return new RedisManager(config)
+      const logger = await this.app.container.make('logger')
+      return new RedisManager(config, logger)
     })
   }
 

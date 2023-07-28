@@ -54,7 +54,6 @@ export const baseMethods = [
   'copy',
   'createBuiltinCommand',
   'dbsize',
-  'debug',
   'decr',
   'decrby',
   'del',

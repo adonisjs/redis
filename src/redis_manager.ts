@@ -7,7 +7,9 @@
  * file that was distributed with this source code.
  */
 
+import Emittery from 'emittery'
 import { RuntimeException } from '@poppinss/utils'
+import type { Logger } from '@adonisjs/core/logger'
 
 import debug from './debug.js'
 import { baseMethods } from './connections/io_methods.js'
@@ -21,7 +23,23 @@ import type { GetConnectionType, IORedisBaseCommands, RedisConnectionsList } fro
  *
  * All connections are long-lived until they are closed explictly
  */
-class RedisManager<ConnectionsList extends RedisConnectionsList> {
+class RedisManager<ConnectionsList extends RedisConnectionsList> extends Emittery<{
+  connection: RedisConnection | RedisClusterConnection
+}> {
+  #logger: Logger
+
+  /**
+   * Should we log redis errors or not
+   */
+  #shouldLogRedisErrors: boolean = true
+
+  /**
+   * The default error reporter we use to log redis errors
+   */
+  #errorReporter = function logRedisError(this: RedisManager<ConnectionsList>, error: any) {
+    this.#logger.fatal({ err: error }, 'Redis connection failure')
+  }.bind(this)
+
   /**
    * User provided config
    */
@@ -45,8 +63,26 @@ class RedisManager<ConnectionsList extends RedisConnectionsList> {
     return Object.keys(this.activeConnections).length
   }
 
-  constructor(config: { connection: keyof ConnectionsList; connections: ConnectionsList }) {
+  constructor(
+    config: { connection: keyof ConnectionsList; connections: ConnectionsList },
+    logger: Logger
+  ) {
+    super()
     this.#config = config
+    this.#logger = logger
+  }
+
+  /**
+   * Disable error logging of redis connection errors. You must
+   * handle the errors manually, otheriwse the app will crash
+   */
+  doNotLogErrors() {
+    this.#shouldLogRedisErrors = false
+    Object.keys(this.activeConnections).forEach((name) => {
+      debug('removing error reporter from %s connection', name)
+      this.activeConnections[name]?.removeListener('error', this.#errorReporter)
+    })
+    return this
   }
 
   /**
@@ -82,6 +118,19 @@ class RedisManager<ConnectionsList extends RedisConnectionsList> {
       'clusters' in config
         ? new RedisClusterConnection(name as string, config)
         : new RedisConnection(name as string, config)
+
+    /**
+     * Notify about a new connection
+     */
+    this.emit('connection', connection)
+
+    /**
+     * Log errors when not disabled by the user
+     */
+    if (this.#shouldLogRedisErrors) {
+      debug('attaching error reporter to log connection errors')
+      connection.on('error', this.#errorReporter)
+    }
 
     /**
      * Remove connection from the list of tracked connections

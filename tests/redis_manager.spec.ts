@@ -10,6 +10,7 @@
 import { pEvent } from 'p-event'
 import { test } from '@japa/runner'
 
+import type { Connection } from '../src/types/main.js'
 import { RedisManagerFactory } from '../factories/redis_manager.js'
 import RedisConnection from '../src/connections/redis_connection.js'
 import RedisClusterConnection from '../src/connections/redis_cluster_connection.js'
@@ -243,5 +244,110 @@ test.group('Redis Manager', () => {
 
     expectTypeOf(redis.connection('cluster')).toEqualTypeOf<RedisClusterConnection>()
     expectTypeOf(redis.connection('primary')).toEqualTypeOf<RedisConnection>()
+  })
+
+  test('notify listener about a new connection', async ({ assert }) => {
+    const redis = new RedisManagerFactory({
+      connection: 'primary',
+      connections: {
+        primary: { host: process.env.REDIS_HOST, port: process.env.REDIS_PORT },
+      },
+    }).create()
+
+    const [connection] = await Promise.all([
+      pEvent<'connection', Connection>(redis, 'connection'),
+      redis.connection(),
+    ])
+
+    assert.strictEqual(connection, redis.connection())
+  })
+
+  test('log errors using the logger', async ({ assert }) => {
+    const manager = new RedisManagerFactory({
+      connection: 'primary',
+      connections: {
+        primary: {
+          host: process.env.REDIS_HOST,
+          port: 4444,
+          retryStrategy() {
+            return null
+          },
+        },
+      },
+    })
+
+    const redis = manager.create()
+
+    /**
+     * pEvent throws an exception when the error event is emitted. We are
+     * supressing that, because our error reporter should handle
+     * it
+     */
+    await pEvent(redis.connection(), 'end', { rejectionEvents: [] })
+
+    const errorLog = JSON.parse(manager.logs[0])
+    assert.equal(errorLog.level, 60)
+    assert.equal(errorLog.err.message, 'connect ECONNREFUSED 127.0.0.1:4444')
+  })
+
+  test('disable error logging', async ({ assert }) => {
+    const manager = new RedisManagerFactory({
+      connection: 'primary',
+      connections: {
+        primary: {
+          host: process.env.REDIS_HOST,
+          port: 4444,
+          retryStrategy() {
+            return null
+          },
+        },
+      },
+    })
+
+    const redis = manager.create()
+    redis.doNotLogErrors()
+
+    redis.on('connection', (connection) => {
+      connection.on('error', () => {})
+    })
+
+    /**
+     * pEvent throws an exception when the error event is emitted. We are
+     * supressing that, because our error reporter should handle
+     * it
+     */
+    await pEvent(redis.connection(), 'end', { rejectionEvents: [] })
+    assert.lengthOf(manager.logs, 0)
+  })
+
+  test('disable error logging for an existing connection', async ({ assert }) => {
+    const manager = new RedisManagerFactory({
+      connection: 'primary',
+      connections: {
+        primary: {
+          host: process.env.REDIS_HOST,
+          port: 4444,
+          retryStrategy() {
+            return null
+          },
+        },
+      },
+    })
+
+    const redis = manager.create()
+    redis.on('connection', (connection) => {
+      connection.on('error', () => {})
+    })
+
+    /**
+     * pEvent throws an exception when the error event is emitted. We are
+     * supressing that, because our error reporter should handle
+     * it
+     */
+    await Promise.all([
+      pEvent(redis.connection(), 'end', { rejectionEvents: [] }),
+      redis.doNotLogErrors(),
+    ])
+    assert.lengthOf(manager.logs, 0)
   })
 })
