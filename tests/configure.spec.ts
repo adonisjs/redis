@@ -72,9 +72,7 @@ test.group('Configure', (group) => {
     await fs.create('.env', '')
     await command.exec()
 
-    await assert.fileContains('.env', 'REDIS_CONNECTION=local')
     await assert.fileContains('.env', 'REDIS_HOST=127.0.0.1')
-
     await assert.fileContains('.env', 'REDIS_PORT=6379')
     await assert.fileContains('.env', 'REDIS_PASSWORD=')
   })

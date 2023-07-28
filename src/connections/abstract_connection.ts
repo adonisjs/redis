@@ -321,6 +321,25 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
   }
 
   /**
+   * Publish the pub/sub message
+   */
+  publish(
+    channel: string,
+    message: string,
+    callback: (error: Error | null | undefined, count: number | undefined) => void
+  ): void
+  publish(channel: string, message: string): Promise<number>
+  publish(
+    channel: string,
+    message: string,
+    callback?: (error: Error | null | undefined, count: number | undefined) => void
+  ) {
+    return callback
+      ? this.ioConnection.publish(channel, message, callback)
+      : this.ioConnection.publish(channel, message)
+  }
+
+  /**
    * Returns report for the connection
    */
   async getReport(checkForMemory?: boolean): Promise<HealthReportNode> {
@@ -379,25 +398,6 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
         error,
       }
     }
-  }
-
-  /**
-   * Publish the pub/sub message
-   */
-  publish(
-    channel: string,
-    message: string,
-    callback: (error: Error | null | undefined, count: number | undefined) => void
-  ): void
-  publish(channel: string, message: string): Promise<number>
-  publish(
-    channel: string,
-    message: string,
-    callback?: (error: Error | null | undefined, count: number | undefined) => void
-  ) {
-    return callback
-      ? this.ioConnection.publish(channel, message, callback)
-      : this.ioConnection.publish(channel, message)
   }
 
   /**

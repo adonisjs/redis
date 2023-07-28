@@ -15,18 +15,25 @@ import { defineConfig } from '../index.js'
 import RedisManager from '../src/redis_manager.js'
 
 const BASE_URL = new URL('./tmp/', import.meta.url)
+const IMPORTER = (filePath: string) => {
+  if (filePath.startsWith('./') || filePath.startsWith('../')) {
+    return import(new URL(filePath, BASE_URL).href)
+  }
+  return import(filePath)
+}
 
 test.group('Redis Provider', () => {
   test('register redis provider', async ({ assert }) => {
     const ignitor = new IgnitorFactory()
       .merge({
         rcFileContents: {
-          providers: ['./providers/redis_provider.js'],
+          providers: ['../../providers/redis_provider.js'],
         },
       })
       .withCoreConfig()
+      .withCoreProviders()
       .create(BASE_URL, {
-        importer: (filePath) => import(new URL(filePath, new URL('../', import.meta.url)).href),
+        importer: IMPORTER,
       })
 
     const app = ignitor.createApp('web')
@@ -41,12 +48,12 @@ test.group('Redis Provider', () => {
       .withCoreConfig()
       .merge({
         rcFileContents: {
-          providers: ['../providers/redis_provider.js'],
+          providers: ['../../providers/redis_provider.js'],
         },
       })
       .withCoreProviders()
       .create(BASE_URL, {
-        importer: (filePath) => import(filePath),
+        importer: IMPORTER,
       })
 
     const app = ignitor.createApp('repl')
@@ -62,10 +69,11 @@ test.group('Redis Provider', () => {
     const ignitor = new IgnitorFactory()
       .merge({
         rcFileContents: {
-          providers: ['./providers/redis_provider.js'],
+          providers: ['../../providers/redis_provider.js'],
         },
       })
       .withCoreConfig()
+      .withCoreProviders()
       .merge({
         config: {
           redis: defineConfig({
@@ -80,7 +88,7 @@ test.group('Redis Provider', () => {
         },
       })
       .create(BASE_URL, {
-        importer: (filePath) => import(new URL(filePath, new URL('../', import.meta.url)).href),
+        importer: IMPORTER,
       })
 
     const app = ignitor.createApp('web')

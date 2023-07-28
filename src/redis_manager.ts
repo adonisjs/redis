@@ -15,7 +15,13 @@ import debug from './debug.js'
 import { baseMethods } from './connections/io_methods.js'
 import RedisConnection from './connections/redis_connection.js'
 import RedisClusterConnection from './connections/redis_cluster_connection.js'
-import type { GetConnectionType, IORedisBaseCommands, RedisConnectionsList } from './types/main.js'
+import type {
+  GetConnectionType,
+  IORedisBaseCommands,
+  PubSubChannelHandler,
+  PubSubPatternHandler,
+  RedisConnectionsList,
+} from './types/main.js'
 
 /**
  * Redis Manager exposes the API to manage multiple redis connections
@@ -130,6 +136,7 @@ class RedisManager<ConnectionsList extends RedisConnectionsList> extends Emitter
     if (this.#shouldLogRedisErrors) {
       debug('attaching error reporter to log connection errors')
       connection.on('error', this.#errorReporter)
+      connection.on('subscriber:error', this.#errorReporter)
     }
 
     /**
@@ -145,6 +152,54 @@ class RedisManager<ConnectionsList extends RedisConnectionsList> extends Emitter
      */
     this.activeConnections[name] = connection as GetConnectionType<ConnectionsList, ConnectionName>
     return connection as GetConnectionType<ConnectionsList, ConnectionName>
+  }
+
+  /**
+   * Subscribe to a given channel to receive Redis pub/sub events. A
+   * new subscriber connection will be created/managed automatically.
+   */
+  subscribe(channel: string, handler: PubSubChannelHandler): void {
+    return this.connection().subscribe(channel, handler)
+  }
+
+  /**
+   * Unsubscribe from a channel
+   */
+  unsubscribe(channel: string) {
+    return this.connection().unsubscribe(channel)
+  }
+
+  /**
+   * Make redis subscription for a pattern
+   */
+  psubscribe(pattern: string, handler: PubSubPatternHandler): void {
+    return this.connection().psubscribe(pattern, handler)
+  }
+
+  /**
+   * Unsubscribe from a given pattern
+   */
+  punsubscribe(pattern: string) {
+    return this.connection().punsubscribe(pattern)
+  }
+
+  /**
+   * Publish the pub/sub message
+   */
+  publish(
+    channel: string,
+    message: string,
+    callback: (error: Error | null | undefined, count: number | undefined) => void
+  ): void
+  publish(channel: string, message: string): Promise<number>
+  publish(
+    channel: string,
+    message: string,
+    callback?: (error: Error | null | undefined, count: number | undefined) => void
+  ) {
+    return callback
+      ? this.connection().publish(channel, message, callback)
+      : this.connection().publish(channel, message)
   }
 
   /**

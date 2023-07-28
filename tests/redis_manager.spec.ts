@@ -350,4 +350,106 @@ test.group('Redis Manager', () => {
     ])
     assert.lengthOf(manager.logs, 0)
   })
+
+  test('subscribe to a channel using manager', async ({ assert, cleanup }) => {
+    const redis = new RedisManagerFactory({
+      connection: 'primary',
+      connections: {
+        primary: { host: process.env.REDIS_HOST, port: process.env.REDIS_PORT },
+      },
+    }).create()
+    cleanup(() => redis.quitAll())
+
+    const connection = redis.connection()
+    await pEvent(connection, 'ready')
+
+    const [message] = await Promise.all([
+      new Promise((resolve) => {
+        redis.subscribe('new:user', resolve)
+      }),
+      pEvent(connection, 'subscription:ready').then(() => {
+        redis.publish('new:user', JSON.stringify({ username: 'virk' }))
+      }),
+    ])
+
+    assert.equal(message, JSON.stringify({ username: 'virk' }))
+  })
+
+  test('subscribe to a pattern using manager', async ({ assert, cleanup }) => {
+    const redis = new RedisManagerFactory({
+      connection: 'primary',
+      connections: {
+        primary: { host: process.env.REDIS_HOST, port: process.env.REDIS_PORT },
+      },
+    }).create()
+    cleanup(() => redis.quitAll())
+
+    const connection = redis.connection()
+    await pEvent(connection, 'ready')
+
+    const [message] = await Promise.all([
+      new Promise((resolve) => {
+        redis.psubscribe('user:*', (_, data) => resolve(data))
+      }),
+      pEvent(connection, 'psubscription:ready').then(() => {
+        redis.publish('user:add', JSON.stringify({ username: 'virk' }))
+      }),
+    ])
+
+    assert.equal(message, JSON.stringify({ username: 'virk' }))
+  })
+
+  test('unsubscribe using manager', async ({ cleanup }) => {
+    const redis = new RedisManagerFactory({
+      connection: 'primary',
+      connections: {
+        primary: { host: process.env.REDIS_HOST, port: process.env.REDIS_PORT },
+      },
+    }).create()
+    cleanup(() => redis.quitAll())
+
+    const connection = redis.connection()
+    await pEvent(connection, 'ready')
+
+    await Promise.all([
+      new Promise<void>((resolve, reject) => {
+        redis.subscribe('new:user', () => reject('Not expected to be called'))
+        setTimeout(() => {
+          resolve()
+        }, 1500)
+      }),
+      pEvent(connection, 'subscription:ready').then(() => {
+        return redis.unsubscribe('new:user').then(() => {
+          redis.publish('new:user', JSON.stringify({ username: 'virk' }))
+        })
+      }),
+    ])
+  }).timeout(4000)
+
+  test('punsubscribe using manager', async ({ cleanup }) => {
+    const redis = new RedisManagerFactory({
+      connection: 'primary',
+      connections: {
+        primary: { host: process.env.REDIS_HOST, port: process.env.REDIS_PORT },
+      },
+    }).create()
+    cleanup(() => redis.quitAll())
+
+    const connection = redis.connection()
+    await pEvent(connection, 'ready')
+
+    await Promise.all([
+      new Promise<void>((resolve, reject) => {
+        redis.psubscribe('user:*', () => reject('Not expected to be called'))
+        setTimeout(() => {
+          resolve()
+        }, 1500)
+      }),
+      pEvent(connection, 'psubscription:ready').then(() => {
+        return redis.punsubscribe('user:*').then(() => {
+          redis.publish('new:user', JSON.stringify({ username: 'virk' }))
+        })
+      }),
+    ])
+  }).timeout(4000)
 })
