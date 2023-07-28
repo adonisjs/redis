@@ -45,6 +45,23 @@ test.group('Redis Manager', () => {
     redis.connection('foo')
   }).throws('Redis connection "foo" is not defined')
 
+  test('run redis commands from the manager', async ({ assert }) => {
+    const redis = new RedisManagerFactory({
+      connection: 'primary',
+      connections: {
+        primary: { host: process.env.REDIS_HOST, port: process.env.REDIS_PORT },
+      },
+    }).create()
+
+    await redis.set('greeting', 'hello-world')
+    const greeting = await redis.get('greeting')
+
+    assert.equal(greeting, 'hello-world')
+
+    await redis.del('greeting')
+    await redis.quit('primary')
+  })
+
   test('run redis commands using default connection', async ({ assert }) => {
     const redis = new RedisManagerFactory({
       connection: 'primary',

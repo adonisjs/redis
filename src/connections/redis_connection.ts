@@ -10,9 +10,9 @@
 import { Redis, RedisOptions } from 'ioredis'
 
 import debug from '../debug.js'
-import { ioMethods } from './io_methods.js'
+import { redisMethods } from './io_methods.js'
 import { AbstractConnection } from './abstract_connection.js'
-import { IORedisCommands, RedisConnectionConfig } from '../types/main.js'
+import { IORedisConnectionCommands, RedisConnectionConfig } from '../types/main.js'
 
 /**
  * Redis connection exposes the API to run Redis commands using `ioredis` as the
@@ -22,6 +22,21 @@ import { IORedisCommands, RedisConnectionConfig } from '../types/main.js'
  */
 export class RedisConnection extends AbstractConnection<Redis> {
   #config: RedisOptions
+
+  /**
+   * Returns the connection mode
+   */
+  get mode() {
+    return this.ioConnection.mode
+  }
+
+  /**
+   * Returns the connection mode for the subscriber
+   * connection
+   */
+  get subscribeMode() {
+    return this.ioSubscriberConnection?.mode
+  }
 
   constructor(connectionName: string, config: RedisConnectionConfig) {
     debug('creating connection %s: %O', connectionName, config)
@@ -57,8 +72,8 @@ export class RedisConnection extends AbstractConnection<Redis> {
  * Adding IORedis methods dynamically on the RedisConnection
  * class and also extending its TypeScript types
  */
-export interface RedisConnection extends IORedisCommands {}
-ioMethods.forEach((method) => {
+export interface RedisConnection extends IORedisConnectionCommands {}
+redisMethods.forEach((method) => {
   ;(RedisConnection.prototype as any)[method] = function redisConnectionProxyFn(...args: any[]) {
     return this.ioConnection[method](...args)
   }

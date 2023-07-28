@@ -7,10 +7,10 @@
  * file that was distributed with this source code.
  */
 
-import type { EventEmitter } from 'node:events'
-import type { Redis as IoRedis, RedisOptions, ClusterOptions } from 'ioredis'
+import type { Redis, Cluster, RedisOptions, ClusterOptions } from 'ioredis'
 
 import type RedisManager from '../redis_manager.js'
+import type { baseMethods, redisMethods } from '../connections/io_methods.js'
 import type RedisConnection from '../connections/redis_connection.js'
 import type RedisClusterConnection from '../connections/redis_cluster_connection.js'
 
@@ -37,22 +37,12 @@ export type HealthReportNode = {
  * List of commands on the IORedis. We omit their internal events and pub/sub
  * handlers, since we have our own.
  */
-export type IORedisCommands = Omit<
-  IoRedis,
-  | 'Promise'
-  | 'status'
-  | 'connect'
-  | 'disconnect'
-  | 'duplicate'
-  | 'subscribe'
-  | 'unsubscribe'
-  | 'psubscribe'
-  | 'punsubscribe'
-  | 'quit'
-  | 'publish'
-  | 'defineCommand'
-  | keyof EventEmitter
->
+export type IORedisBaseCommands = {
+  [K in (typeof baseMethods)[number]]: Cluster[K]
+}
+export type IORedisConnectionCommands = {
+  [K in (typeof redisMethods)[number]]: Redis[K]
+}
 
 /**
  * Configuration accepted by the redis connection. It is same

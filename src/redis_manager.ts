@@ -10,9 +10,10 @@
 import { RuntimeException } from '@poppinss/utils'
 
 import debug from './debug.js'
+import { baseMethods } from './connections/io_methods.js'
 import RedisConnection from './connections/redis_connection.js'
 import RedisClusterConnection from './connections/redis_cluster_connection.js'
-import type { GetConnectionType, RedisConnectionsList } from './types/main.js'
+import type { GetConnectionType, IORedisBaseCommands, RedisConnectionsList } from './types/main.js'
 
 /**
  * Redis Manager exposes the API to manage multiple redis connections
@@ -20,7 +21,7 @@ import type { GetConnectionType, RedisConnectionsList } from './types/main.js'
  *
  * All connections are long-lived until they are closed explictly
  */
-export default class RedisManager<ConnectionsList extends RedisConnectionsList> {
+class RedisManager<ConnectionsList extends RedisConnectionsList> {
   /**
    * User provided config
    */
@@ -137,3 +138,12 @@ export default class RedisManager<ConnectionsList extends RedisConnectionsList> 
     await Promise.all(Object.keys(this.activeConnections).map((name) => this.disconnect(name)))
   }
 }
+
+interface RedisManager<ConnectionsList extends RedisConnectionsList> extends IORedisBaseCommands {}
+baseMethods.forEach((method) => {
+  ;(RedisManager.prototype as any)[method] = function redisConnectionProxyFn(...args: any[]) {
+    return this.connection()[method](...args)
+  }
+})
+
+export default RedisManager

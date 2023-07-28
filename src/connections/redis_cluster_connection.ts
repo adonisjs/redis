@@ -10,9 +10,9 @@
 import Redis, { type Cluster, type NodeRole } from 'ioredis'
 
 import debug from '../debug.js'
-import { ioMethods } from './io_methods.js'
+import { baseMethods } from './io_methods.js'
 import { AbstractConnection } from './abstract_connection.js'
-import type { IORedisCommands, RedisClusterConnectionConfig } from '../types/main.js'
+import type { IORedisBaseCommands, RedisClusterConnectionConfig } from '../types/main.js'
 
 /**
  * Redis cluster connection exposes the API to run Redis commands using `ioredis` as the
@@ -21,6 +21,10 @@ import type { IORedisCommands, RedisClusterConnectionConfig } from '../types/mai
  */
 export class RedisClusterConnection extends AbstractConnection<Cluster> {
   #config: RedisClusterConnectionConfig
+
+  get slots() {
+    return this.ioConnection.slots
+  }
 
   constructor(connectionName: string, config: RedisClusterConnectionConfig) {
     debug('creating cluster connection %s: %O', connectionName, config)
@@ -59,8 +63,8 @@ export class RedisClusterConnection extends AbstractConnection<Cluster> {
  * Adding IORedis methods dynamically on the RedisClusterConnection
  * class and also extending its TypeScript types
  */
-export interface RedisClusterConnection extends IORedisCommands {}
-ioMethods.forEach((method) => {
+export interface RedisClusterConnection extends IORedisBaseCommands {}
+baseMethods.forEach((method) => {
   ;(RedisClusterConnection.prototype as any)[method] = function redisConnectionProxyFn(
     ...args: any[]
   ) {

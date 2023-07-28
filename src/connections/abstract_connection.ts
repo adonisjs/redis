@@ -74,6 +74,14 @@ export abstract class AbstractConnection<T extends Redis | Cluster> extends Even
   }
 
   /**
+   * Get the number of commands queued in automatic pipelines.
+   * This is not available (and returns 0) until the cluster is connected and slots information have been received.
+   */
+  get autoPipelineQueueSize() {
+    return this.ioConnection.autoPipelineQueueSize
+  }
+
+  /**
    * Parent class must implement makeSubscriberConnection
    */
   protected abstract makeSubscriberConnection(): void
