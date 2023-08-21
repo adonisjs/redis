@@ -57,23 +57,34 @@ test.group('Configure', (group) => {
     await assert.fileContains('config/redis.ts', `declare module '@adonisjs/redis/types'`)
   })
 
-  test('add redis_provider to the rc file', async ({ assert }) => {
-    const { command } = await setupConfigureCommand()
+  test('add redis_provider to the rc file', async ({ fs, assert }) => {
+    await fs.createJson('tsconfig.json', {})
+    await fs.create('adonisrc.ts', `export default defineConfig({})`)
 
+    const { command } = await setupConfigureCommand()
     await command.exec()
 
-    await assert.fileExists('.adonisrc.json')
-    await assert.fileContains('.adonisrc.json', '"@adonisjs/redis/redis_provider"')
+    await assert.fileExists('adonisrc.ts')
+    await assert.fileContains(
+      'adonisrc.ts',
+      `providers: [() => import('@adonisjs/redis/redis_provider')]`
+    )
   })
 
   test('add env variables for the selected drivers', async ({ assert, fs }) => {
-    const { command } = await setupConfigureCommand()
-
+    await fs.createJson('tsconfig.json', {})
     await fs.create('.env', '')
+    await fs.create('start/env.ts', `export default Env.create(new URL('./'), {})`)
+    await fs.create('adonisrc.ts', `export default defineConfig({})`)
+
+    const { command } = await setupConfigureCommand()
     await command.exec()
 
     await assert.fileContains('.env', 'REDIS_HOST=127.0.0.1')
     await assert.fileContains('.env', 'REDIS_PORT=6379')
     await assert.fileContains('.env', 'REDIS_PASSWORD=')
+
+    await assert.fileContains('start/env.ts', `REDIS_HOST: Env.schema.string({ format: 'host' })`)
+    await assert.fileContains('start/env.ts', 'REDIS_PORT: Env.schema.number()')
   })
 })

@@ -28,6 +28,16 @@ export async function configure(command: Configure) {
   })
 
   /**
+   * Validate environment variables
+   */
+  await command.defineEnvValidations({
+    variables: {
+      REDIS_HOST: `Env.schema.string({ format: 'host' })`,
+      REDIS_PORT: 'Env.schema.number()',
+    },
+  })
+
+  /**
    * Add provider to rc file
    */
   await command.updateRcFile((rcFile) => {
