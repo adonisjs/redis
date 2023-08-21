@@ -44,7 +44,7 @@
     "sync-labels": "github-label-sync --labels .github/labels.json adonisjs/redis"
   },
   "devDependencies": {
-    "@adonisjs/core": "^6.1.5-12",
+    "@adonisjs/core": "^6.1.5-18",
     "@adonisjs/eslint-config": "^1.1.8",
     "@adonisjs/prettier-config": "^1.1.8",
     "@adonisjs/tsconfig": "^1.1.8",
@@ -74,7 +74,7 @@
     "ioredis": "^5.3.2"
   },
   "peerDependencies": {
-    "@adonisjs/core": "^6.1.5-12"
+    "@adonisjs/core": "^6.1.5-18"
   },
   "author": "virk,adonisjs",
   "license": "MIT",
