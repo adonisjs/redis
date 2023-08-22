@@ -18,10 +18,12 @@ export async function configure(command: Configure) {
    */
   await command.publishStub('config/redis.stub')
 
+  const codemods = await command.createCodemods()
+
   /**
    * Add environment variables
    */
-  await command.defineEnvVariables({
+  await codemods.defineEnvVariables({
     REDIS_HOST: '127.0.0.1',
     REDIS_PORT: '6379',
     REDIS_PASSWORD: '',
@@ -30,7 +32,7 @@ export async function configure(command: Configure) {
   /**
    * Validate environment variables
    */
-  await command.defineEnvValidations({
+  await codemods.defineEnvValidations({
     variables: {
       REDIS_HOST: `Env.schema.string({ format: 'host' })`,
       REDIS_PORT: 'Env.schema.number()',
@@ -40,7 +42,7 @@ export async function configure(command: Configure) {
   /**
    * Add provider to rc file
    */
-  await command.updateRcFile((rcFile) => {
+  await codemods.updateRcFile((rcFile) => {
     rcFile.addProvider('@adonisjs/redis/redis_provider')
   })
 }
