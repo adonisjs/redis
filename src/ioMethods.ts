@@ -95,6 +95,7 @@ export const ioMethods = [
   'hvals',
   'hgetall',
   'hexists',
+  'hmset',
   'incrby',
   'incrbyfloat',
   'decrby',
