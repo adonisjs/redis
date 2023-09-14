@@ -308,4 +308,32 @@ test.group('Redis Manager', () => {
 
     await redis.quit('primary')
   })
+
+  test('hmset and hmget', async ({ assert }) => {
+    const app = new Application(__dirname, 'web', {})
+    const redis = new RedisManager(
+      app,
+      {
+        connection: 'primary',
+        connections: {
+          primary: {
+            host: process.env.REDIS_HOST,
+            port: Number(process.env.REDIS_PORT),
+          },
+          cluster: {
+            clusters: clusterNodes,
+          },
+        },
+      },
+      new Emitter(app)
+    ) as unknown as RedisManagerContract
+
+    await redis.hmset('greeting', { hello: 'world' })
+    const greeting = await redis.hmget('greeting', 'hello')
+
+    assert.equal(greeting, 'world')
+
+    await redis.del('greeting')
+    await redis.quit('primary')
+  })
 })

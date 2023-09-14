@@ -87,6 +87,7 @@ export const ioMethods = [
   'hget',
   'hgetBuffer',
   'hmget',
+  'hmset',
   'hincrby',
   'hincrbyfloat',
   'hdel',
