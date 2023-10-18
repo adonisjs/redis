@@ -1,7 +1,7 @@
 {
   "name": "@adonisjs/redis",
   "description": "AdonisJS addon for Redis",
-  "version": "8.0.0-10",
+  "version": "8.0.0-11",
   "type": "module",
   "main": "build/index.js",
   "files": [
@@ -111,7 +111,7 @@
       "src/repl_bindings.ts"
     ]
   },
-    "tsup": {
+  "tsup": {
     "entry": [
       "./index.ts",
       "./services/main.ts",
