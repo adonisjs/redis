@@ -18,7 +18,7 @@ import type {
   ConnectionEvents,
   PubSubChannelHandler,
   PubSubPatternHandler,
-} from '../types/main.js'
+} from '../types.js'
 
 /**
  * Abstract factory implements the shared functionality required by Redis cluster

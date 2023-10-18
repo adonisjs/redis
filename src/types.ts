@@ -9,10 +9,10 @@
 
 import type { Redis, Cluster, RedisOptions, ClusterOptions } from 'ioredis'
 
-import type RedisManager from '../redis_manager.js'
-import type { baseMethods, redisMethods } from '../connections/io_methods.js'
-import type RedisConnection from '../connections/redis_connection.js'
-import type RedisClusterConnection from '../connections/redis_cluster_connection.js'
+import type RedisManager from './redis_manager.js'
+import type RedisConnection from './connections/redis_connection.js'
+import type { baseMethods, redisMethods } from './connections/io_methods.js'
+import type RedisClusterConnection from './connections/redis_cluster_connection.js'
 
 /**
  * PubSub subscriber

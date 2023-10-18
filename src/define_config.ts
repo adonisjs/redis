@@ -8,7 +8,7 @@
  */
 
 import { RuntimeException } from '@poppinss/utils'
-import type { RedisConnectionsList } from './types/main.js'
+import type { RedisConnectionsList } from './types.js'
 
 /**
  * Define config for redis

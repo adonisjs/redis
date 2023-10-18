@@ -8,7 +8,7 @@
  */
 
 import app from '@adonisjs/core/services/app'
-import { RedisService } from '../src/types/main.js'
+import { RedisService } from '../src/types.js'
 
 let redis: RedisService
 

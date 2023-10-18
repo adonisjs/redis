@@ -15,7 +15,7 @@
     "./services/main": "./build/services/main.js",
     "./redis_provider": "./build/providers/redis_provider.js",
     "./factories": "./build/factories/main.js",
-    "./types": "./build/src/types/main.js"
+    "./types": "./build/src/types.js"
   },
   "scripts": {
     "pretest": "npm run lint",
@@ -117,7 +117,7 @@
       "./services/main.ts",
       "./providers/redis_provider.ts",
       "./factories/main.ts",
-      "./src/types/main.ts"
+      "./src/types.ts"
     ],
     "outDir": "./build",
     "clean": true,

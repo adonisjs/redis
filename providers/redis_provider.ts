@@ -8,7 +8,7 @@
  */
 
 import type { ApplicationService } from '@adonisjs/core/types'
-import type { RedisService } from '../src/types/main.js'
+import type { RedisService } from '../src/types.js'
 
 declare module '@adonisjs/core/types' {
   export interface ContainerBindings {

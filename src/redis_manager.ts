@@ -22,7 +22,7 @@ import type {
   PubSubChannelHandler,
   PubSubPatternHandler,
   RedisConnectionsList,
-} from './types/main.js'
+} from './types.js'
 
 /**
  * Redis Manager exposes the API to manage multiple redis connections

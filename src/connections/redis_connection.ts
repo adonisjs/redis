@@ -16,7 +16,7 @@ import type {
   ConnectionEvents,
   RedisConnectionConfig,
   IORedisConnectionCommands,
-} from '../types/main.js'
+} from '../types.js'
 
 /**
  * Redis connection exposes the API to run Redis commands using `ioredis` as the

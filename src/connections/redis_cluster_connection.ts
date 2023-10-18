@@ -16,7 +16,7 @@ import type {
   ConnectionEvents,
   IORedisBaseCommands,
   RedisClusterConnectionConfig,
-} from '../types/main.js'
+} from '../types.js'
 
 /**
  * Redis cluster connection exposes the API to run Redis commands using `ioredis` as the

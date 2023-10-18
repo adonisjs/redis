@@ -9,7 +9,7 @@
 
 import RedisManager from '../src/redis_manager.js'
 import { LoggerFactory } from '@adonisjs/core/factories/logger'
-import type { RedisClusterConnectionConfig, RedisConnectionConfig } from '../src/types/main.js'
+import type { RedisClusterConnectionConfig, RedisConnectionConfig } from '../src/types.js'
 
 /**
  * Redis manager factory is used to create an instance of the redis
