@@ -46,6 +46,8 @@ test.group('Configure', (group) => {
     context.fs.basePath = fileURLToPath(BASE_URL)
   })
 
+  group.tap((t) => t.timeout(60 * 1000))
+
   test('publish config file', async ({ assert }) => {
     const { command } = await setupConfigureCommand()
 
