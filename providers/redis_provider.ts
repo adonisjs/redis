@@ -8,6 +8,13 @@
  */
 
 import type { ApplicationService } from '@adonisjs/core/types'
+import type { RedisService } from '../src/types/main.js'
+
+declare module '@adonisjs/core/types' {
+  export interface ContainerBindings {
+    redis: RedisService
+  }
+}
 
 /**
  * Registering the Redis manager as a singleton to the container

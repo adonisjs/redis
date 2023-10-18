@@ -5,17 +5,7 @@
   "type": "module",
   "main": "build/index.js",
   "files": [
-    "build/configure.js",
-    "build/configure.d.ts",
-    "build/index.js",
-    "build/index.d.ts",
-    "build/src",
-    "build/services",
-    "build/providers",
-    "build/factories",
-    "build/stubs",
-    "build/index.d.ts",
-    "build/index.js"
+    "build"
   ],
   "engines": {
     "node": ">=18.16.0"
@@ -33,8 +23,8 @@
     "test:docker": "docker-compose -f docker-compose.ci.yml run --rm tests",
     "quick:test": "node --enable-source-maps --loader=ts-node/esm ./bin/test.js",
     "clean": "del-cli build",
-    "copy:templates": "copyfiles \"stubs/**/**/*.stub\" build",
-    "compile": "npm run lint && npm run clean && tsc && npm run copy:templates",
+    "copy:templates": "copyfiles --up 1 \"stubs/**/**/*.stub\" build",
+    "compile": "npm run lint && npm run clean && tsup-node && npm run copy:templates",
     "build": "npm run compile",
     "release": "np",
     "version": "npm run build",
@@ -67,6 +57,7 @@
     "np": "^8.0.4",
     "prettier": "^3.0.3",
     "ts-node": "^10.9.1",
+    "tsup": "^7.2.0",
     "typescript": "^5.2.2"
   },
   "dependencies": {
@@ -119,5 +110,19 @@
       "tests/**",
       "src/repl_bindings.ts"
     ]
+  },
+    "tsup": {
+    "entry": [
+      "./index.ts",
+      "./services/main.ts",
+      "./providers/redis_provider.ts",
+      "./factories/main.ts",
+      "./src/types/main.ts"
+    ],
+    "outDir": "./build",
+    "clean": true,
+    "format": "esm",
+    "dts": true,
+    "target": "esnext"
   }
 }

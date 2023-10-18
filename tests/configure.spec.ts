@@ -7,8 +7,8 @@
  * file that was distributed with this source code.
  */
 
-import { fileURLToPath } from 'node:url'
 import { test } from '@japa/runner'
+import { fileURLToPath } from 'node:url'
 import { IgnitorFactory } from '@adonisjs/core/factories'
 import Configure from '@adonisjs/core/commands/configure'
 
