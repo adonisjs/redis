@@ -5,7 +5,10 @@
   "type": "module",
   "main": "build/index.js",
   "files": [
-    "build"
+    "build",
+    "!build/bin",
+    "!build/tests",
+    "!build/tests_helpers"
   ],
   "engines": {
     "node": ">=18.16.0"
@@ -24,7 +27,9 @@
     "quick:test": "node --enable-source-maps --loader=ts-node/esm ./bin/test.js",
     "clean": "del-cli build",
     "copy:templates": "copyfiles --up 1 \"stubs/**/**/*.stub\" build",
-    "compile": "npm run lint && npm run clean && tsup-node && npm run copy:templates",
+    "precompile": "npm run lint && npm run clean",
+    "compile": "tsup-node && tsc --emitDeclarationOnly --declaration",
+    "postcompile": "npm run copy:templates",
     "build": "npm run compile",
     "release": "np",
     "version": "npm run build",
@@ -116,13 +121,13 @@
       "./index.ts",
       "./services/main.ts",
       "./providers/redis_provider.ts",
-      "./factories/main.ts",
-      "./src/types.ts"
+      "./factories/main.ts"
     ],
     "outDir": "./build",
     "clean": true,
     "format": "esm",
-    "dts": true,
+    "dts": false,
+    "sourcemap": true,
     "target": "esnext"
   }
 }
