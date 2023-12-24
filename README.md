@@ -8,7 +8,7 @@
 Redis provider for AdonisJS with support for multiple Redis connections, cluster, pub/sub and much more
 
 ## Official Documentation
-The documentation is available on the [AdonisJS website](https://docs.adonisjs.com/guides/redis)
+The documentation is available on the [AdonisJS website](https://docs.adonisjs.com/guides/database/redis)
 
 ## Contributing
 One of the primary goals of AdonisJS is to have a vibrant community of users and contributors who believes in the principles of the framework.
