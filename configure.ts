@@ -8,17 +8,18 @@
  */
 
 import type Configure from '@adonisjs/core/commands/configure'
+import { stubsRoot } from './stubs/main.js'
 
 /**
  * Configures the package
  */
 export async function configure(command: Configure) {
+  const codemods = await command.createCodemods()
+
   /**
    * Publish config file
    */
-  await command.publishStub('config/redis.stub')
-
-  const codemods = await command.createCodemods()
+  await codemods.makeUsingStub(stubsRoot, 'config/redis.stub', {})
 
   /**
    * Add environment variables

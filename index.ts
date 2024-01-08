@@ -9,7 +9,7 @@
 
 export * as errors from './src/errors.js'
 export { configure } from './configure.js'
-export { stubsRoot } from './stubs/index.js'
+export { stubsRoot } from './stubs/main.js'
 export { defineConfig } from './src/define_config.js'
 export { default as RedisManager } from './src/redis_manager.js'
 export { RedisConnection } from './src/connections/redis_connection.js'

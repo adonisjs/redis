@@ -15,26 +15,18 @@ import { pEvent } from '../tests_helpers/main.js'
 import RedisManager from '../src/redis_manager.js'
 
 const BASE_URL = new URL('./tmp/', import.meta.url)
-const IMPORTER = (filePath: string) => {
-  if (filePath.startsWith('./') || filePath.startsWith('../')) {
-    return import(new URL(filePath, BASE_URL).href)
-  }
-  return import(filePath)
-}
 
 test.group('Redis Provider', () => {
   test('register redis provider', async ({ assert }) => {
     const ignitor = new IgnitorFactory()
       .merge({
         rcFileContents: {
-          providers: ['../../providers/redis_provider.js'],
+          providers: [() => import('../providers/redis_provider.js')],
         },
       })
       .withCoreConfig()
       .withCoreProviders()
-      .create(BASE_URL, {
-        importer: IMPORTER,
-      })
+      .create(BASE_URL)
 
     const app = ignitor.createApp('web')
     await app.init()
@@ -48,13 +40,11 @@ test.group('Redis Provider', () => {
       .withCoreConfig()
       .merge({
         rcFileContents: {
-          providers: ['../../providers/redis_provider.js'],
+          providers: [() => import('../providers/redis_provider.js')],
         },
       })
       .withCoreProviders()
-      .create(BASE_URL, {
-        importer: IMPORTER,
-      })
+      .create(BASE_URL)
 
     const app = ignitor.createApp('repl')
     await app.init()
@@ -69,7 +59,7 @@ test.group('Redis Provider', () => {
     const ignitor = new IgnitorFactory()
       .merge({
         rcFileContents: {
-          providers: ['../../providers/redis_provider.js'],
+          providers: [() => import('../providers/redis_provider.js')],
         },
       })
       .withCoreConfig()
@@ -87,9 +77,7 @@ test.group('Redis Provider', () => {
           }),
         },
       })
-      .create(BASE_URL, {
-        importer: IMPORTER,
-      })
+      .create(BASE_URL)
 
     const app = ignitor.createApp('web')
     await app.init()
