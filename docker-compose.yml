@@ -1,21 +1,10 @@
 version: '3.4'
 services:
-  tests:
-    image: adonis-redis
-    network_mode: host
-    build:
-      context: .
-    environment:
-      REDIS_HOST: 0.0.0.0
-      REDIS_PORT: 7007
-      REDIS_CLUSTER_PORTS: '7000,7001,7002'
-      WAIT_HOSTS: 0.0.0.0:7000, 0.0.0.0:7001, 0.0.0.0:7002, 0.0.0.0:7003, 0.0.0.0:7004, 0.0.0.0:7005, 0.0.0.0:7006, 0.0.0.0:7007
-    depends_on:
-      - redis
-    command: sh -c "/wait && npm run test:docker"
   redis:
-    network_mode: host
-    image: grokzen/redis-cluster
+    platform: linux/x86_64
+    image: grokzen/redis-cluster:6.2.10
+    ports:
+      - "7000-7005:7000-7005"
     environment:
       REDIS_CLUSTER_IP: 0.0.0.0
       IP: 0.0.0.0

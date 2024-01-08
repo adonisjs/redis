@@ -1,4 +1,4 @@
-FROM node:14-alpine as build-deps
+FROM node:20-alpine as build-deps
 
 RUN apk update && apk upgrade && \
   apk add --update git && \
