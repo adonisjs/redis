@@ -63,14 +63,6 @@ class RedisManager<ConnectionsList extends RedisConnectionsList> extends Emitter
   }.bind(this)
 
   /**
-   * User provided config
-   */
-  #config: {
-    connection: keyof ConnectionsList
-    connections: ConnectionsList
-  }
-
-  /**
    * Reference to "import('ioredis').Redis.Command"
    */
   Command = Redis.Command
@@ -91,11 +83,10 @@ class RedisManager<ConnectionsList extends RedisConnectionsList> extends Emitter
   }
 
   constructor(
-    config: { connection: keyof ConnectionsList; connections: ConnectionsList },
+    public managerConfig: { connection: keyof ConnectionsList; connections: ConnectionsList },
     logger: Logger
   ) {
     super()
-    this.#config = config
     this.#logger = logger
   }
 
@@ -126,7 +117,7 @@ class RedisManager<ConnectionsList extends RedisConnectionsList> extends Emitter
   connection<ConnectionName extends keyof ConnectionsList>(
     connectionName?: ConnectionName
   ): GetConnectionType<ConnectionsList, ConnectionName> {
-    const name = connectionName || this.#config.connection
+    const name = connectionName || this.managerConfig.connection
     debug('resolving connection %s', name)
 
     /**
@@ -140,7 +131,7 @@ class RedisManager<ConnectionsList extends RedisConnectionsList> extends Emitter
     /**
      * Get config for the named connection
      */
-    const config = this.#config.connections[name]
+    const config = this.managerConfig.connections[name]
     if (!config) {
       throw new RuntimeException(`Redis connection "${name.toString()}" is not defined`)
     }
@@ -273,7 +264,7 @@ class RedisManager<ConnectionsList extends RedisConnectionsList> extends Emitter
    * name is defined.
    */
   async quit<ConnectionName extends keyof ConnectionsList>(name?: ConnectionName) {
-    const connection = this.activeConnections[name || this.#config.connection]
+    const connection = this.activeConnections[name || this.managerConfig.connection]
     if (!connection) {
       return
     }
@@ -286,7 +277,7 @@ class RedisManager<ConnectionsList extends RedisConnectionsList> extends Emitter
    * name is defined.
    */
   async disconnect<ConnectionName extends keyof ConnectionsList>(name?: ConnectionName) {
-    const connection = this.activeConnections[name || this.#config.connection]
+    const connection = this.activeConnections[name || this.managerConfig.connection]
     if (!connection) {
       return
     }
