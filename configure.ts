@@ -37,7 +37,7 @@ export async function configure(command: Configure) {
     variables: {
       REDIS_HOST: `Env.schema.string({ format: 'host' })`,
       REDIS_PORT: 'Env.schema.number()',
-      REDIS_PASSWORD: Env.schema.string.optional(),
+      REDIS_PASSWORD: 'Env.schema.string.optional()',
     },
   })
 
