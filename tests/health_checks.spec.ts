@@ -118,7 +118,7 @@ test.group('Health check | redis connection', () => {
 
     const result = await healthCheck.run()
     assert.containsSubset(result, {
-      message: 'Memory usage exceeded the "100MB" threshold',
+      message: 'Redis memory usage is "101MB", which is above the threshold of "100MB".',
       status: 'warning',
       meta: {
         connection: {
@@ -151,7 +151,7 @@ test.group('Health check | redis connection', () => {
 
     const result = await healthCheck.run()
     assert.containsSubset(result, {
-      message: 'Memory usage exceeded the "200MB" threshold',
+      message: 'Redis memory usage is "201MB", which is above the threshold of "200MB".',
       status: 'error',
       meta: {
         connection: {

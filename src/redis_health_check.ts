@@ -218,7 +218,7 @@ export class RedisHealthCheck extends BaseCheck {
        */
       if (this.#failThreshold && memoryUsage > this.#failThreshold) {
         return Result.failed(
-          `Memory usage exceeded the "${stringHelpers.bytes.format(this.#failThreshold)}" threshold`
+          `Redis memory usage is "${stringHelpers.bytes.format(memoryUsage)}", which is above the threshold of "${stringHelpers.bytes.format(this.#failThreshold)}".`
         )
           .mergeMetaData(this.#getConnectionMetadata())
           .mergeMetaData(this.#getMemoryMetadata(memoryUsage))
@@ -229,7 +229,7 @@ export class RedisHealthCheck extends BaseCheck {
        */
       if (this.#warnThreshold && memoryUsage > this.#warnThreshold) {
         return Result.warning(
-          `Memory usage exceeded the "${stringHelpers.bytes.format(this.#warnThreshold)}" threshold`
+          `Redis memory usage is "${stringHelpers.bytes.format(memoryUsage)}", which is above the threshold of "${stringHelpers.bytes.format(this.#warnThreshold)}".`
         )
           .mergeMetaData(this.#getConnectionMetadata())
           .mergeMetaData(this.#getMemoryMetadata(memoryUsage))
