@@ -58,16 +58,6 @@ export type ConnectionEvents<T extends any> = {
 }
 
 /**
- * Shape of the report node for the redis connection report
- */
-export type HealthReportNode = {
-  connection: string
-  status: string
-  used_memory: string | null
-  error: any
-}
-
-/**
  * List of commands on the IORedis. We omit their internal events and pub/sub
  * handlers, since we have our own.
  */
@@ -92,7 +82,6 @@ export type RedisConnectionConfig = Omit<RedisOptions, 'port'> & {
 export type RedisClusterConnectionConfig = {
   clusters: { host: string; port: number | string }[]
   clusterOptions?: ClusterOptions
-  healthCheck?: boolean
 }
 
 /**

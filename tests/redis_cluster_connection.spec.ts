@@ -103,35 +103,6 @@ test.group('Redis cluster factory', () => {
     assert.isAbove(connection.nodes().length, 2) // defined in compose file
   })
 
-  test('get report for connection in ready state', async ({ assert, cleanup }) => {
-    const connection = new RedisClusterConnection('main', nodes, {})
-    cleanup(() => connection.quit())
-
-    await pEvent(connection, 'ready')
-
-    const report = await connection.getReport(true)
-    assert.equal(report.status, 'ready')
-    assert.isNull(report.error)
-    assert.isDefined(report.used_memory)
-  })
-
-  test('get report for errored connection', async ({ assert, cleanup }) => {
-    const connection = new RedisClusterConnection(
-      'main',
-      [{ host: process.env.REDIS_HOST!, port: 5000 }],
-      {}
-    )
-
-    cleanup(() => connection.quit())
-
-    await pEvent(connection, 'error')
-
-    const report = await connection.getReport(true)
-    assert.notEqual(report.status, 'ready')
-    assert.equal(report.error.message, 'Failed to refresh slots cache.')
-    assert.equal(report.used_memory, null)
-  })
-
   test('execute redis commands using lua scripts', async ({ assert, cleanup }) => {
     const connection = new RedisClusterConnection('main', nodes, {})
     cleanup(async () => {

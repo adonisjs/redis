@@ -117,36 +117,6 @@ test.group('Redis connection', () => {
     assert.equal(greeting, 'hello world')
   })
 
-  test('get report for connection in ready state', async ({ assert, cleanup }) => {
-    const connection = new RedisConnection('main', {
-      host: process.env.REDIS_HOST,
-      port: Number(process.env.REDIS_PORT),
-    })
-    cleanup(() => connection.quit())
-
-    await pEvent(connection, 'ready')
-
-    const report = await connection.getReport(true)
-    assert.equal(report.status, 'ready')
-    assert.isNull(report.error)
-    assert.isDefined(report.used_memory)
-  })
-
-  test('get report connection in error state', async ({ assert, cleanup }) => {
-    const connection = new RedisConnection('main', {
-      host: process.env.REDIS_HOST,
-      port: 4444,
-    })
-    cleanup(() => connection.disconnect())
-
-    await pEvent(connection, 'error')
-
-    const report = await connection.getReport(true)
-    assert.notEqual(report.status, 'ready')
-    assert.equal(report.error.code, 'ECONNREFUSED')
-    assert.equal(report.used_memory, null)
-  })
-
   test('subscribe to a channel and listen for messages', async ({ assert, cleanup }) => {
     const connection = new RedisConnection('main', {
       host: process.env.REDIS_HOST,

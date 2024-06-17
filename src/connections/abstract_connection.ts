@@ -9,12 +9,9 @@
 
 import Emittery from 'emittery'
 import type { Redis, Cluster } from 'ioredis'
-import { setTimeout } from 'node:timers/promises'
-
 import * as errors from '../errors.js'
 import type {
   PubSubOptions,
-  HealthReportNode,
   ConnectionEvents,
   PubSubChannelHandler,
   PubSubPatternHandler,
@@ -45,26 +42,10 @@ export abstract class AbstractConnection<
   protected psubscriptions: Map<string, PubSubPatternHandler> = new Map()
 
   /**
-   * Number of times `getReport` was deferred, at max we defer it for 3 times
-   */
-  #deferredReportAttempts = 0
-
-  /**
    * The last error emitted by the `error` event. We set it to `null` after
    * the `ready` event
    */
-  #lastError?: any
-
-  /**
-   * Returns the memory usage for a given connection
-   */
-  async #getUsedMemory() {
-    const memory = await (this.ioConnection as Redis).info('memory')
-    const memorySegment = memory
-      .split(/\r|\r\n/)
-      .find((line) => line.trim().startsWith('used_memory_human'))
-    return memorySegment ? memorySegment.split(':')[1] : 'unknown'
-  }
+  lastError?: any
 
   /**
    * Returns status of the main connection
@@ -111,12 +92,12 @@ export abstract class AbstractConnection<
        * We must set the error to null when server is ready for accept
        * commands
        */
-      this.#lastError = null
+      this.lastError = null
       this.emit('ready', { connection: this })
     })
 
     this.ioConnection.on('error', (error: any) => {
-      this.#lastError = error
+      this.lastError = error
       this.emit('error', { error, connection: this })
     })
 
@@ -373,67 +354,6 @@ export abstract class AbstractConnection<
     return callback
       ? this.ioConnection.publish(channel, message, callback)
       : this.ioConnection.publish(channel, message)
-  }
-
-  /**
-   * Returns report for the connection
-   */
-  async getReport(checkForMemory?: boolean): Promise<HealthReportNode> {
-    const connection = this.ioConnection as Redis
-
-    /**
-     * When status === 'connecting' we maximum wait for 3 times and then send
-     * the report. Which means, if we are unable to connect to redis within
-     * 3 seconds, we consider the connection unstable.
-     */
-    if (
-      connection.status === 'connecting' &&
-      this.#deferredReportAttempts < 3 &&
-      !this.#lastError
-    ) {
-      await setTimeout(1000)
-      this.#deferredReportAttempts++
-      return this.getReport(checkForMemory)
-    }
-
-    /**
-     * Returns the status with the last error when connection status
-     * is not in `connect` state.
-     */
-    if (!['ready', 'connect'].includes(connection.status)) {
-      return {
-        connection: this.connectionName,
-        status: connection.status,
-        used_memory: null,
-        error: this.#lastError,
-      }
-    }
-
-    try {
-      /**
-       * Ping the server for response
-       */
-      await connection.ping()
-
-      /**
-       * Collect memory when checkForMemory = true
-       */
-      const memory = checkForMemory ? await this.#getUsedMemory() : 'unknown'
-
-      return {
-        connection: this.connectionName,
-        status: connection.status,
-        used_memory: memory,
-        error: null,
-      }
-    } catch (error) {
-      return {
-        connection: this.connectionName,
-        status: connection.status,
-        used_memory: null,
-        error,
-      }
-    }
   }
 
   /**
