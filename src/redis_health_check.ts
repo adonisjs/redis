@@ -70,7 +70,7 @@ export class RedisHealthCheck extends BaseCheck {
   constructor(connection: Connection) {
     super()
     this.#connection = connection
-    this.name = `Redis health check for ${connection.connectionName}`
+    this.name = `Redis health check for ${connection.connectionName} connection`
   }
 
   /**
