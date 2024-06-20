@@ -7,19 +7,18 @@
  * file that was distributed with this source code.
  */
 
-import { setTimeout } from 'node:timers/promises'
 import stringHelpers from '@adonisjs/core/helpers/string'
 import { BaseCheck, Result } from '@adonisjs/core/health'
 import type { HealthCheckResult } from '@adonisjs/core/types/health'
 
-import type { Connection } from './types.js'
+import type { Connection } from '../types.js'
 
 /**
- * The RedisHealthCheck pings the redis server to ensure we are
- * able to connect to it. Optionally you can check the memory
- * consumption and define "warning" + "failure" thresholds
+ * The RedisMemoryUsageCheck can be used to monitor the memory
+ * consumption of a redis server and report a warning or error
+ * after a certain threshold has been execeeded.
  */
-export class RedisHealthCheck extends BaseCheck {
+export class RedisMemoryUsageCheck extends BaseCheck {
   #connection: Connection
 
   /**
@@ -41,26 +40,14 @@ export class RedisHealthCheck extends BaseCheck {
   }
 
   /**
-   * Should we be tracking memory. The flag is set to true
-   * automatically after the "warning" or the "error"
-   * thresholds are defined
-   */
-  #trackMemory: boolean = false
-
-  /**
    * Memory consumption threshold after which a warning will be created
    */
-  #warnThreshold?: number
+  #warnThreshold: number = stringHelpers.bytes.parse('100 mb')
 
   /**
    * Memory consumption threshold after which an error will be created
    */
-  #failThreshold?: number
-
-  /**
-   * Number of times `ping` was deferred, at max we defer it for 3 times
-   */
-  #pingAttempts = 0
+  #failThreshold: number = stringHelpers.bytes.parse('120 mb')
 
   /**
    * Health check public name
@@ -71,22 +58,6 @@ export class RedisHealthCheck extends BaseCheck {
     super()
     this.#connection = connection
     this.name = `Redis health check for ${connection.connectionName} connection`
-  }
-
-  /**
-   * Returns a boolean notifying if the connection is
-   * in connecting state
-   */
-  #isConnecting() {
-    return this.#connection.status === 'connecting' || this.#connection.status === 'reconnecting'
-  }
-
-  /**
-   * Returns a boolean notifying id the connection is in
-   * ready state
-   */
-  #isReady() {
-    return this.#connection.status === 'ready' || this.#connection.status === 'connect'
   }
 
   /**
@@ -117,35 +88,6 @@ export class RedisHealthCheck extends BaseCheck {
   }
 
   /**
-   * Internal method to ping the redis server
-   */
-  async #ping(): Promise<Result | undefined> {
-    /**
-     * When in connecting status, we should wait for maximum 3 seconds with
-     * (divided into 3 attempts). However, if there was an error, we will
-     * not wait for 3 seconds.
-     */
-    if (this.#isConnecting() && this.#pingAttempts < 3 && !this.#connection.lastError) {
-      await setTimeout(1000)
-      this.#pingAttempts++
-      return this.#ping()
-    }
-
-    /**
-     * If we are not in `connect` or `ready` state, then we should
-     * report an error.
-     */
-    if (!this.#isReady()) {
-      return Result.failed(
-        'Unable to connect to the redis server',
-        this.#connection.lastError
-      ).mergeMetaData(this.#getConnectionMetadata())
-    }
-
-    await this.#connection.ping()
-  }
-
-  /**
    * Define the memory threshold after which a warning
    * should be created.
    *
@@ -158,7 +100,6 @@ export class RedisHealthCheck extends BaseCheck {
    */
   warnWhenExceeds(value: string | number) {
     this.#warnThreshold = stringHelpers.bytes.parse(value)
-    this.#trackMemory = true
     return this
   }
 
@@ -175,7 +116,6 @@ export class RedisHealthCheck extends BaseCheck {
    */
   failWhenExceeds(value: string | number) {
     this.#failThreshold = stringHelpers.bytes.parse(value)
-    this.#trackMemory = true
     return this
   }
 
@@ -193,32 +133,37 @@ export class RedisHealthCheck extends BaseCheck {
    */
   async run(): Promise<HealthCheckResult> {
     try {
-      const result = await this.#ping()
-      if (result) {
-        return result
+      if (!['ready', 'connect'].includes(this.#connection.status)) {
+        return Result.failed('Check failed. The redis connection is not ready yet').mergeMetaData(
+          this.#getConnectionMetadata()
+        )
       }
 
       /**
        * Get memory usage when tracking memory
        */
-      const memoryUsage = this.#trackMemory ? await this.#computeFn(this.#connection) : null
+      const memoryUsage = await this.#computeFn(this.#connection)
 
       /**
        * Return early when we do not have access to the memory
        * usage.
        */
       if (!memoryUsage) {
-        return Result.ok('Successfully connected to the redis server').mergeMetaData(
+        return Result.failed('Check failed. Unable to get redis memory info').mergeMetaData(
           this.#getConnectionMetadata()
         )
       }
+
+      const memoryUsagePretty = stringHelpers.bytes.format(memoryUsage)
+      const warnThresholdPretty = stringHelpers.bytes.format(this.#warnThreshold)
+      const failureThresholdPretty = stringHelpers.bytes.format(this.#failThreshold)
 
       /**
        * Check if we have crossed the failure threshold
        */
       if (this.#failThreshold && memoryUsage > this.#failThreshold) {
         return Result.failed(
-          `Redis memory usage is "${stringHelpers.bytes.format(memoryUsage)}", which is above the threshold of "${stringHelpers.bytes.format(this.#failThreshold)}".`
+          `Redis memory usage is ${memoryUsagePretty}, which is above the threshold of ${failureThresholdPretty}`
         )
           .mergeMetaData(this.#getConnectionMetadata())
           .mergeMetaData(this.#getMemoryMetadata(memoryUsage))
@@ -229,13 +174,13 @@ export class RedisHealthCheck extends BaseCheck {
        */
       if (this.#warnThreshold && memoryUsage > this.#warnThreshold) {
         return Result.warning(
-          `Redis memory usage is "${stringHelpers.bytes.format(memoryUsage)}", which is above the threshold of "${stringHelpers.bytes.format(this.#warnThreshold)}".`
+          `Redis memory usage is ${stringHelpers.bytes.format(memoryUsage)}, which is above the threshold of ${warnThresholdPretty}`
         )
           .mergeMetaData(this.#getConnectionMetadata())
           .mergeMetaData(this.#getMemoryMetadata(memoryUsage))
       }
 
-      return Result.ok('Successfully connected to the redis server')
+      return Result.ok('Redis memory usage is under defined thresholds')
         .mergeMetaData(this.#getConnectionMetadata())
         .mergeMetaData(this.#getMemoryMetadata(memoryUsage))
     } catch (error) {
