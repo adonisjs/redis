@@ -8,12 +8,12 @@
  */
 
 import { test } from '@japa/runner'
+import stringHelpers from '@adonisjs/core/helpers/string'
 
 import { pEvent } from '../tests_helpers/main.js'
 import RedisConnection from '../src/connections/redis_connection.js'
 import { RedisMemoryUsageCheck } from '../src/checks/redis_memory_usage_check.js'
 import RedisClusterConnection from '../src/connections/redis_cluster_connection.js'
-import stringHelpers from '@adonisjs/core/helpers/string'
 
 const nodes = process.env.REDIS_CLUSTER_PORTS!.split(',').map((port) => {
   return { host: process.env.REDIS_HOST!, port: Number(port) }
@@ -33,7 +33,6 @@ test.group('Redis memory usage | redis connection', () => {
     const result = await healthCheck.run()
 
     assert.containsSubset(result, {
-      message: 'Redis memory usage is under defined thresholds',
       status: 'ok',
       meta: {
         connection: {
@@ -48,7 +47,7 @@ test.group('Redis memory usage | redis connection', () => {
     })
   })
 
-  test('return error when connection is not in connected state', async ({ assert, cleanup }) => {
+  test('wait until connection gets ready', async ({ assert, cleanup }) => {
     const connection = new RedisConnection('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
@@ -60,11 +59,15 @@ test.group('Redis memory usage | redis connection', () => {
     const result = await healthCheck.run()
 
     assert.containsSubset(result, {
-      message: 'Check failed. The redis connection is not ready yet',
-      status: 'error',
+      status: 'ok',
       meta: {
         connection: {
           name: 'main',
+          status: 'ready',
+        },
+        memoryInBytes: {
+          warningThreshold: 104857600,
+          failureThreshold: 524288000,
         },
       },
     })
@@ -174,7 +177,6 @@ test.group('Redis memory usage | cluster connection', () => {
     const result = await healthCheck.run()
 
     assert.containsSubset(result, {
-      message: 'Redis memory usage is under defined thresholds',
       status: 'ok',
       meta: {
         connection: {

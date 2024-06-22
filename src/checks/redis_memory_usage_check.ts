@@ -120,7 +120,7 @@ export class RedisMemoryUsageCheck extends BaseCheck {
      * If we are not in `connect` or `ready` state, then we should
      * report an error.
      */
-    if (!this.#connection.isConnecting()) {
+    if (!this.#connection.isReady()) {
       return Result.failed(
         'Unable to connect to the redis server',
         this.#connection.lastError
