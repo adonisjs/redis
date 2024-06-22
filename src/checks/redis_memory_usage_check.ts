@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 
+import { setTimeout } from 'node:timers/promises'
 import stringHelpers from '@adonisjs/core/helpers/string'
 import { BaseCheck, Result } from '@adonisjs/core/health'
 import type { HealthCheckResult } from '@adonisjs/core/types/health'
@@ -20,6 +21,11 @@ import type { Connection } from '../types.js'
  */
 export class RedisMemoryUsageCheck extends BaseCheck {
   #connection: Connection
+
+  /**
+   * Number of times `ping` was deferred, at max we defer it for 3 times
+   */
+  #pingAttempts = 0
 
   /**
    * Method to compute the memory consumption
@@ -57,7 +63,7 @@ export class RedisMemoryUsageCheck extends BaseCheck {
   constructor(connection: Connection) {
     super()
     this.#connection = connection
-    this.name = `Redis health check for ${connection.connectionName} connection`
+    this.name = `Redis memory consumption health check (${connection.connectionName})`
   }
 
   /**
@@ -85,6 +91,43 @@ export class RedisMemoryUsageCheck extends BaseCheck {
         failureThreshold: this.#failThreshold,
       },
     }
+  }
+
+  /**
+   * Internal method to ping the redis server
+   */
+  async #ping(): Promise<Result | undefined> {
+    /**
+     * When in connecting status, we should wait for maximum 3 seconds with
+     * (divided into 3 attempts). However, if there was an error, we will
+     * not wait for 3 seconds.
+     */
+    if (this.#connection.isConnecting() && this.#pingAttempts < 3 && !this.#connection.lastError) {
+      await setTimeout(1000)
+      this.#pingAttempts++
+      return this.#ping()
+    }
+
+    /**
+     * Re-connect when connection is in closed state
+     */
+    if (this.#connection.isClosed()) {
+      await this.#connection.ioConnection.connect()
+      return this.#ping()
+    }
+
+    /**
+     * If we are not in `connect` or `ready` state, then we should
+     * report an error.
+     */
+    if (!this.#connection.isConnecting()) {
+      return Result.failed(
+        'Unable to connect to the redis server',
+        this.#connection.lastError
+      ).mergeMetaData(this.#getConnectionMetadata())
+    }
+
+    await this.#connection.ping()
   }
 
   /**
@@ -133,10 +176,9 @@ export class RedisMemoryUsageCheck extends BaseCheck {
    */
   async run(): Promise<HealthCheckResult> {
     try {
-      if (!['ready', 'connect'].includes(this.#connection.status)) {
-        return Result.failed('Check failed. The redis connection is not ready yet').mergeMetaData(
-          this.#getConnectionMetadata()
-        )
+      const result = await this.#ping()
+      if (result) {
+        return result
       }
 
       /**
@@ -180,7 +222,9 @@ export class RedisMemoryUsageCheck extends BaseCheck {
           .mergeMetaData(this.#getMemoryMetadata(memoryUsage))
       }
 
-      return Result.ok('Redis memory usage is under defined thresholds')
+      return Result.ok(
+        `Redis memory usage is ${memoryUsagePretty}, which is under the defined thresholds`
+      )
         .mergeMetaData(this.#getConnectionMetadata())
         .mergeMetaData(this.#getMemoryMetadata(memoryUsage))
     } catch (error) {

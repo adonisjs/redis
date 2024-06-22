@@ -72,6 +72,29 @@ export abstract class AbstractConnection<
   }
 
   /**
+   * Returns a boolean notifying if the connection is
+   * in connecting state
+   */
+  isConnecting() {
+    return this.status === 'connecting' || this.status === 'reconnecting'
+  }
+
+  /**
+   * Returns a boolean notifying if the connection is in
+   * ready state
+   */
+  isReady() {
+    return this.status === 'ready' || this.status === 'connect'
+  }
+
+  /**
+   * Returns a boolean notifying if the connection has been closed
+   */
+  isClosed() {
+    return this.status === 'end' || this.status === 'close'
+  }
+
+  /**
    * Parent class must implement makeSubscriberConnection
    */
   protected abstract makeSubscriberConnection(): void

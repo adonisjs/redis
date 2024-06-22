@@ -32,23 +32,7 @@ export class RedisCheck extends BaseCheck {
   constructor(connection: Connection) {
     super()
     this.#connection = connection
-    this.name = `Redis health check for ${connection.connectionName} connection`
-  }
-
-  /**
-   * Returns a boolean notifying if the connection is
-   * in connecting state
-   */
-  #isConnecting() {
-    return this.#connection.status === 'connecting' || this.#connection.status === 'reconnecting'
-  }
-
-  /**
-   * Returns a boolean notifying id the connection is in
-   * ready state
-   */
-  #isReady() {
-    return this.#connection.status === 'ready' || this.#connection.status === 'connect'
+    this.name = `Redis health check (${connection.connectionName})`
   }
 
   /**
@@ -73,9 +57,17 @@ export class RedisCheck extends BaseCheck {
      * (divided into 3 attempts). However, if there was an error, we will
      * not wait for 3 seconds.
      */
-    if (this.#isConnecting() && this.#pingAttempts < 3 && !this.#connection.lastError) {
+    if (this.#connection.isConnecting() && this.#pingAttempts < 3 && !this.#connection.lastError) {
       await setTimeout(1000)
       this.#pingAttempts++
+      return this.#ping()
+    }
+
+    /**
+     * Re-connect when connection is in closed state
+     */
+    if (this.#connection.isClosed()) {
+      await this.#connection.ioConnection.connect()
       return this.#ping()
     }
 
@@ -83,7 +75,7 @@ export class RedisCheck extends BaseCheck {
      * If we are not in `connect` or `ready` state, then we should
      * report an error.
      */
-    if (!this.#isReady()) {
+    if (!this.#connection.isConnecting()) {
       return Result.failed(
         'Unable to connect to the redis server',
         this.#connection.lastError
