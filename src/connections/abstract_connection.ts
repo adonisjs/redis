@@ -9,7 +9,6 @@
 
 import Emittery from 'emittery'
 import type { Redis, Cluster } from 'ioredis'
-import * as errors from '../errors.js'
 import type {
   PubSubOptions,
   ConnectionEvents,
@@ -38,8 +37,8 @@ export abstract class AbstractConnection<
   /**
    * A list of active subscriptions and pattern subscription
    */
-  protected subscriptions: Map<string, PubSubChannelHandler> = new Map()
-  protected psubscriptions: Map<string, PubSubPatternHandler> = new Map()
+  protected subscriptions: Map<string, Set<PubSubChannelHandler>> = new Map()
+  protected psubscriptions: Map<string, Set<PubSubPatternHandler>> = new Map()
 
   /**
    * The last error emitted by the `error` event. We set it to `null` after
@@ -230,9 +229,11 @@ export abstract class AbstractConnection<
      * Listen for messages
      */
     this.ioSubscriberConnection!.on('message', (channel, message) => {
-      const handler = this.subscriptions.get(channel)
-      if (handler) {
-        handler(message)
+      const handlers = this.subscriptions.get(channel)
+      if (handlers) {
+        for (const handler of handlers) {
+          handler(message)
+        }
       }
     })
 
@@ -240,9 +241,11 @@ export abstract class AbstractConnection<
      * Listen for pattern messages
      */
     this.ioSubscriberConnection!.on('pmessage', (pattern, channel, message) => {
-      const handler = this.psubscriptions.get(pattern)
-      if (handler) {
-        handler(channel, message)
+      const handlers = this.psubscriptions.get(pattern)
+      if (handlers) {
+        for (const handler of handlers) {
+          handler(channel, message)
+        }
       }
     })
   }
@@ -279,13 +282,6 @@ export abstract class AbstractConnection<
     this.setupSubscriberConnection()
 
     /**
-     * Disallow multiple subscriptions to a single channel
-     */
-    if (this.subscriptions.has(channel)) {
-      throw new errors.E_MULTIPLE_REDIS_SUBSCRIPTIONS([channel])
-    }
-
-    /**
      * If the subscriptions map is empty, it means we have no active subscriptions
      * on the given channel, hence we should make one subscription and also set
      * the subscription handler.
@@ -296,7 +292,12 @@ export abstract class AbstractConnection<
           options?.onSubscription(count as number)
         }
         this.emit('subscription:ready', { count: count as number, connection: this })
-        this.subscriptions.set(channel, handler)
+        const subscriptions = this.subscriptions.get(channel)
+        if (subscriptions) {
+          subscriptions.add(handler)
+        } else {
+          this.subscriptions.set(channel, new Set([handler]))
+        }
       })
       .catch((error) => {
         if (options?.onError) {
@@ -309,8 +310,19 @@ export abstract class AbstractConnection<
   /**
    * Unsubscribe from a channel
    */
-  unsubscribe(channel: string) {
-    this.subscriptions.delete(channel)
+  unsubscribe(channel: string, handler?: PubSubChannelHandler) {
+    if (handler) {
+      const subscriptions = this.subscriptions.get(channel)
+      if (subscriptions) {
+        subscriptions.delete(handler)
+      }
+
+      if (subscriptions && subscriptions.size !== 0) {
+        return Promise.resolve()
+      }
+    } else {
+      this.subscriptions.delete(channel)
+    }
     return this.ioSubscriberConnection!.unsubscribe(channel)
   }
 
@@ -325,13 +337,6 @@ export abstract class AbstractConnection<
     this.setupSubscriberConnection()
 
     /**
-     * Disallow multiple subscriptions to a single channel
-     */
-    if (this.psubscriptions.has(pattern)) {
-      throw new errors.E_MULTIPLE_REDIS_PSUBSCRIPTIONS([pattern])
-    }
-
-    /**
      * If the subscriptions map is empty, it means we have no active subscriptions
      * on the given channel, hence we should make one subscription and also set
      * the subscription handler.
@@ -342,7 +347,12 @@ export abstract class AbstractConnection<
           options?.onSubscription(count as number)
         }
         this.emit('psubscription:ready', { count: count as number, connection: this })
-        this.psubscriptions.set(pattern, handler)
+        const psubscriptions = this.psubscriptions.get(pattern)
+        if (psubscriptions) {
+          psubscriptions.add(handler)
+        } else {
+          this.psubscriptions.set(pattern, new Set([handler]))
+        }
       })
       .catch((error) => {
         if (options?.onError) {
@@ -355,8 +365,20 @@ export abstract class AbstractConnection<
   /**
    * Unsubscribe from a given pattern
    */
-  punsubscribe(pattern: string) {
-    this.psubscriptions.delete(pattern)
+  punsubscribe(pattern: string, handler?: PubSubPatternHandler) {
+    if (handler) {
+      const psubscriptions = this.psubscriptions.get(pattern)
+      if (psubscriptions) {
+        psubscriptions.delete(handler)
+      }
+
+      if (psubscriptions && psubscriptions.size !== 0) {
+        return Promise.resolve()
+      }
+    } else {
+      this.psubscriptions.delete(pattern)
+    }
+
     return this.ioSubscriberConnection!.punsubscribe(pattern)
   }
 
