@@ -35,8 +35,7 @@
     "version": "npm run build",
     "prepublishOnly": "npm run build",
     "lint": "eslint . --ext=.ts",
-    "typecheck": "tsc --noEmit",
-    "sync-labels": "github-label-sync --labels .github/labels.json adonisjs/redis"
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@adonisjs/assembler": "^7.7.0",
@@ -57,7 +56,6 @@
     "del-cli": "^5.1.0",
     "dotenv": "^16.4.5",
     "eslint": "^8.56.0",
-    "github-label-sync": "^2.3.1",
     "husky": "^9.0.11",
     "np": "^10.0.6",
     "prettier": "^3.3.2",
