@@ -23,7 +23,7 @@
   "scripts": {
     "pretest": "npm run lint",
     "test": "c8 npm run quick:test",
-    "test:docker": "docker-compose -f docker-compose.ci.yml run --rm tests",
+    "test:docker": "docker compose -f compose.ci.yml run --rm tests",
     "quick:test": "node --enable-source-maps --loader=ts-node/esm ./bin/test.js",
     "clean": "del-cli build",
     "copy:templates": "copyfiles --up 1 \"stubs/**/**/*.stub\" build",

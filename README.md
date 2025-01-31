@@ -16,14 +16,14 @@ One of the primary goals of AdonisJS is to have a vibrant community of users and
 We encourage you to read the [contribution guide](https://github.com/adonisjs/.github/blob/main/docs/CONTRIBUTING.md) before contributing to the framework.
 
 ### Run tests locally
-Easiest way to run tests is to launch the redis cluster using docker-compose and `docker-compose.yml` file.
+Easiest way to run tests is to launch the redis cluster using `docker compose` and `compose.yml` file.
 
 ```sh
-docker-compose up
+docker compose up
 npm run test
 ```
 
-We also have a `docker-compose.ci.yml` file that will dockerize the library and run tests inside the container. This is what we use on Github actions.
+We also have a `compose.ci.yml` file that will dockerize the library and run tests inside the container. This is what we use on Github actions.
 
 ## Code of Conduct
 In order to ensure that the AdonisJS community is welcoming to all, please review and abide by the [Code of Conduct](https://github.com/adonisjs/.github/blob/main/docs/CODE_OF_CONDUCT.md).
