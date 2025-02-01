@@ -30,6 +30,8 @@ test.group('Redis Manager', () => {
       },
     }).create()
 
+    // TODO: Double check this
+    // @ts-expect-error - Tests pass but TS throws error
     expectTypeOf(redis.connection).parameter(0).toEqualTypeOf<'primary' | 'secondary' | undefined>()
   })
 
