@@ -24,7 +24,7 @@
     "pretest": "npm run lint",
     "test": "c8 npm run quick:test",
     "test:docker": "docker compose -f compose.ci.yml run --rm tests",
-    "quick:test": "node --enable-source-maps --loader=ts-node/esm ./bin/test.js",
+    "quick:test": "node --import=ts-node-maintained/register/esm --enable-source-maps ./bin/test.js",
     "clean": "del-cli build",
     "copy:templates": "copyfiles --up 1 \"stubs/**/**/*.stub\" build",
     "precompile": "npm run lint && npm run clean",
@@ -59,7 +59,7 @@
     "husky": "^9.1.7",
     "np": "^10.2.0",
     "prettier": "^3.4.2",
-    "ts-node": "^10.9.2",
+    "ts-node-maintained": "^10.9.5",
     "tsup": "^8.3.6",
     "typescript": "^5.7.3"
   },
