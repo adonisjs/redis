@@ -70,7 +70,11 @@
   "peerDependencies": {
     "@adonisjs/core": "^6.2.0"
   },
-  "author": "virk,adonisjs",
+  "author": "Harminder Virk <virk@adonisjs.com>",
+  "contributors": [
+    "Romain Lanz <romain.lanz@pm.me>",
+    "Julien Ripouteau <julien@ripouteau.com>"
+  ],
   "license": "MIT",
   "homepage": "https://github.com/adonisjs/redis#readme",
   "repository": {
