@@ -1,7 +1,7 @@
 services:
   redis:
     platform: linux/x86_64
-    image: grokzen/redis-cluster:6.2.10
+    image: grokzen/redis-cluster:latest
     ports:
       - "7000-7005:7000-7005"
     environment:
