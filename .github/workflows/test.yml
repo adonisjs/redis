@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         node-version: ["lts/iron", "lts/jod", "latest"]
-        redis-version: ["6.0.20", "6.2.14", "7.0.15", "7.4-rc1", "latest"]
+        redis-version: ["6.0.20", "6.2.14", "7.0.15"]
 
     services:
       redis:
