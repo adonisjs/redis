@@ -138,7 +138,7 @@ test.group('Redis connection', () => {
     assert.equal(message, JSON.stringify({ username: 'virk' }))
   })
 
-  test('throw error when subscribing to a channel twice', async ({ cleanup }) => {
+  test('do not throw error when subscribing to a channel twice', async ({ cleanup }) => {
     const connection = new RedisConnection('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
@@ -150,7 +150,7 @@ test.group('Redis connection', () => {
     connection.subscribe('new:user', () => {})
     await pEvent(connection, 'subscription:ready')
     connection.subscribe('new:user', () => {})
-  }).throws('Cannot subscribe to "new:user" channel. Channel already has an active subscription')
+  })
 
   test('subscribe to a pattern and listen for messages', async ({ assert, cleanup }) => {
     const connection = new RedisConnection('main', {
@@ -174,7 +174,7 @@ test.group('Redis connection', () => {
     assert.equal(message.data, JSON.stringify({ username: 'virk' }))
   })
 
-  test('throw error when subscribing to a pattern twice', async ({ cleanup }) => {
+  test('do not throw error when subscribing to a pattern twice', async ({ cleanup }) => {
     const connection = new RedisConnection('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
@@ -187,7 +187,7 @@ test.group('Redis connection', () => {
     await pEvent(connection, 'psubscription:ready')
 
     connection.psubscribe('user:*', () => {})
-  }).throws('Cannot subscribe to "user:*" pattern. Pattern already has an active subscription')
+  })
 
   test('unsubscribe from a channel', async ({ cleanup }) => {
     const connection = new RedisConnection('main', {
