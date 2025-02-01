@@ -11,6 +11,7 @@ import { setTimeout } from 'node:timers/promises'
 import stringHelpers from '@adonisjs/core/helpers/string'
 import { BaseCheck, Result } from '@adonisjs/core/health'
 import type { HealthCheckResult } from '@adonisjs/core/types/health'
+import * as errors from '../errors.js'
 
 import type { Connection } from '../types.js'
 
@@ -48,12 +49,12 @@ export class RedisMemoryUsageCheck extends BaseCheck {
   /**
    * Memory consumption threshold after which a warning will be created
    */
-  #warnThreshold: number = stringHelpers.bytes.parse('100 mb')
+  #warnThreshold: number = stringHelpers.bytes.parse('100 mb')!
 
   /**
    * Memory consumption threshold after which an error will be created
    */
-  #failThreshold: number = stringHelpers.bytes.parse('120 mb')
+  #failThreshold: number = stringHelpers.bytes.parse('120 mb')!
 
   /**
    * Health check public name
@@ -142,7 +143,13 @@ export class RedisMemoryUsageCheck extends BaseCheck {
    * ```
    */
   warnWhenExceeds(value: string | number) {
-    this.#warnThreshold = stringHelpers.bytes.parse(value)
+    const bytes = stringHelpers.bytes.parse(value)
+
+    if (bytes === null) {
+      throw new errors.E_INVALID_BYTES_VALUE([value])
+    }
+
+    this.#warnThreshold = bytes
     return this
   }
 
@@ -158,7 +165,13 @@ export class RedisMemoryUsageCheck extends BaseCheck {
    * ```
    */
   failWhenExceeds(value: string | number) {
-    this.#failThreshold = stringHelpers.bytes.parse(value)
+    const bytes = stringHelpers.bytes.parse(value)
+
+    if (bytes === null) {
+      throw new errors.E_INVALID_BYTES_VALUE([value])
+    }
+
+    this.#failThreshold = bytes
     return this
   }
 
