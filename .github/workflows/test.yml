@@ -7,10 +7,14 @@ on:
 jobs:
   test_linux:
     runs-on: ubuntu-latest
+    env:
+      REDIS_HOST: 0.0.0.0
+      REDIS_PORT: 7007
+      REDIS_CLUSTER_PORTS: '7000,7001,7002'
     strategy:
       matrix:
         node-version: ["lts/iron", "lts/jod", "latest"]
-        redis-version: ["latest"]
+        redis-version: ["6.0.x", "6.2.x", "7.0.x", "7.2.x", "latest"]
 
     services:
       redis:
