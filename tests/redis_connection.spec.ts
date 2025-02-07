@@ -138,7 +138,7 @@ test.group('Redis connection', () => {
     assert.equal(message, JSON.stringify({ username: 'virk' }))
   })
 
-  test('throw error when subscribing to a channel twice', async ({ cleanup }) => {
+  test('call all handlers subscribed to a channel', async ({ assert, cleanup }) => {
     const connection = new RedisConnection('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
@@ -147,10 +147,32 @@ test.group('Redis connection', () => {
 
     await pEvent(connection, 'ready')
 
-    connection.subscribe('new:user', () => {})
-    await pEvent(connection, 'subscription:ready')
-    connection.subscribe('new:user', () => {})
-  }).throws('Cannot subscribe to "new:user" channel. Channel already has an active subscription')
+    const [message1] = await Promise.all([
+      new Promise<any>((resolve) => {
+        connection.subscribe('new:user', (message) => {
+          resolve(message)
+        })
+      }),
+      pEvent(connection, 'subscription:ready').then(() => {
+        connection.publish('new:user', JSON.stringify({ username: 'virk' }))
+      }),
+    ])
+
+    assert.equal(message1, JSON.stringify({ username: 'virk' }))
+
+    const [message2] = await Promise.all([
+      new Promise<any>((resolve) => {
+        connection.subscribe('new:user', (message) => {
+          resolve(message)
+        })
+      }),
+      pEvent(connection, 'subscription:ready').then(() => {
+        connection.publish('new:user', JSON.stringify({ username: 'virk' }))
+      }),
+    ])
+
+    assert.equal(message2, JSON.stringify({ username: 'virk' }))
+  })
 
   test('subscribe to a pattern and listen for messages', async ({ assert, cleanup }) => {
     const connection = new RedisConnection('main', {
@@ -174,7 +196,7 @@ test.group('Redis connection', () => {
     assert.equal(message.data, JSON.stringify({ username: 'virk' }))
   })
 
-  test('throw error when subscribing to a pattern twice', async ({ cleanup }) => {
+  test('call all handlers subscribed to a pattern', async ({ assert, cleanup }) => {
     const connection = new RedisConnection('main', {
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
@@ -183,11 +205,34 @@ test.group('Redis connection', () => {
 
     await pEvent(connection, 'ready')
 
-    connection.psubscribe('user:*', () => {})
-    await pEvent(connection, 'psubscription:ready')
+    const [message1] = await Promise.all([
+      new Promise<any>((resolve) => {
+        connection.psubscribe('user:*', (channel, message) => {
+          resolve({ channel, message })
+        })
+      }),
+      pEvent(connection, 'psubscription:ready').then(() => {
+        connection.publish('user:add', JSON.stringify({ username: 'virk' }))
+      }),
+    ])
 
-    connection.psubscribe('user:*', () => {})
-  }).throws('Cannot subscribe to "user:*" pattern. Pattern already has an active subscription')
+    assert.equal(message1.channel, 'user:add')
+    assert.equal(message1.message, JSON.stringify({ username: 'virk' }))
+
+    const [message2] = await Promise.all([
+      new Promise<any>((resolve) => {
+        connection.psubscribe('user:*', (channel, message) => {
+          resolve({ channel, message })
+        })
+      }),
+      pEvent(connection, 'psubscription:ready').then(() => {
+        connection.publish('user:add', JSON.stringify({ username: 'virk' }))
+      }),
+    ])
+
+    assert.equal(message2.channel, 'user:add')
+    assert.equal(message2.message, JSON.stringify({ username: 'virk' }))
+  })
 
   test('unsubscribe from a channel', async ({ cleanup }) => {
     const connection = new RedisConnection('main', {
