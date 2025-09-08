@@ -19,8 +19,21 @@ import type { Connection } from '../types.ts'
  * The RedisMemoryUsageCheck can be used to monitor the memory
  * consumption of a redis server and report a warning or error
  * after a certain threshold has been execeeded.
+ *
+ * @example
+ * ```ts
+ * const check = new RedisMemoryUsageCheck(redis.connection())
+ *   .warnWhenExceeds('100mb')
+ *   .failWhenExceeds('200mb')
+ *
+ * const result = await check.run()
+ * console.log(result.status) // 'ok', 'warning', or 'error'
+ * ```
  */
 export class RedisMemoryUsageCheck extends BaseCheck {
+  /**
+   * The Redis connection to monitor
+   */
   #connection: Connection
 
   /**
@@ -61,6 +74,16 @@ export class RedisMemoryUsageCheck extends BaseCheck {
    */
   name: string
 
+  /**
+   * Create a new RedisMemoryUsageCheck instance
+   *
+   * @param connection - The Redis connection to monitor
+   *
+   * @example
+   * ```ts
+   * const check = new RedisMemoryUsageCheck(redis.connection('main'))
+   * ```
+   */
   constructor(connection: Connection) {
     super()
     this.#connection = connection
@@ -83,6 +106,8 @@ export class RedisMemoryUsageCheck extends BaseCheck {
   /**
    * Returns memory usage metadata to be shared in the health checks
    * report
+   *
+   * @param used - Current memory usage in bytes
    */
   #getMemoryMetadata(used?: number) {
     return {
@@ -135,11 +160,12 @@ export class RedisMemoryUsageCheck extends BaseCheck {
    * Define the memory threshold after which a warning
    * should be created.
    *
-   * - The value should be either a number in bytes
-   * - Or it should be a value expression in string.
+   * @param value - Memory threshold as bytes or string (e.g. '200mb')
    *
-   * ```
-   * .warnWhenExceeds('200 mb')
+   * @example
+   * ```ts
+   * check.warnWhenExceeds('200 mb')
+   * check.warnWhenExceeds(209715200) // 200MB in bytes
    * ```
    */
   warnWhenExceeds(value: string | number) {
@@ -157,11 +183,12 @@ export class RedisMemoryUsageCheck extends BaseCheck {
    * Define the memory threshold after which an error
    * should be created.
    *
-   * - The value should be either a number in bytes
-   * - Or it should be a value expression in string.
+   * @param value - Memory threshold as bytes or string (e.g. '200mb')
    *
-   * ```
-   * .warnWhenExceeds('200 mb')
+   * @example
+   * ```ts
+   * check.failWhenExceeds('500 mb')
+   * check.failWhenExceeds(524288000) // 500MB in bytes
    * ```
    */
   failWhenExceeds(value: string | number) {
@@ -177,7 +204,18 @@ export class RedisMemoryUsageCheck extends BaseCheck {
 
   /**
    * Define a custom callback to compute Redis memory usage. The
-   * return value must be a human readable string
+   * return value must be a number in bytes or null.
+   *
+   * @param callback - Function that returns memory usage in bytes
+   *
+   * @example
+   * ```ts
+   * check.compute(async (connection) => {
+   *   const info = await connection.info('memory')
+   *   // Custom parsing logic
+   *   return memoryInBytes
+   * })
+   * ```
    */
   compute(callback: (connection: Connection) => Promise<number | null>): this {
     this.#computeFn = callback
@@ -186,6 +224,14 @@ export class RedisMemoryUsageCheck extends BaseCheck {
 
   /**
    * Executes the health check
+   *
+   * @example
+   * ```ts
+   * const result = await check.run()
+   * if (result.status === 'ok') {
+   *   console.log('Memory usage is within limits')
+   * }
+   * ```
    */
   async run(): Promise<HealthCheckResult> {
     try {

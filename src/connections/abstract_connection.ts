@@ -19,6 +19,15 @@ import type {
 /**
  * Abstract factory implements the shared functionality required by Redis cluster
  * and the normal Redis connections.
+ *
+ * @example
+ * ```ts
+ * class MyConnection extends AbstractConnection<Redis, MyEvents> {
+ *   protected makeSubscriberConnection() {
+ *     // Implementation specific to your connection type
+ *   }
+ * }
+ * ```
  */
 export abstract class AbstractConnection<
   T extends Redis | Cluster,
@@ -35,9 +44,13 @@ export abstract class AbstractConnection<
   declare ioSubscriberConnection?: T
 
   /**
-   * A list of active subscriptions and pattern subscription
+   * A list of active subscriptions
    */
   protected subscriptions: Map<string, Set<PubSubChannelHandler>> = new Map()
+
+  /**
+   * A list of active pattern subscriptions
+   */
   protected psubscriptions: Map<string, Set<PubSubPatternHandler>> = new Map()
 
   /**
@@ -73,6 +86,13 @@ export abstract class AbstractConnection<
   /**
    * Returns a boolean notifying if the connection is
    * in connecting state
+   *
+   * @example
+   * ```ts
+   * if (connection.isConnecting()) {
+   *   console.log('Connection is establishing...')
+   * }
+   * ```
    */
   isConnecting() {
     return this.status === 'connecting' || this.status === 'reconnecting'
@@ -81,6 +101,13 @@ export abstract class AbstractConnection<
   /**
    * Returns a boolean notifying if the connection is in
    * ready state
+   *
+   * @example
+   * ```ts
+   * if (connection.isReady()) {
+   *   await connection.ioConnection.set('key', 'value')
+   * }
+   * ```
    */
   isReady() {
     return this.status === 'ready' || this.status === 'connect'
@@ -88,6 +115,13 @@ export abstract class AbstractConnection<
 
   /**
    * Returns a boolean notifying if the connection has been closed
+   *
+   * @example
+   * ```ts
+   * if (connection.isClosed()) {
+   *   console.log('Connection is closed')
+   * }
+   * ```
    */
   isClosed() {
     return this.status === 'end' || this.status === 'close'
@@ -98,6 +132,20 @@ export abstract class AbstractConnection<
    */
   protected abstract makeSubscriberConnection(): void
 
+  /**
+   * Create a new AbstractConnection instance
+   *
+   * @param connectionName - Name identifier for this connection
+   *
+   * @example
+   * ```ts
+   * class MyConnection extends AbstractConnection {
+   *   constructor() {
+   *     super('main')
+   *   }
+   * }
+   * ```
+   */
   constructor(public connectionName: string) {
     super()
   }
@@ -252,6 +300,11 @@ export abstract class AbstractConnection<
 
   /**
    * Gracefully end the redis connection
+   *
+   * @example
+   * ```ts
+   * await connection.quit()
+   * ```
    */
   async quit() {
     await this.ioConnection.quit()
@@ -262,6 +315,11 @@ export abstract class AbstractConnection<
 
   /**
    * Forcefully end the redis connection
+   *
+   * @example
+   * ```ts
+   * await connection.disconnect()
+   * ```
    */
   async disconnect() {
     await this.ioConnection.disconnect()
@@ -273,6 +331,17 @@ export abstract class AbstractConnection<
   /**
    * Subscribe to a given channel to receive Redis pub/sub events. A
    * new subscriber connection will be created/managed automatically.
+   *
+   * @param channel - The channel name to subscribe to
+   * @param handler - Function to handle received messages
+   * @param options - Optional subscription configuration
+   *
+   * @example
+   * ```ts
+   * connection.subscribe('notifications', (message) => {
+   *   console.log('Received:', message)
+   * })
+   * ```
    */
   subscribe(channel: string, handler: PubSubChannelHandler, options?: PubSubOptions): void {
     /**
@@ -309,6 +378,14 @@ export abstract class AbstractConnection<
 
   /**
    * Unsubscribe from a channel
+   *
+   * @param channel - The channel name to unsubscribe from
+   * @param handler - Optional specific handler to remove
+   *
+   * @example
+   * ```ts
+   * await connection.unsubscribe('notifications')
+   * ```
    */
   unsubscribe(channel: string, handler?: PubSubChannelHandler) {
     if (handler) {
@@ -328,6 +405,17 @@ export abstract class AbstractConnection<
 
   /**
    * Make redis subscription for a pattern
+   *
+   * @param pattern - The pattern to subscribe to
+   * @param handler - Function to handle received pattern messages
+   * @param options - Optional subscription configuration
+   *
+   * @example
+   * ```ts
+   * connection.psubscribe('news.*', (channel, message) => {
+   *   console.log(`Channel ${channel}:`, message)
+   * })
+   * ```
    */
   psubscribe(pattern: string, handler: PubSubPatternHandler, options?: PubSubOptions): void {
     /**
@@ -364,6 +452,14 @@ export abstract class AbstractConnection<
 
   /**
    * Unsubscribe from a given pattern
+   *
+   * @param pattern - The pattern to unsubscribe from
+   * @param handler - Optional specific handler to remove
+   *
+   * @example
+   * ```ts
+   * await connection.punsubscribe('news.*')
+   * ```
    */
   punsubscribe(pattern: string, handler?: PubSubPatternHandler) {
     if (handler) {
@@ -384,6 +480,21 @@ export abstract class AbstractConnection<
 
   /**
    * Publish the pub/sub message
+   *
+   * @param channel - The channel to publish to
+   * @param message - The message to publish
+   * @param callback - Optional callback for completion
+   *
+   * @example
+   * ```ts
+   * // Promise-based
+   * const count = await connection.publish('notifications', 'Hello World')
+   *
+   * // Callback-based
+   * connection.publish('notifications', 'Hello World', (err, count) => {
+   *   console.log('Published to', count, 'subscribers')
+   * })
+   * ```
    */
   publish(
     channel: string,
@@ -404,6 +515,16 @@ export abstract class AbstractConnection<
   /**
    * Define a custom command using LUA script. You can run the
    * registered command using the "runCommand" method.
+   *
+   * @param args - Arguments for defining the command
+   *
+   * @example
+   * ```ts
+   * connection.defineCommand('myCommand', {
+   *   numberOfKeys: 1,
+   *   lua: 'return redis.call("get", KEYS[1])'
+   * })
+   * ```
    */
   defineCommand(...args: Parameters<Redis['defineCommand']>): this {
     this.ioConnection.defineCommand(...args)
@@ -412,6 +533,14 @@ export abstract class AbstractConnection<
 
   /**
    * Run a pre registered command
+   *
+   * @param command - The name of the registered command
+   * @param args - Arguments to pass to the command
+   *
+   * @example
+   * ```ts
+   * const result = await connection.runCommand('myCommand', 'key1')
+   * ```
    */
   runCommand(command: string, ...args: any[]): any {
     // @ts-ignore

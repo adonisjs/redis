@@ -9,4 +9,15 @@
 
 import { debuglog } from 'node:util'
 
+/**
+ * Debug logger for AdonisJS Redis package.
+ * Enable with NODE_DEBUG=adonisjs:redis
+ *
+ * @example
+ * ```ts
+ * import debug from './debug.ts'
+ *
+ * debug('Creating connection %s', connectionName)
+ * ```
+ */
 export default debuglog('adonisjs:redis')

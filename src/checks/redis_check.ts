@@ -15,8 +15,21 @@ import type { Connection } from '../types.ts'
 /**
  * The RedisCheck pings the redis server to ensure we are
  * able to connect to it.
+ *
+ * @example
+ * ```ts
+ * const check = new RedisCheck(redis.connection())
+ * const result = await check.run()
+ *
+ * if (result.isHealthy) {
+ *   console.log('Redis is healthy')
+ * }
+ * ```
  */
 export class RedisCheck extends BaseCheck {
+  /**
+   * The Redis connection to check
+   */
   #connection: Connection
 
   /**
@@ -29,6 +42,16 @@ export class RedisCheck extends BaseCheck {
    */
   name: string
 
+  /**
+   * Create a new RedisCheck instance
+   *
+   * @param connection - The Redis connection to monitor
+   *
+   * @example
+   * ```ts
+   * const check = new RedisCheck(redis.connection('main'))
+   * ```
+   */
   constructor(connection: Connection) {
     super()
     this.#connection = connection
@@ -87,6 +110,12 @@ export class RedisCheck extends BaseCheck {
 
   /**
    * Executes the health check
+   *
+   * @example
+   * ```ts
+   * const result = await check.run()
+   * console.log(result.status) // 'ok' or 'error'
+   * ```
    */
   async run(): Promise<HealthCheckResult> {
     try {

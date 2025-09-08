@@ -22,18 +22,55 @@ import type {
  * Redis cluster connection exposes the API to run Redis commands using `ioredis` as the
  * underlying client. The class abstracts the need of creating and managing multiple
  * pub/sub connections by hand, since it handles that internally by itself.
+ *
+ * @example
+ * ```ts
+ * const cluster = new RedisClusterConnection('cluster', [
+ *   { host: '127.0.0.1', port: 7000 },
+ *   { host: '127.0.0.1', port: 7001 }
+ * ], { enableOfflineQueue: false })
+ *
+ * await cluster.set('key', 'value')
+ * const value = await cluster.get('key')
+ * ```
  */
 export class RedisClusterConnection extends AbstractConnection<
   Cluster,
   ConnectionEvents<RedisClusterConnection>
 > {
+  /**
+   * Array of cluster host configurations
+   */
   #hosts: RedisClusterConnectionConfig['clusters']
+
+  /**
+   * Redis cluster configuration options
+   */
   #config: RedisClusterConnectionConfig['clusterOptions']
 
+  /**
+   * Returns the cluster slots configuration
+   */
   get slots() {
     return this.ioConnection.slots
   }
 
+  /**
+   * Create a new Redis cluster connection
+   *
+   * @param connectionName - Unique name for this connection
+   * @param hosts - Array of cluster node configurations
+   * @param config - Redis cluster configuration options
+   *
+   * @example
+   * ```ts
+   * const connection = new RedisClusterConnection(
+   *   'main-cluster',
+   *   [{ host: '127.0.0.1', port: 7000 }],
+   *   { enableOfflineQueue: false }
+   * )
+   * ```
+   */
   constructor(
     connectionName: string,
     hosts: RedisClusterConnectionConfig['clusters'],
@@ -50,7 +87,7 @@ export class RedisClusterConnection extends AbstractConnection<
   }
 
   /**
-   * Creates the subscriber connection, the [[AbstractConnection]] will
+   * Creates the subscriber connection, the AbstractConnection will
    * invoke this method when first subscription is created.
    */
   protected makeSubscriberConnection() {
@@ -61,6 +98,17 @@ export class RedisClusterConnection extends AbstractConnection<
 
   /**
    * Returns cluster nodes
+   *
+   * @param role - Optional role filter ('master', 'slave', or 'all')
+   *
+   * @example
+   * ```ts
+   * // Get all nodes
+   * const allNodes = cluster.nodes()
+   *
+   * // Get only master nodes
+   * const masterNodes = cluster.nodes('master')
+   * ```
    */
   nodes(role?: NodeRole) {
     return this.ioConnection.nodes(role)

@@ -13,6 +13,16 @@ import type { Redis, Cluster } from 'ioredis'
  * Base methods are shared by a regular Redis connection and
  * the cluster connection.
  * https://redis.github.io/ioredis/classes/Redis.html
+ *
+ * @example
+ * ```ts
+ * // Used internally to add Redis methods to connection classes
+ * baseMethods.forEach((method) => {
+ *   ConnectionClass.prototype[method] = function(...args) {
+ *     return this.ioConnection[method](...args)
+ *   }
+ * })
+ * ```
  */
 export const baseMethods = [
   'acl',
@@ -330,7 +340,18 @@ export const baseMethods = [
 
 /**
  * Methods available on a non-cluster Redis
- * connection
+ * connection. Includes all base methods plus
+ * additional methods specific to standalone Redis.
+ *
+ * @example
+ * ```ts
+ * // Used internally to add Redis methods to RedisConnection class
+ * redisMethods.forEach((method) => {
+ *   RedisConnection.prototype[method] = function(...args) {
+ *     return this.ioConnection[method](...args)
+ *   }
+ * })
+ * ```
  */
 export const redisMethods = [
   'acl',

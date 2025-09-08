@@ -12,6 +12,26 @@ import type { RedisConnectionsList } from './types.ts'
 
 /**
  * Define config for redis
+ *
+ * @param config - Redis configuration object
+ *
+ * @example
+ * ```ts
+ * export default defineConfig({
+ *   connection: 'main',
+ *   connections: {
+ *     main: {
+ *       host: 'localhost',
+ *       port: 6379,
+ *       password: 'secret'
+ *     },
+ *     cache: {
+ *       host: 'redis-cache.example.com',
+ *       port: 6379
+ *     }
+ *   }
+ * })
+ * ```
  */
 export function defineConfig<Connections extends RedisConnectionsList>(config: {
   connection: keyof Connections

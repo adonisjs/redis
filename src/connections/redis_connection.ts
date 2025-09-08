@@ -23,8 +23,22 @@ import type {
  * underlying client. The class abstracts the need of creating and managing
  * multiple pub/sub connections by hand, since it handles that internally
  * by itself.
+ *
+ * @example
+ * ```ts
+ * const redis = new RedisConnection('main', {
+ *   host: 'localhost',
+ *   port: 6379
+ * })
+ *
+ * await redis.set('key', 'value')
+ * const value = await redis.get('key')
+ * ```
  */
 export class RedisConnection extends AbstractConnection<Redis, ConnectionEvents<RedisConnection>> {
+  /**
+   * Normalized Redis configuration options
+   */
   #config: RedisOptions
 
   /**
@@ -42,6 +56,21 @@ export class RedisConnection extends AbstractConnection<Redis, ConnectionEvents<
     return this.ioSubscriberConnection?.mode
   }
 
+  /**
+   * Create a new Redis connection
+   *
+   * @param connectionName - Unique name for this connection
+   * @param config - Redis connection configuration
+   *
+   * @example
+   * ```ts
+   * const connection = new RedisConnection('main', {
+   *   host: 'localhost',
+   *   port: 6379,
+   *   password: 'secret'
+   * })
+   * ```
+   */
   constructor(connectionName: string, config: RedisConnectionConfig) {
     debug('creating connection %s: %O', connectionName, config)
     super(connectionName)
@@ -53,6 +82,8 @@ export class RedisConnection extends AbstractConnection<Redis, ConnectionEvents<
 
   /**
    * Normalizes config option to be compatible with IORedis
+   *
+   * @param config - Raw configuration object
    */
   #normalizeConfig(config: RedisConnectionConfig): RedisOptions {
     if (typeof config.port === 'string') {
@@ -68,7 +99,7 @@ export class RedisConnection extends AbstractConnection<Redis, ConnectionEvents<
   }
 
   /**
-   * Creates the subscriber connection, the [[AbstractConnection]] will
+   * Creates the subscriber connection, the AbstractConnection will
    * invoke this method when first subscription is created.
    */
   protected makeSubscriberConnection() {

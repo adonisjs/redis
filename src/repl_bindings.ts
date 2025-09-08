@@ -13,6 +13,19 @@ import type { ApplicationService } from '@adonisjs/core/types'
 /**
  * Define repl bindings. The method must be invoked when application environment
  * is set to repl.
+ *
+ * @param app - Application service instance
+ * @param repl - REPL instance
+ *
+ * @example
+ * ```ts
+ * // In your REPL configuration
+ * export default defineReplBindings(app, repl)
+ *
+ * // Then in REPL:
+ * await loadRedis()
+ * redis.set('key', 'value')
+ * ```
  */
 export function defineReplBindings(app: ApplicationService, repl: Repl) {
   repl.addMethod(
