@@ -9,8 +9,8 @@
 
 import { test } from '@japa/runner'
 
-import { pEvent } from '../tests_helpers/main.js'
-import RedisConnection from '../src/connections/redis_connection.js'
+import { pEvent } from '../tests_helpers/main.ts'
+import RedisConnection from '../src/connections/redis_connection.ts'
 
 test.group('Redis connection', () => {
   test('emit ready when connected to redis server', async ({ assert, cleanup }) => {

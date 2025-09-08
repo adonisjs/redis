@@ -7,4 +7,4 @@
  * file that was distributed with this source code.
  */
 
-export { RedisManagerFactory } from './redis_manager.js'
+export { RedisManagerFactory } from './redis_manager.ts'

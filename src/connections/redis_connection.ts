@@ -9,14 +9,14 @@
 
 import { Redis, type RedisOptions } from 'ioredis'
 
-import debug from '../debug.js'
-import { redisMethods } from './io_methods.js'
-import { AbstractConnection } from './abstract_connection.js'
+import debug from '../debug.ts'
+import { redisMethods } from './io_methods.ts'
+import { AbstractConnection } from './abstract_connection.ts'
 import type {
   ConnectionEvents,
   RedisConnectionConfig,
   IORedisConnectionCommands,
-} from '../types.js'
+} from '../types.ts'
 
 /**
  * Redis connection exposes the API to run Redis commands using `ioredis` as the

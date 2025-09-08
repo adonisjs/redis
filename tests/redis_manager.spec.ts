@@ -9,10 +9,10 @@
 
 import { test } from '@japa/runner'
 
-import { pEvent } from '../tests_helpers/main.js'
-import { RedisManagerFactory } from '../factories/redis_manager.js'
-import type RedisConnection from '../src/connections/redis_connection.js'
-import type RedisClusterConnection from '../src/connections/redis_cluster_connection.js'
+import { pEvent } from '../tests_helpers/main.ts'
+import { RedisManagerFactory } from '../factories/redis_manager.ts'
+import type RedisConnection from '../src/connections/redis_connection.ts'
+import type RedisClusterConnection from '../src/connections/redis_cluster_connection.ts'
 
 const clusterNodes = process.env.REDIS_CLUSTER_PORTS!.split(',').map((port) => {
   return { host: process.env.REDIS_HOST!, port: Number(port) }

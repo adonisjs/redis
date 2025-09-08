@@ -9,8 +9,8 @@
 
 import { Redis } from 'ioredis'
 import { test } from '@japa/runner'
-import { pEvent } from '../tests_helpers/main.js'
-import RedisClusterConnection from '../src/connections/redis_cluster_connection.js'
+import { pEvent } from '../tests_helpers/main.ts'
+import RedisClusterConnection from '../src/connections/redis_cluster_connection.ts'
 
 const nodes = process.env.REDIS_CLUSTER_PORTS!.split(',').map((port) => {
   return { host: process.env.REDIS_HOST!, port: Number(port) }

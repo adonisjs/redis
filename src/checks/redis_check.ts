@@ -10,7 +10,7 @@
 import { setTimeout } from 'node:timers/promises'
 import { BaseCheck, Result } from '@adonisjs/core/health'
 import type { HealthCheckResult } from '@adonisjs/core/types/health'
-import type { Connection } from '../types.js'
+import type { Connection } from '../types.ts'
 
 /**
  * The RedisCheck pings the redis server to ensure we are

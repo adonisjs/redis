@@ -8,7 +8,7 @@
  */
 
 import type Configure from '@adonisjs/core/commands/configure'
-import { stubsRoot } from './stubs/main.js'
+import { stubsRoot } from './stubs/main.ts'
 
 /**
  * Configures the package

@@ -12,17 +12,17 @@ import type { Logger } from '@adonisjs/core/logger'
 import { RuntimeException } from '@poppinss/utils/exception'
 import { type ClusterOptions, type RedisOptions, Redis } from 'ioredis'
 
-import debug from './debug.js'
-import { baseMethods } from './connections/io_methods.js'
-import RedisConnection from './connections/redis_connection.js'
-import RedisClusterConnection from './connections/redis_cluster_connection.js'
+import debug from './debug.ts'
+import { baseMethods } from './connections/io_methods.ts'
+import RedisConnection from './connections/redis_connection.ts'
+import RedisClusterConnection from './connections/redis_cluster_connection.ts'
 import type {
   GetConnectionType,
   IORedisBaseCommands,
   PubSubChannelHandler,
   PubSubPatternHandler,
   RedisConnectionsList,
-} from './types.js'
+} from './types.ts'
 
 /**
  * Redis Manager exposes the API to manage multiple redis connections

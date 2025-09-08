@@ -8,21 +8,22 @@
  */
 
 import { type Secret } from '@adonisjs/core/helpers'
+import { type AsyncOrSync } from '@poppinss/utils/types'
 import type { Redis, Cluster, RedisOptions, ClusterOptions } from 'ioredis'
 
-import type RedisManager from './redis_manager.js'
-import type RedisConnection from './connections/redis_connection.js'
-import type { baseMethods, redisMethods } from './connections/io_methods.js'
-import type RedisClusterConnection from './connections/redis_cluster_connection.js'
+import type RedisManager from './redis_manager.ts'
+import type RedisConnection from './connections/redis_connection.ts'
+import type { baseMethods, redisMethods } from './connections/io_methods.ts'
+import type RedisClusterConnection from './connections/redis_cluster_connection.ts'
 
 /**
  * PubSub subscriber
  */
-export type PubSubChannelHandler<T extends any = string> = (data: T) => Promise<void> | void
+export type PubSubChannelHandler<T extends any = string> = (data: T) => AsyncOrSync<void>
 export type PubSubPatternHandler<T extends any = string> = (
   channel: string,
   data: T
-) => Promise<void> | void
+) => AsyncOrSync<void>
 
 /**
  * Options accepted during subscribe

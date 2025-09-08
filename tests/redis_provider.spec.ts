@@ -10,9 +10,9 @@
 import { test } from '@japa/runner'
 import { IgnitorFactory } from '@adonisjs/core/factories'
 
-import { defineConfig } from '../index.js'
-import { pEvent } from '../tests_helpers/main.js'
-import RedisManager from '../src/redis_manager.js'
+import { defineConfig } from '../index.ts'
+import { pEvent } from '../tests_helpers/main.ts'
+import RedisManager from '../src/redis_manager.ts'
 
 const BASE_URL = new URL('./tmp/', import.meta.url)
 

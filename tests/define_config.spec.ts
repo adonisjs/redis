@@ -8,7 +8,7 @@
  */
 
 import { test } from '@japa/runner'
-import { defineConfig } from '../src/define_config.js'
+import { defineConfig } from '../src/define_config.ts'
 
 test.group('Define Config', () => {
   test('should throw if no config passed', ({ assert }) => {

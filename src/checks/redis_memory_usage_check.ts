@@ -11,9 +11,9 @@ import { setTimeout } from 'node:timers/promises'
 import stringHelpers from '@adonisjs/core/helpers/string'
 import { BaseCheck, Result } from '@adonisjs/core/health'
 import type { HealthCheckResult } from '@adonisjs/core/types/health'
-import * as errors from '../errors.js'
+import * as errors from '../errors.ts'
 
-import type { Connection } from '../types.js'
+import type { Connection } from '../types.ts'
 
 /**
  * The RedisMemoryUsageCheck can be used to monitor the memory

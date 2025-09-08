@@ -10,10 +10,10 @@
 import { test } from '@japa/runner'
 import stringHelpers from '@adonisjs/core/helpers/string'
 
-import { pEvent } from '../tests_helpers/main.js'
-import RedisConnection from '../src/connections/redis_connection.js'
-import { RedisMemoryUsageCheck } from '../src/checks/redis_memory_usage_check.js'
-import RedisClusterConnection from '../src/connections/redis_cluster_connection.js'
+import { pEvent } from '../tests_helpers/main.ts'
+import RedisConnection from '../src/connections/redis_connection.ts'
+import { RedisMemoryUsageCheck } from '../src/checks/redis_memory_usage_check.ts'
+import RedisClusterConnection from '../src/connections/redis_cluster_connection.ts'
 
 const nodes = process.env.REDIS_CLUSTER_PORTS!.split(',').map((port) => {
   return { host: process.env.REDIS_HOST!, port: Number(port) }

@@ -9,14 +9,14 @@
 
 import Redis, { type Cluster, type NodeRole } from 'ioredis'
 
-import debug from '../debug.js'
-import { baseMethods } from './io_methods.js'
-import { AbstractConnection } from './abstract_connection.js'
+import debug from '../debug.ts'
+import { baseMethods } from './io_methods.ts'
+import { AbstractConnection } from './abstract_connection.ts'
 import type {
   ConnectionEvents,
   IORedisBaseCommands,
   RedisClusterConnectionConfig,
-} from '../types.js'
+} from '../types.ts'
 
 /**
  * Redis cluster connection exposes the API to run Redis commands using `ioredis` as the
