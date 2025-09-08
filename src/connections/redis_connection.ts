@@ -58,6 +58,12 @@ export class RedisConnection extends AbstractConnection<Redis, ConnectionEvents<
     if (typeof config.port === 'string') {
       config.port = Number(config.port)
     }
+    if (config.password && typeof config.password !== 'string') {
+      config.password = config.password.release()
+    }
+    if (config.sentinelPassword && typeof config.sentinelPassword !== 'string') {
+      config.sentinelPassword = config.sentinelPassword.release()
+    }
     return config as RedisOptions
   }
 

@@ -7,6 +7,7 @@
  * file that was distributed with this source code.
  */
 
+import { type Secret } from '@adonisjs/core/helpers'
 import type { Redis, Cluster, RedisOptions, ClusterOptions } from 'ioredis'
 
 import type RedisManager from './redis_manager.js'
@@ -72,8 +73,10 @@ export type IORedisConnectionCommands = {
  * Configuration accepted by the redis connection. It is same
  * as ioredis, except the number can be a string as well
  */
-export type RedisConnectionConfig = Omit<RedisOptions, 'port'> & {
+export type RedisConnectionConfig = Omit<RedisOptions, 'port' | 'password' | 'sentinelPassword'> & {
   port?: string | number
+  password?: string | Secret<string>
+  sentinelPassword?: string | Secret<string>
 }
 
 /**
