@@ -9,12 +9,16 @@
 
 import { type Secret } from '@adonisjs/core/helpers'
 import { type AsyncOrSync } from '@poppinss/utils/types'
-import type { Redis, Cluster, RedisOptions, ClusterOptions } from 'ioredis'
+import type { Redis, Cluster, RedisOptions, ClusterOptions, Command } from 'ioredis'
 
 import type RedisManager from './redis_manager.ts'
 import type RedisConnection from './connections/redis_connection.ts'
 import type { baseMethods, redisMethods } from './connections/io_methods.ts'
 import type RedisClusterConnection from './connections/redis_cluster_connection.ts'
+
+export type RedisCommandData = {
+  command: Command
+}
 
 /**
  * PubSub channel message handler function

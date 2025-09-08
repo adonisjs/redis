@@ -11,6 +11,7 @@ import Redis, { type Cluster, type NodeRole } from 'ioredis'
 
 import debug from '../debug.ts'
 import { baseMethods } from './io_methods.ts'
+import { redisCommand } from '../tracing_channels.ts'
 import { AbstractConnection } from './abstract_connection.ts'
 import type {
   ConnectionEvents,
@@ -83,6 +84,18 @@ export class RedisClusterConnection extends AbstractConnection<
     this.#config = config
 
     this.ioConnection = new Redis.Cluster(this.#hosts as any[], this.#config)
+    const originalSendCommand = this.ioConnection.sendCommand
+
+    this.ioConnection.sendCommand = function (command, ...args) {
+      return redisCommand.tracePromise(
+        originalSendCommand as (...args: Parameters<Redis.Cluster['sendCommand']>) => Promise<any>,
+        redisCommand.hasSubscribers ? { command } : undefined,
+        this,
+        command,
+        ...args
+      )
+    }
+
     this.monitorConnection()
   }
 
