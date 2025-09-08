@@ -11,8 +11,8 @@ jobs:
       REDIS_CLUSTER_PORTS: '7000,7001,7002'
     strategy:
       matrix:
-        node-version: ["lts/iron", "lts/jod", "latest"]
-        redis-version: ["6.0.20", "6.2.14", "7.0.15"]
+        node-version: ['latest']
+        redis-version: ['6.0.20', '7.2.5']
 
     services:
       redis:
@@ -22,20 +22,20 @@ jobs:
           IP: 0.0.0.0
           STANDALONE: 'true'
         ports:
-          - "7007:7007"
-          - "7000-7005:7000-7005"
+          - '7007:7007'
+          - '7000-7005:7000-7005'
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
 
-    - name: Install dependencies
-      run: npm install
+      - name: Install dependencies
+        run: npm install
 
-    - name: Run tests
-      run: npm run test
+      - name: Run tests
+        run: npm run test

@@ -8,8 +8,8 @@
  */
 
 import Emittery from 'emittery'
-import { RuntimeException } from '@poppinss/utils'
 import type { Logger } from '@adonisjs/core/logger'
+import { RuntimeException } from '@poppinss/utils/exception'
 import { type ClusterOptions, type RedisOptions, Redis } from 'ioredis'
 
 import debug from './debug.js'

@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { Redis, RedisOptions } from 'ioredis'
+import { Redis, type RedisOptions } from 'ioredis'
 
 import debug from '../debug.js'
 import { redisMethods } from './io_methods.js'

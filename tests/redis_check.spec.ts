@@ -30,7 +30,7 @@ test.group('Health check | redis connection', () => {
 
     const healthCheck = new RedisCheck(connection)
     const result = await healthCheck.run()
-    assert.containsSubset(result, {
+    assert.containSubset(result, {
       message: 'Successfully connected to the redis server',
       status: 'ok',
       meta: {
@@ -51,7 +51,7 @@ test.group('Health check | redis connection', () => {
 
     const healthCheck = new RedisCheck(connection)
     const result = await healthCheck.run()
-    assert.containsSubset(result, {
+    assert.containSubset(result, {
       message: 'Successfully connected to the redis server',
       status: 'ok',
       meta: {
@@ -65,7 +65,7 @@ test.group('Health check | redis connection', () => {
 })
 
 test.group('Health check | cluster connection', () => {
-  test('get report for connection in ready state', async ({ assert, cleanup }) => {
+  test('get report for cluster connection in ready state', async ({ assert, cleanup }) => {
     const connection = new RedisClusterConnection('main', nodes, {})
     cleanup(() => connection.quit())
 
@@ -73,7 +73,7 @@ test.group('Health check | cluster connection', () => {
 
     const healthCheck = new RedisCheck(connection)
     const result = await healthCheck.run()
-    assert.containsSubset(result, {
+    assert.containSubset(result, {
       message: 'Successfully connected to the redis server',
       status: 'ok',
       meta: {
@@ -85,13 +85,13 @@ test.group('Health check | cluster connection', () => {
     })
   })
 
-  test('wait until connection gets ready', async ({ assert, cleanup }) => {
+  test('wait until cluster connection gets ready', async ({ assert, cleanup }) => {
     const connection = new RedisClusterConnection('main', nodes, {})
     cleanup(() => connection.quit())
 
     const healthCheck = new RedisCheck(connection)
     const result = await healthCheck.run()
-    assert.containsSubset(result, {
+    assert.containSubset(result, {
       message: 'Successfully connected to the redis server',
       status: 'ok',
       meta: {
@@ -103,7 +103,7 @@ test.group('Health check | cluster connection', () => {
     })
   })
 
-  test('report error when unable to connect to the server', async ({ assert, cleanup }) => {
+  test('report error when unable to connect to the cluster', async ({ assert, cleanup }) => {
     const connection = new RedisClusterConnection(
       'main',
       [{ host: process.env.REDIS_HOST!, port: 5000 }],
