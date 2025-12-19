@@ -37,11 +37,11 @@ test.group('Redis connection', () => {
   })
 
   test('emit error when unable to connect', async ({ assert, cleanup }) => {
-    const connection = new RedisConnection('main', { port: 4444 })
+    const connection = new RedisConnection('main', { port: 4444, host: '127.0.0.1' })
     cleanup(() => connection.disconnect())
 
     const response = await pEvent(connection, 'error')
-    assert.equal(response!.error.message, 'connect ECONNREFUSED 127.0.0.1:4444')
+    assert.equal(response?.error.message, 'connect ECONNREFUSED 127.0.0.1:4444')
   })
 
   test('cleanup listeners on quit', async ({ assert }) => {
