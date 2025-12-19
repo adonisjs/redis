@@ -128,10 +128,6 @@ export class RedisClusterConnection extends AbstractConnection<
   }
 }
 
-/**
- * Adding IORedis methods dynamically on the RedisClusterConnection
- * class and also extending its TypeScript types
- */
 export interface RedisClusterConnection extends IORedisBaseCommands {}
 baseMethods.forEach((method) => {
   ;(RedisClusterConnection.prototype as any)[method] = function redisConnectionProxyFn(

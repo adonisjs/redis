@@ -122,10 +122,6 @@ export class RedisConnection extends AbstractConnection<Redis, ConnectionEvents<
   }
 }
 
-/**
- * Adding IORedis methods dynamically on the RedisConnection
- * class and also extending its TypeScript types
- */
 export interface RedisConnection extends IORedisConnectionCommands {}
 
 redisMethods.forEach((method) => {
