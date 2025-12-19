@@ -294,7 +294,7 @@ test.group('Redis connection', () => {
   })
 
   test('emit error when unable to make subscriber connection', async ({ assert, cleanup }) => {
-    const connection = new RedisConnection('main', { port: 4444 })
+    const connection = new RedisConnection('main', { port: 4444, host: '127.0.0.1' })
     await pEvent(connection, 'error')
     cleanup(() => connection.disconnect())
 
