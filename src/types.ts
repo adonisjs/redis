@@ -324,5 +324,6 @@ export type InferConnections<T extends { connections: RedisConnectionsList }> = 
  * const value = await redis.get('key')
  * ```
  */
-export interface RedisService
-  extends RedisManager<RedisConnections extends RedisConnectionsList ? RedisConnections : never> {}
+export interface RedisService extends RedisManager<
+  RedisConnections extends RedisConnectionsList ? RedisConnections : never
+> {}
