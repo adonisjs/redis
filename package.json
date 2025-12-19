@@ -25,7 +25,7 @@
     "test": "cross-env NODE_DEBUG=adonisjs:http c8 npm run quick:test",
     "typecheck": "tsc --noEmit",
     "precompile": "npm run lint",
-    "compile": "tsup-node && tsc --emitDeclarationOnly --declaration",
+    "compile": "tsdown && tsc --emitDeclarationOnly --declaration",
     "build": "npm run compile",
     "prebenchmark": "npm run build",
     "benchmark": "node benchmarks/index.js",
@@ -60,7 +60,7 @@
     "eslint": "^9.39.2",
     "prettier": "^3.7.4",
     "release-it": "^19.1.0",
-    "tsup": "^8.5.1",
+    "tsdown": "^0.18.1",
     "typescript": "^5.9.3"
   },
   "dependencies": {
@@ -127,7 +127,7 @@
       "src/repl_bindings.ts"
     ]
   },
-  "tsup": {
+  "tsdown": {
     "entry": [
       "./index.ts",
       "./src/types.ts",
@@ -138,8 +138,11 @@
     "outDir": "./build",
     "clean": true,
     "format": "esm",
+    "minify": "dce-only",
+    "fixedExtension": false,
     "dts": false,
-    "sourcemap": false,
+    "treeshake": false,
+    "sourcemaps": false,
     "target": "esnext"
   },
   "prettier": "@adonisjs/prettier-config"
