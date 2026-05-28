@@ -6,10 +6,10 @@ on:
 
 jobs:
   lint:
-    uses: adonisjs/.github/.github/workflows/lint.yml@next
+    uses: adonisjs/.github/.github/workflows/lint.yml@616f1f5863b4a3a73eb49cd0d16e8719bcd34e7a # next
 
   typecheck:
-    uses: adonisjs/.github/.github/workflows/typecheck.yml@next
+    uses: adonisjs/.github/.github/workflows/typecheck.yml@616f1f5863b4a3a73eb49cd0d16e8719bcd34e7a # next
 
   test:
     uses: adonisjs/redis/.github/workflows/test.yml@10.x
