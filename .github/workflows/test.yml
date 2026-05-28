@@ -2,6 +2,9 @@ name: test
 on:
   - workflow_call
 
+permissions:
+  contents: read
+
 jobs:
   test_linux:
     runs-on: ubuntu-latest
