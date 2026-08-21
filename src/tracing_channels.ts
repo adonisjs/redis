@@ -13,7 +13,5 @@ import { type RedisCommandData } from './types.ts'
 /**
  * Traces every Redis command sent by IORedis
  */
-export const redisCommand = diagnostics_channel.tracingChannel<
-  'adonisjs.redis.command',
-  RedisCommandData
->('adonisjs.redis.command')
+export const redisCommand =
+  diagnostics_channel.tracingChannel<RedisCommandData>('adonisjs.redis.command')
