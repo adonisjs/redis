@@ -40,33 +40,33 @@
     "postcompile": "npm run copy:templates"
   },
   "devDependencies": {
-    "@adonisjs/assembler": "^8.0.0",
-    "@adonisjs/core": "^7.0.0",
-    "@adonisjs/eslint-config": "^3.0.0",
-    "@adonisjs/prettier-config": "^1.4.5",
+    "@adonisjs/assembler": "^8.5.0",
+    "@adonisjs/core": "^7.5.0",
+    "@adonisjs/eslint-config": "^3.1.0",
+    "@adonisjs/prettier-config": "^1.5.0",
     "@adonisjs/tsconfig": "^2.0.0",
     "@japa/assert": "^4.2.0",
     "@japa/expect-type": "^2.0.4",
     "@japa/file-system": "^3.0.0",
     "@japa/runner": "^5.3.0",
     "@poppinss/ts-exec": "^1.4.4",
-    "@release-it/conventional-changelog": "^10.0.5",
-    "@types/node": "~25.3.0",
-    "c8": "^11.0.0",
+    "@release-it/conventional-changelog": "^12.0.0",
+    "@types/node": "~26.2.0",
+    "c8": "^12.0.0",
     "copyfiles": "^2.4.1",
     "cross-env": "^10.1.0",
     "del-cli": "^7.0.0",
-    "dotenv": "^17.3.1",
-    "eslint": "^10.0.2",
-    "prettier": "^3.8.1",
-    "release-it": "^19.2.4",
-    "tsdown": "^0.20.3",
+    "dotenv": "^17.4.2",
+    "eslint": "^10.8.1",
+    "prettier": "^3.9.6",
+    "release-it": "^21.0.2",
+    "tsdown": "^0.22.14",
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@poppinss/utils": "^7.0.0",
-    "emittery": "^1.2.0",
-    "ioredis": "^5.9.3"
+    "@poppinss/utils": "^7.0.1",
+    "emittery": "^2.0.0",
+    "ioredis": "^6.0.0"
   },
   "peerDependencies": {
     "@adonisjs/core": "^7.0.0-next.0 || ^7.0.0"
