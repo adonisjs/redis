@@ -189,6 +189,53 @@ test.group('Redis Manager', () => {
     assert.equal(redis.activeConnectionsCount, 0)
   })
 
+  test('quit all connections that never connected', async ({ assert }) => {
+    const redis = new RedisManagerFactory({
+      connection: 'primary',
+      connections: {
+        primary: { host: process.env.REDIS_HOST, port: process.env.REDIS_PORT, lazyConnect: true },
+        secondary: {
+          host: process.env.REDIS_HOST,
+          port: process.env.REDIS_PORT,
+          lazyConnect: true,
+        },
+      },
+    }).create()
+
+    assert.equal(redis.connection().status, 'wait')
+    assert.equal(redis.connection('secondary').status, 'wait')
+
+    await Promise.all([
+      pEvent(redis.connection(), 'end'),
+      pEvent(redis.connection('secondary'), 'end'),
+      redis.quitAll(),
+    ])
+    assert.equal(redis.activeConnectionsCount, 0)
+  })
+
+  test('quit all connections right after disconnecting them', async ({ assert }) => {
+    const redis = new RedisManagerFactory({
+      connection: 'primary',
+      connections: {
+        primary: { host: process.env.REDIS_HOST, port: process.env.REDIS_PORT, lazyConnect: true },
+      },
+    }).create()
+
+    /**
+     * Disconnecting a lazy connection ends it right away, whereas the
+     * manager drops it from the tracked list on its "end" event, which is
+     * emitted a tick later. Quitting in between must not fail on the
+     * ended connection
+     */
+    const ended = pEvent(redis.connection(), 'end')
+    await redis.disconnectAll()
+    assert.equal(redis.activeConnectionsCount, 1)
+    await assert.doesNotReject(() => redis.quitAll())
+
+    await ended
+    assert.equal(redis.activeConnectionsCount, 0)
+  })
+
   test('noop when trying to quit a non-existing connection', async () => {
     const redis = new RedisManagerFactory({
       connection: 'primary',

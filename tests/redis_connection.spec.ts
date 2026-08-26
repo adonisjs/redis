@@ -76,6 +76,75 @@ test.group('Redis connection', () => {
     assert.equal(connection.ioConnection.listenerCount('wait'), 0)
   })
 
+  test('dial the server when creating an eager connection', async ({ assert }) => {
+    const connection = new RedisConnection('main', {
+      host: process.env.REDIS_HOST,
+      port: Number(process.env.REDIS_PORT),
+    })
+    assert.equal(connection.status, 'connecting')
+
+    /**
+     * The status event is emitted on the next tick, hence the listener
+     * catches the dial started by the constructor
+     */
+    let connecting = false
+    connection.ioConnection.on('connecting', () => {
+      connecting = true
+    })
+
+    await Promise.all([pEvent(connection, 'end'), connection.quit()])
+    assert.isTrue(connecting)
+    assert.equal(connection.status, 'end')
+  })
+
+  test('quit a lazy connection without connecting to the server', async ({ assert }) => {
+    const connection = new RedisConnection('main', {
+      host: process.env.REDIS_HOST,
+      port: Number(process.env.REDIS_PORT),
+      lazyConnect: true,
+    })
+    assert.equal(connection.status, 'wait')
+
+    /**
+     * IORedis moves the connection to the "connecting" status as soon as it
+     * starts dialing the server. Sending the QUIT command to a lazy
+     * connection does that, even though IORedis aborts the dial right
+     * away when the offline queue is empty
+     */
+    let connecting = false
+    connection.ioConnection.on('connecting', () => {
+      connecting = true
+    })
+
+    await Promise.all([pEvent(connection, 'end'), connection.quit()])
+    assert.isFalse(connecting)
+    assert.equal(connection.status, 'end')
+  })
+
+  test('noop when quitting an ended connection', async ({ assert }) => {
+    const connection = new RedisConnection('main', {
+      host: process.env.REDIS_HOST,
+      port: Number(process.env.REDIS_PORT),
+    })
+
+    await Promise.all([pEvent(connection, 'end'), connection.disconnect()])
+    assert.equal(connection.status, 'end')
+
+    await assert.doesNotReject(() => connection.quit())
+  })
+
+  test('noop when disconnecting an ended connection', async ({ assert }) => {
+    const connection = new RedisConnection('main', {
+      host: process.env.REDIS_HOST,
+      port: Number(process.env.REDIS_PORT),
+    })
+
+    await Promise.all([pEvent(connection, 'end'), connection.quit()])
+    assert.equal(connection.status, 'end')
+
+    await assert.doesNotReject(() => connection.disconnect())
+  })
+
   test('execute redis commands', async ({ assert, cleanup }) => {
     const connection = new RedisConnection('main', {
       host: process.env.REDIS_HOST,

@@ -307,10 +307,39 @@ export abstract class AbstractConnection<
    * ```
    */
   async quit() {
-    await this.ioConnection.quit()
+    await this.quitIoConnection(this.ioConnection)
     if (this.ioSubscriberConnection) {
-      await this.ioSubscriberConnection.quit()
+      await this.quitIoConnection(this.ioSubscriberConnection)
     }
+  }
+
+  /**
+   * Gracefully end an IORedis connection based upon its status
+   *
+   * @param ioConnection - The IORedis connection to quit
+   */
+  protected async quitIoConnection(ioConnection: T) {
+    /**
+     * A connection in the "wait" status has never dialed the server (lazy
+     * connect) and has no pending commands either, since issuing a command
+     * moves it to the "connecting" status synchronously. Quitting it would
+     * dial the server only to send the QUIT command, so we disconnect
+     * instead.
+     */
+    if (ioConnection.status === 'wait') {
+      ioConnection.disconnect()
+      return
+    }
+
+    /**
+     * Nothing to quit once the connection has ended. IORedis rejects
+     * commands issued on an ended connection.
+     */
+    if (ioConnection.status === 'end') {
+      return
+    }
+
+    await ioConnection.quit()
   }
 
   /**
