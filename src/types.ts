@@ -10,10 +10,13 @@
 import { type Secret } from '@adonisjs/core/helpers'
 import { type AsyncOrSync } from '@poppinss/utils/types'
 import type { Redis, Cluster, RedisOptions, ClusterOptions, Command } from 'ioredis'
+import type { RedisClientOptions, RedisClientType } from 'redis'
 
 import type RedisManager from './redis_manager.ts'
 import type RedisConnection from './connections/redis_connection.ts'
 import type { baseMethods, redisMethods } from './connections/io_methods.ts'
+import type NodeRedisConnection from './connections/node_redis_connection.ts'
+import type { nodeRedisMethods } from './connections/node_redis_methods.ts'
 import type RedisClusterConnection from './connections/redis_cluster_connection.ts'
 
 export type RedisCommandData = {
@@ -199,6 +202,56 @@ export type RedisClusterConnectionConfig = {
 }
 
 /**
+ * The subset of node-redis commands exposed by a "NodeRedisConnection".
+ * The signatures are the node-redis ones, so commands are camelCased and
+ * take options objects instead of positional flags.
+ *
+ * @example
+ * ```ts
+ * // ioredis
+ * await connection.set('key', 'value', 'PX', 1000)
+ *
+ * // node-redis
+ * await connection.set('key', 'value', { PX: 1000 })
+ * ```
+ */
+export type NodeRedisCommands = {
+  [K in (typeof nodeRedisMethods)[number]]: RedisClientType[K]
+}
+
+/**
+ * Status of a node-redis connection. We re-use the ioredis vocabulary,
+ * so that code reading "connection.status" behaves the same with both
+ * clients.
+ */
+export type NodeRedisConnectionStatus =
+  'wait' | 'connecting' | 'connect' | 'ready' | 'reconnecting' | 'close' | 'end'
+
+/**
+ * Configuration for a connection backed by the official "redis"
+ * (node-redis) client. The "client" property is the opt-in: any
+ * connection without it keeps using ioredis.
+ *
+ * @example
+ * ```ts
+ * const config: NodeRedisConnectionConfig = {
+ *   client: 'node-redis',
+ *   socket: {
+ *     host: 'localhost',
+ *     port: 6379,
+ *   },
+ *   password: Secret.create('my-password'),
+ * }
+ * ```
+ */
+export type NodeRedisConnectionConfig = Omit<RedisClientOptions, 'password'> & {
+  /** Opt-in to the node-redis backed connection */
+  client: 'node-redis'
+  /** Redis password (can be string or Secret) */
+  password?: string | Secret<string>
+}
+
+/**
  * Union type representing either a cluster or standalone Redis connection
  *
  * @example
@@ -242,7 +295,7 @@ export type Connection = RedisClusterConnection | RedisConnection
  */
 export type RedisConnectionsList = Record<
   string,
-  RedisConnectionConfig | RedisClusterConnectionConfig
+  RedisConnectionConfig | RedisClusterConnectionConfig | NodeRedisConnectionConfig
 >
 
 /**
@@ -266,9 +319,11 @@ export type RedisConnectionsList = Record<
 export type GetConnectionType<
   ConnectionsList extends RedisConnectionsList,
   T extends keyof ConnectionsList,
-> = ConnectionsList[T] extends RedisClusterConnectionConfig
-  ? RedisClusterConnection
-  : RedisConnection
+> = ConnectionsList[T] extends NodeRedisConnectionConfig
+  ? NodeRedisConnection
+  : ConnectionsList[T] extends RedisClusterConnectionConfig
+    ? RedisClusterConnection
+    : RedisConnection
 
 /**
  * Interface for defining available Redis connections.

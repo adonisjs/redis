@@ -15,14 +15,23 @@ import { type ClusterOptions, type RedisOptions, Redis } from 'ioredis'
 import debug from './debug.ts'
 import { baseMethods } from './connections/io_methods.ts'
 import RedisConnection from './connections/redis_connection.ts'
+import NodeRedisConnection from './connections/node_redis_connection.ts'
 import RedisClusterConnection from './connections/redis_cluster_connection.ts'
 import type {
   GetConnectionType,
   IORedisBaseCommands,
+  NodeRedisConnectionConfig,
   PubSubChannelHandler,
   PubSubPatternHandler,
   RedisConnectionsList,
 } from './types.ts'
+
+/**
+ * Detects a connection that opted into the node-redis client
+ */
+function isNodeRedisConfig(config: unknown): config is NodeRedisConnectionConfig {
+  return (config as NodeRedisConnectionConfig)?.client === 'node-redis'
+}
 
 /**
  * Redis Manager exposes the API to manage multiple redis connections
@@ -47,7 +56,7 @@ import type {
  * ```
  */
 class RedisManager<ConnectionsList extends RedisConnectionsList> extends Emittery<{
-  connection: RedisConnection | RedisClusterConnection
+  connection: RedisConnection | RedisClusterConnection | NodeRedisConnection
 }> {
   /**
    * Lua scripts to apply to all the connections
@@ -193,14 +202,28 @@ class RedisManager<ConnectionsList extends RedisConnectionsList> extends Emitter
      * Instantiate the connection based upon the config
      */
     debug('creating new connection %s', name)
-    const connection =
-      'clusters' in config
-        ? new RedisClusterConnection(
-            name as string,
-            config.clusters,
-            this.#mergeScripts(config.clusterOptions || {})
-          )
-        : new RedisConnection(name as string, this.#mergeScripts(config))
+    let connection: RedisConnection | RedisClusterConnection | NodeRedisConnection
+
+    if (isNodeRedisConfig(config)) {
+      connection = new NodeRedisConnection(name as string, config)
+
+      /**
+       * node-redis has its own "scripts" option and it can only be defined
+       * when creating the client, hence we register the manager level
+       * scripts on the connection instead.
+       */
+      Object.entries(this.#scripts).forEach(([script, definition]) => {
+        ;(connection as NodeRedisConnection).defineCommand(script, definition)
+      })
+    } else if ('clusters' in config) {
+      connection = new RedisClusterConnection(
+        name as string,
+        config.clusters,
+        this.#mergeScripts(config.clusterOptions || {})
+      )
+    } else {
+      connection = new RedisConnection(name as string, this.#mergeScripts(config))
+    }
 
     /**
      * Notify about a new connection

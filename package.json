@@ -59,6 +59,7 @@
     "dotenv": "^17.4.2",
     "eslint": "^10.8.1",
     "prettier": "^3.9.6",
+    "redis": "^6.2.1",
     "release-it": "^21.0.2",
     "tsdown": "^0.22.14",
     "typescript": "^5.9.3"
@@ -69,7 +70,13 @@
     "ioredis": "^6.0.0"
   },
   "peerDependencies": {
-    "@adonisjs/core": "^7.0.0-next.0 || ^7.0.0"
+    "@adonisjs/core": "^7.0.0-next.0 || ^7.0.0",
+    "redis": "^5.0.0 || ^6.0.0"
+  },
+  "peerDependenciesMeta": {
+    "redis": {
+      "optional": true
+    }
   },
   "keywords": [
     "redis",

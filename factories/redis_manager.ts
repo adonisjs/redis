@@ -9,15 +9,13 @@
 
 import RedisManager from '../src/redis_manager.ts'
 import { LoggerFactory } from '@adonisjs/core/factories/logger'
-import type { RedisClusterConnectionConfig, RedisConnectionConfig } from '../src/types.ts'
+import type { RedisConnectionsList } from '../src/types.ts'
 
 /**
  * Redis manager factory is used to create an instance of the redis
  * manager for testing
  */
-export class RedisManagerFactory<
-  ConnectionsList extends Record<string, RedisClusterConnectionConfig | RedisConnectionConfig>,
-> {
+export class RedisManagerFactory<ConnectionsList extends RedisConnectionsList> {
   #config: {
     connection: keyof ConnectionsList
     connections: ConnectionsList
