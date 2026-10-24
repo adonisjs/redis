@@ -10,7 +10,7 @@
 import { test } from '@japa/runner'
 import stringHelpers from '@adonisjs/core/helpers/string'
 
-import { pEvent } from '../tests_helpers/main.ts'
+import { createSilentServer, pEvent } from '../tests_helpers/main.ts'
 import RedisConnection from '../src/connections/redis_connection.ts'
 import { RedisMemoryUsageCheck } from '../src/checks/redis_memory_usage_check.ts'
 import RedisClusterConnection from '../src/connections/redis_cluster_connection.ts'
@@ -162,6 +162,30 @@ test.group('Redis memory usage | redis connection', () => {
           name: 'main',
         },
       },
+    })
+  })
+
+  test('fail when the server does not answer the ping, with a custom compute', async ({
+    assert,
+    cleanup,
+  }) => {
+    const server = await createSilentServer()
+    cleanup(() => server.close())
+
+    const connection = new RedisConnection('main', {
+      host: '127.0.0.1',
+      port: server.port,
+      enableReadyCheck: false,
+    })
+    cleanup(() => connection.disconnect())
+    await pEvent(connection, 'ready')
+    server.silence()
+
+    const healthCheck = new RedisMemoryUsageCheck(connection).timeout(200).compute(async () => 1024)
+
+    assert.containSubset(await healthCheck.run(), {
+      message: 'Redis did not respond within 200ms',
+      status: 'error',
     })
   })
 })
