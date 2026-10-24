@@ -7,18 +7,24 @@
  * file that was distributed with this source code.
  */
 
-import { setTimeout } from 'node:timers/promises'
+import stringHelpers from '@adonisjs/core/helpers/string'
 import { BaseCheck, Result } from '@adonisjs/core/health'
 import type { HealthCheckResult } from '@adonisjs/core/types/health'
+import { probeConnection } from './probe_connection.ts'
 import type { Connection } from '../types.ts'
 
 /**
  * The RedisCheck pings the redis server to ensure we are
  * able to connect to it.
  *
+ * The check fails at once when the connection is neither ready nor
+ * connecting (for example while reconnecting), and fails when waiting
+ * for the connection plus the ping take longer than the timeout. It
+ * never connects or reconnects the connection itself.
+ *
  * @example
  * ```ts
- * const check = new RedisCheck(redis.connection())
+ * const check = new RedisCheck(redis.connection()).timeout('2s')
  * const result = await check.run()
  *
  * if (result.isHealthy) {
@@ -33,9 +39,9 @@ export class RedisCheck extends BaseCheck {
   #connection: Connection
 
   /**
-   * Number of times `ping` was deferred, at max we defer it for 3 times
+   * Time in milliseconds to wait for the connection and the ping
    */
-  #pingAttempts = 0
+  #timeout = 1_000
 
   /**
    * Health check public name
@@ -72,40 +78,20 @@ export class RedisCheck extends BaseCheck {
   }
 
   /**
-   * Internal method to ping the redis server
+   * Define how long the check waits for a connecting connection and
+   * the ping, together. Defaults to 1 second.
+   *
+   * @param duration - Milliseconds or a duration expression (e.g. '2s')
+   *
+   * @example
+   * ```ts
+   * check.timeout('2s')
+   * check.timeout(500)
+   * ```
    */
-  async #ping(): Promise<Result | undefined> {
-    /**
-     * When in connecting status, we should wait for maximum 3 seconds with
-     * (divided into 3 attempts). However, if there was an error, we will
-     * not wait for 3 seconds.
-     */
-    if (this.#connection.isConnecting() && this.#pingAttempts < 3 && !this.#connection.lastError) {
-      await setTimeout(1000)
-      this.#pingAttempts++
-      return this.#ping()
-    }
-
-    /**
-     * Re-connect when connection is in closed state
-     */
-    if (this.#connection.isClosed()) {
-      await this.#connection.ioConnection.connect()
-      return this.#ping()
-    }
-
-    /**
-     * If we are not in `connect` or `ready` state, then we should
-     * report an error.
-     */
-    if (!this.#connection.isReady()) {
-      return Result.failed(
-        'Unable to connect to the redis server',
-        this.#connection.lastError
-      ).mergeMetaData(this.#getConnectionMetadata())
-    }
-
-    await this.#connection.ping()
+  timeout(duration: string | number) {
+    this.#timeout = stringHelpers.milliseconds.parse(duration)
+    return this
   }
 
   /**
@@ -118,17 +104,10 @@ export class RedisCheck extends BaseCheck {
    * ```
    */
   async run(): Promise<HealthCheckResult> {
-    try {
-      const result = await this.#ping()
-      if (result) {
-        return result
-      }
+    const result = await probeConnection(this.#connection, this.#timeout, async () =>
+      Result.ok('Successfully connected to the redis server')
+    )
 
-      return Result.ok('Successfully connected to the redis server').mergeMetaData(
-        this.#getConnectionMetadata()
-      )
-    } catch (error) {
-      return Result.failed(error).mergeMetaData(this.#getConnectionMetadata())
-    }
+    return result.mergeMetaData(this.#getConnectionMetadata())
   }
 }
