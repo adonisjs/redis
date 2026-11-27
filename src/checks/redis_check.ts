@@ -127,7 +127,7 @@ export class RedisCheck extends BaseCheck {
       return Result.ok('Successfully connected to the redis server').mergeMetaData(
         this.#getConnectionMetadata()
       )
-    } catch (error) {
+    } catch (error: any) {
       return Result.failed(error).mergeMetaData(this.#getConnectionMetadata())
     }
   }

@@ -286,7 +286,7 @@ export class RedisMemoryUsageCheck extends BaseCheck {
       )
         .mergeMetaData(this.#getConnectionMetadata())
         .mergeMetaData(this.#getMemoryMetadata(memoryUsage))
-    } catch (error) {
+    } catch (error: any) {
       return Result.failed(error).mergeMetaData(this.#getConnectionMetadata())
     }
   }
